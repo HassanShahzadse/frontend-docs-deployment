@@ -1,0 +1,150 @@
+export const metadata = {
+  title: 'Fees per Transaction (Median)',
+  description:
+    'Use the Fees per Transaction Median endpoint to track the median transaction fee, revealing typical user costs without distortion from outlier high-value transactions.',
+}
+
+# Fees per Transaction (Median)
+
+The **Fees per Transaction Median** metric tracks the median fee paid per transaction during a specified time window. {{ className: 'lead' }}
+
+This metric reveals what typical users actually pay to transact, providing a more representative view of network costs by filtering out extreme outliers like very high-value transactions.
+
+---
+
+## Endpoint
+
+`GET /fees-per-transaction-median`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor median fees per transaction to understand typical user costs without distortion from outlier transactions.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Fees per Transaction Median data"}
+curl -G "https://api.blocklytics.net/api/public/v1/fees-per-transaction-median" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "fees_transaction_median": 0.00032
+  },
+  {
+    "date": "2025-01-06",
+    "fees_transaction_median": 0.00028
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/fees-per-transaction-median" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="fees_transaction_median" type="number">
+    The median fee paid per transaction during the specified time window,
+    denominated in BTC.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising median fees** indicate increasing costs for typical users, suggesting genuine network congestion rather than just a few high-value transactions skewing the average. This better reflects the experience of average network participants.
+
+**Declining median fees** suggest improved accessibility for regular users, making the network more affordable for everyday transactions and smaller value transfers without being masked by occasional large transactions.
+
+**Median significantly lower than mean** reveals that a small number of very high-fee transactions are pulling the average up, while most users pay considerably less. This indicates a two-tier system where urgent or high-value transactions coexist with regular activity.
+
+**Median close to mean** suggests relatively uniform fee distribution across transactions, indicating that most users are experiencing similar cost levels and competing in the same fee market.
+
+### Use Cases
+
+This metric provides a more accurate picture of typical user experience than mean fees, which can be distorted by outliers. When median fees remain low despite high mean fees, it indicates that the network remains accessible to regular users even during periods of high-value activity. This metric is crucial for wallet developers setting default fee recommendations, as it represents what most users actually need to pay rather than an inflated average. Businesses can use median fees to better estimate operational costs for regular transaction flows. Comparing median with mean fees reveals market segmentation between urgent high-value transfers and regular activity, helping identify whether congestion affects all users equally or creates distinct priority tiers.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/fees-per-transaction-median', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `fees-per-transaction-median?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      fees_transaction_median: d.fees_transaction_median,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

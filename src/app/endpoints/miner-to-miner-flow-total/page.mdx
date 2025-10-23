@@ -1,0 +1,165 @@
+export const metadata = {
+  title: 'Miner to Miner Flow (Total)',
+  description:
+    'Use the Miner to Miner Flow Total endpoint to track the total volume of Bitcoin transfers between mining pools, revealing consolidation patterns, operational relationships, and treasury movements.',
+}
+
+# Miner to Miner Flow (Total)
+
+The **Miner to Miner Flow (Total)** metric tracks the total volume of Bitcoin transferred between mining pool wallets. {{ className: 'lead' }}
+
+This metric reveals consolidation patterns, operational relationships, and strategic treasury movements within the mining ecosystem, showing how Bitcoin redistributes among mining operations.
+
+---
+
+## Endpoint
+
+`GET /miner-to-miner-flow-total`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the total volume of transfers between mining pools to assess consolidation patterns and operational relationships in the mining ecosystem.
+
+<Properties>
+  <Property name="from_miner" type="string">
+    Source mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="to_miner" type="string">
+    Destination mining pool name. Example: <code>f2pool</code>,{' '}
+    <code>antpool</code>, <code>foundryusa</code>. Default: <code>1thash</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner to Miner Flow Total data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-to-miner-flow-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_miner=f2pool \
+  -d to_miner=antpool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "flow_total": 1247.89
+  },
+  {
+    "date": "2025-01-06",
+    "flow_total": 982.34
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-to-miner-flow-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_miner=all_miner \
+  -d to_miner=1thash \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="flow_total" type="number">
+    The total volume of Bitcoin transferred from one specified mining pool to
+    another during the time period, measured in BTC.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising total flows** indicate increasing inter-pool Bitcoin movements, suggesting consolidation activities, treasury rebalancing among affiliated operations, settlement of mining rewards, or strategic repositioning of holdings within mining networks.
+
+**Declining total flows** suggest reduced inter-pool transfer activity where mining operations maintain more isolated treasuries, potentially indicating operational independence, reduced consolidation needs, or strategic shifts toward direct market interactions rather than inter-pool settlements.
+
+**Spike in total flows** often signals significant consolidation events such as treasury centralization among related mining entities, major settlements following pool mergers or operational changes, or strategic repositioning ahead of anticipated market movements or liquidity needs.
+
+**Sustained high flows between specific pools** reveal established operational relationships, potential common ownership structures, or strategic partnerships where regular significant transfers indicate integrated treasury management or coordinated operations.
+
+### Use Cases
+
+This metric provides essential insight into the structure and relationships within the mining ecosystem beyond individual pool analysis. Inter-pool flows reveal consolidation patterns and operational networks that aren't visible from external market interactions alone. High consistent flows between specific pool pairs often indicate affiliated operations or strategic partnerships, helping identify mining conglomerates and related entities within the fragmented pool landscape. During mining difficulty adjustments or market volatility, tracking inter-pool flows reveals how mining operations strategically consolidate or distribute holdings in response to changing conditions. Comparing inter-pool flows to external outflows distinguishes between internal treasury management and actual market distributions, with high inter-pool flows relative to exchange flows suggesting centralized treasury strategies among related operations. This metric helps identify emerging mining consortiums or operational consolidations, as increasing flows between previously unrelated pools can signal new partnerships or acquisitions before public announcements. Analyzing the directionality and persistence of flows reveals hub-and-spoke patterns in mining operations, identifying central treasury operations that aggregate holdings from multiple smaller pools. Tracking changes in inter-pool flow patterns during profitability squeezes reveals strategic responses, with some operations consolidating to stronger pools while others maintain independence, indicating different financial positions and operational strategies.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-to-miner-flow-total', async (req, res) => {
+  try {
+    const fromMiner = req.query.from_miner || 'all_miner'
+    const toMiner = req.query.to_miner || '1thash'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-to-miner-flow-total?window=${window}&from_miner=${fromMiner}&to_miner=${toMiner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      flow_total: d.flow_total,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

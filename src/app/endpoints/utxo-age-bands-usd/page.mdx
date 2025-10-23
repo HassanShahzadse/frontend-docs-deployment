@@ -1,0 +1,206 @@
+export const metadata = {
+  title: 'UTXO Age Bands (USD)',
+  description:
+    'Use the UTXO Age Bands (USD) endpoint to track the dollar value of Bitcoin supply across different age cohorts, revealing the economic scale of holdings by different holder types.',
+}
+
+# UTXO Age Bands (USD)
+
+The **UTXO Age Bands (USD)** metric distributes the active Bitcoin supply across age cohorts in dollar values, revealing the economic scale of holdings by different holder types. {{ className: 'lead' }}
+
+This metric identifies the dollar-denominated value concentration across age groups, enabling analysis of the economic significance of short-term trader versus long-term holder positions at current market prices.
+
+---
+
+## Endpoint
+
+`GET /utxo-age-bands-usd`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor UTXO age USD distribution to assess the economic value locked in different holder age cohorts at current market prices.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting UTXO Age Bands (USD) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxo-age-bands-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "range_0d_1d_usd": 4500000000,
+    "range_1d_1w_usd": 12300000000,
+    "range_1w_1m_usd": 23400000000,
+    "range_1m_3m_usd": 45600000000,
+    "range_3m_6m_usd": 67800000000,
+    "range_6m_12m_usd": 89000000000,
+    "range_12m_18m_usd": 102000000000,
+    "range_18m_2y_usd": 115000000000,
+    "range_2y_3y_usd": 134000000000,
+    "range_3y_5y_usd": 245000000000,
+    "range_5y_7y_usd": 312000000000,
+    "range_7y_10y_usd": 289000000000,
+    "range_10y_inf_usd": 456000000000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxo-age-bands-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="range_0d_1d_usd" type="number">
+    Dollar value of Bitcoin in UTXOs aged 0-1 days, in USD.
+  </Property>
+  <Property name="range_1d_1w_usd" type="number">
+    Dollar value of Bitcoin in UTXOs aged 1 day to 1 week, in USD.
+  </Property>
+  <Property name="range_1w_1m_usd" type="number">
+    Dollar value of Bitcoin in UTXOs aged 1 week to 1 month, in USD.
+  </Property>
+  <Property name="range_1m_3m_usd" type="number">
+    Dollar value of Bitcoin in UTXOs aged 1-3 months, in USD.
+  </Property>
+  <Property name="range_3m_6m_usd" type="number">
+    Dollar value of Bitcoin in UTXOs aged 3-6 months, in USD.
+  </Property>
+  <Property name="range_6m_12m_usd" type="number">
+    Dollar value of Bitcoin in UTXOs aged 6-12 months, in USD.
+  </Property>
+  <Property name="range_12m_18m_usd" type="number">
+    Dollar value of Bitcoin in UTXOs aged 12-18 months, in USD.
+  </Property>
+  <Property name="range_18m_2y_usd" type="number">
+    Dollar value of Bitcoin in UTXOs aged 18 months to 2 years, in USD.
+  </Property>
+  <Property name="range_2y_3y_usd" type="number">
+    Dollar value of Bitcoin in UTXOs aged 2-3 years, in USD.
+  </Property>
+  <Property name="range_3y_5y_usd" type="number">
+    Dollar value of Bitcoin in UTXOs aged 3-5 years, in USD.
+  </Property>
+  <Property name="range_5y_7y_usd" type="number">
+    Dollar value of Bitcoin in UTXOs aged 5-7 years, in USD.
+  </Property>
+  <Property name="range_7y_10y_usd" type="number">
+    Dollar value of Bitcoin in UTXOs aged 7-10 years, in USD.
+  </Property>
+  <Property name="range_10y_inf_usd" type="number">
+    Dollar value of Bitcoin in UTXOs aged over 10 years, in USD.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High young band dollar values** indicate substantial economic value in recently-moved Bitcoin, revealing billions in fresh capital actively trading without establishing long-term positions, typical during high-volume periods.
+
+**High old band dollar values** demonstrate massive economic value locked in unmoved Bitcoin, showing hundreds of billions in patient capital demonstrating conviction through years of inactivity, strengthening supply fundamentals.
+
+**Growing old band dollar values** reveal increasing economic capital maturing into conviction, signaling successful accumulation where substantial value transitions from active trading to long-term holding, reducing available liquid supply.
+
+**Declining old band dollar values** signal long-term holder distribution where substantial economic value from aged positions enters circulation, often marking major profit-taking events as veteran capital breaks its commitment.
+
+### Use Cases
+
+This metric provides dollar-normalized insight into the economic significance of different holder age cohorts, revealing the actual capital value at stake in each segment. High old band dollar values indicate massive economic capital has demonstrated conviction through sustained inactivity, with hundreds of billions locked in long-term positions representing the patient capital base. These dollar values contextualize the economic impact of potential distribution events, as movements from high-value old bands represent substantially more market-moving capital than equivalent BTC amounts from young bands. The metric also reveals how market capitalization changes affect holder economics, with rising prices inflating old band dollar values and demonstrating growing unrealized gains for veteran holders. Tracking old band dollar value growth identifies wealth accumulation in patient capital, as long-term holders benefit disproportionately from sustained appreciation. Comparing dollar values across age bands reveals capital concentration patterns, with disproportionate old band values indicating wealth has accumulated in conviction holders while balanced distributions suggest more democratic capital allocation. The metric proves valuable for assessing potential distribution pressure, as high old band dollar values indicate substantial profitable capital that could theoretically exit positions. During bull markets, tracking old band dollar values identifies when veteran holdings reach historically elevated levels that have preceded profit-taking events.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/utxo-age-bands-usd', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `utxo-age-bands-usd?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      range_0d_1d_usd: d.range_0d_1d_usd,
+      range_1d_1w_usd: d.range_1d_1w_usd,
+      range_1w_1m_usd: d.range_1w_1m_usd,
+      range_1m_3m_usd: d.range_1m_3m_usd,
+      range_3m_6m_usd: d.range_3m_6m_usd,
+      range_6m_12m_usd: d.range_6m_12m_usd,
+      range_12m_18m_usd: d.range_12m_18m_usd,
+      range_18m_2y_usd: d.range_18m_2y_usd,
+      range_2y_3y_usd: d.range_2y_3y_usd,
+      range_3y_5y_usd: d.range_3y_5y_usd,
+      range_5y_7y_usd: d.range_5y_7y_usd,
+      range_7y_10y_usd: d.range_7y_10y_usd,
+      range_10y_inf_usd: d.range_10y_inf_usd,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

@@ -1,0 +1,152 @@
+export const metadata = {
+  title: 'Tokens Transferred (Total)',
+  description:
+    'Use the Tokens Transferred (Total) endpoint to track the total volume of Bitcoin moved on-chain, revealing network activity levels and capital flow intensity.',
+}
+
+# Tokens Transferred (Total)
+
+The **Tokens Transferred (Total)** measures the total amount of Bitcoin transferred on-chain across all transactions, revealing network activity and capital flow intensity. {{ className: 'lead' }}
+
+This metric quantifies the aggregate volume of Bitcoin changing hands, with high values indicating intense network usage and capital reallocation, and low values suggesting dormancy or reduced economic activity.
+
+---
+
+## Endpoint
+
+`GET /tokens-transferred-total`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor total tokens transferred to assess overall network activity levels and identify periods of intense capital movement or dormancy.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Tokens Transferred (Total) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/tokens-transferred-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "tokens_transferred_total": 456789.34
+  },
+  {
+    "date": "2025-01-06",
+    "tokens_transferred_total": 423456.78
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/tokens-transferred-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="tokens_transferred_total" type="number">
+    The total amount of Bitcoin transferred on-chain across all transactions,
+    measured in BTC, representing the aggregate volume of capital movement on
+    the network.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High total transfer volume** indicates intense network activity, revealing substantial capital reallocation as large amounts of Bitcoin move across numerous transactions, typical during volatile periods or major market events.
+
+**Low total transfer volume** demonstrates network dormancy, showing limited capital movement as reduced amounts of Bitcoin transfer, typical during consolidation periods when holders remain inactive.
+
+**Rising total transfer volume** reveals increasing network activity, signaling growing capital mobility as more Bitcoin moves on-chain, often accompanying volatility increases or major accumulation/distribution events.
+
+**Declining total transfer volume** shows decreasing network activity, indicating reduced capital mobility as less Bitcoin moves, often preceding consolidation or suggesting participant exhaustion after major moves.
+
+### Use Cases
+
+This metric provides fundamental measurement of network economic activity through aggregate capital flows, revealing the intensity of Bitcoin usage and holder behavior. High total transfer volumes indicate active markets where substantial capital reallocates, whether through trading, rebalancing, or major holder movements. These elevated volumes often accompany significant market events, as participants respond to volatility, news, or price movements by actively repositioning capital. Conversely, low volumes indicate dormant markets where holders remain inactive and capital stays put, typical during consolidation when participants wait for catalysts before moving coins. The metric reveals market cycle phases through characteristic volume patterns, with bull markets showing elevated volumes from active trading and accumulation while bear markets often show declining volumes from holder inactivity. Comparing current volumes to historical levels contextualizes activity intensity, revealing whether current network usage is high or low relative to typical patterns. Rising volumes during sideways price action warn of building pressure and potential breakouts, as increased capital movement suggests participants are repositioning ahead of directional moves. The metric also identifies capitulation events through volume spikes during selloffs, as panicked holders flood the network with transfer activity to exit positions. Tracking volume trends reveals conviction shifts, with sustained volume increases indicating growing participation while declining volumes suggest participants are losing interest or exhausting their capital for movement.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/tokens-transferred-total', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `tokens-transferred-total?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      tokens_transferred_total: d.tokens_transferred_total,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

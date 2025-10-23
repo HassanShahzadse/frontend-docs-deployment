@@ -1,0 +1,203 @@
+export const metadata = {
+  title: 'Exchange Inflow – Spent Output Age Bands (%)',
+  description:
+    'Learn how to use the Exchange Inflow – Spent Output Age Bands (%) endpoint to view the percentage distribution of BTC deposits by coin age, identifying behavioral patterns of long-term and short-term holders entering exchanges.',
+}
+
+# Exchange Inflow – Spent Output Age Bands (%)
+
+The **Exchange Inflow – Spent Output Age Bands (%)** metric shows the relative percentage distribution of Bitcoin inflows to exchanges based on the age of spent outputs. {{ className: 'lead' }}
+
+This normalized version of the age bands indicator makes it easier to compare the dominance of different holder groups over time — for example, when long-term holders (LTHs) start increasing their share of deposits, signaling potential market tops or distribution phases.
+
+---
+
+## Endpoint
+
+`GET /exchange-inflow-age-bands-percent`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Retrieve the **percentage breakdown** of BTC inflows by age bands per exchange. You can specify the time range and resolution.
+
+<Properties>
+  <Property name="exchange" type="string">
+    Exchange name. Example: <code>binance</code>, <code>coinbase</code>,{' '}
+    <code>kraken</code>. Default: <code>all_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Exchange Inflow Age Bands (%) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-inflow-age-bands-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=binance \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "range_0d_1d_percent": 52.4,
+    "range_1d_1w_percent": 19.8,
+    "range_1w_1m_percent": 10.7,
+    "range_1m_3m_percent": 6.5,
+    "range_3m_6m_percent": 3.1,
+    "range_6m_12m_percent": 2.2,
+    "range_12m_18m_percent": 1.5,
+    "range_18m_2y_percent": 1.0,
+    "range_2y_3y_percent": 0.6,
+    "range_3y_5y_percent": 0.3,
+    "range_5y_7y_percent": 0.2,
+    "range_7y_10y_percent": 0.1,
+    "range_10y_inf_percent": 0.05
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-inflow-age-bands-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=kraken \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+Each percentage-based field reflects the relative contribution of coins from different age groups to total exchange inflows on a given day.
+
+<Properties>
+  <Property name="range_0d_1d_percent" type="number">
+    % of BTC inflows from coins moved within the last 24 hours.
+  </Property>
+  <Property name="range_1d_1w_percent" type="number">
+    % of BTC inflows from coins moved within the past week.
+  </Property>
+  <Property name="range_1w_1m_percent" type="number">
+    % of BTC inflows from coins held for 1 week – 1 month.
+  </Property>
+  <Property name="range_1m_3m_percent" type="number">
+    % of BTC inflows from coins held for 1 – 3 months.
+  </Property>
+  <Property name="range_3m_6m_percent" type="number">
+    % of BTC inflows from coins held for 3 – 6 months.
+  </Property>
+  <Property name="range_6m_12m_percent" type="number">
+    % of BTC inflows from coins held for 6 – 12 months.
+  </Property>
+  <Property name="range_12m_18m_percent" type="number">
+    % of BTC inflows from coins held for 12 – 18 months.
+  </Property>
+  <Property name="range_18m_2y_percent" type="number">
+    % of BTC inflows from coins held between 18 months – 2 years.
+  </Property>
+  <Property name="range_2y_3y_percent" type="number">
+    % of BTC inflows from coins aged 2 – 3 years.
+  </Property>
+  <Property name="range_3y_5y_percent" type="number">
+    % of BTC inflows from coins aged 3 – 5 years.
+  </Property>
+  <Property name="range_5y_7y_percent" type="number">
+    % of BTC inflows from coins aged 5 – 7 years.
+  </Property>
+  <Property name="range_7y_10y_percent" type="number">
+    % of BTC inflows from coins aged 7 – 10 years.
+  </Property>
+  <Property name="range_10y_inf_percent" type="number">
+    % of BTC inflows from coins older than 10 years.
+  </Property>
+</Properties>
+
+When older coins (e.g., >3y) start accounting for a higher percentage of total inflows, it can indicate that long-term holders are moving their coins to exchanges — often preceding profit-taking cycles or market corrections.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/exchange-inflow-age-bands-percent', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `exchange-inflow-age-bands-percent?window=${window}&exchange=${exchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      range_0d_1d_percent: d.range_0d_1d_percent,
+      range_1d_1w_percent: d.range_1d_1w_percent,
+      range_1w_1m_percent: d.range_1w_1m_percent,
+      range_1m_3m_percent: d.range_1m_3m_percent,
+      range_3m_6m_percent: d.range_3m_6m_percent,
+      range_6m_12m_percent: d.range_6m_12m_percent,
+      range_12m_18m_percent: d.range_12m_18m_percent,
+      range_18m_2y_percent: d.range_18m_2y_percent,
+      range_2y_3y_percent: d.range_2y_3y_percent,
+      range_3y_5y_percent: d.range_3y_5y_percent,
+      range_5y_7y_percent: d.range_5y_7y_percent,
+      range_7y_10y_percent: d.range_7y_10y_percent,
+      range_10y_inf_percent: d.range_10y_inf_percent,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

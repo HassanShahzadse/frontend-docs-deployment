@@ -1,0 +1,162 @@
+export const metadata = {
+  title: 'Open Interest',
+  description:
+    'Use the Open Interest endpoint to track the total value of outstanding Bitcoin perpetual futures contracts, revealing leverage levels and derivatives market positioning.',
+}
+
+# Open Interest
+
+The **Open Interest** metric tracks the total dollar value of outstanding Bitcoin perpetual futures contracts across derivative exchanges. {{ className: 'lead' }}
+
+This metric reveals the level of leverage and speculative positioning in derivatives markets, providing critical insight into potential volatility, liquidation risks, and market sentiment.
+
+---
+
+## Endpoint
+
+`GET /open-interest`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor open interest to assess leverage levels, derivatives market positioning, and potential volatility in Bitcoin markets.
+
+<Properties>
+  <Property name="exchange" type="string">
+    Derivative exchange name. Example: <code>binance</code>, <code>bitmex</code>
+    , <code>bybit</code>. Default: <code>all_exchange</code>.
+  </Property>
+  <Property name="symbol" type="string">
+    Trading symbol. Example: <code>btc_usd</code>, <code>btc_usdt</code>,{' '}
+    <code>btc_busd</code>. Default: <code>all_symbol</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>min</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Open Interest data"}
+curl -G "https://api.blocklytics.net/api/public/v1/open-interest" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=binance \
+  -d symbol=btc_usdt \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "open_interest": 18500000000
+  },
+  {
+    "date": "2025-01-06",
+    "open_interest": 17800000000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/open-interest" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=all_exchange \
+  -d symbol=all_symbol \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="open_interest" type="number">
+    The total dollar value of outstanding Bitcoin perpetual futures contracts on
+    the specified exchange and symbol, measured in USD.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising open interest** indicates increasing leverage and derivatives positioning as more capital enters futures markets, suggesting growing speculative interest that can amplify price movements in both directions and increase volatility through potential liquidation cascades.
+
+**Declining open interest** suggests deleveraging where positions are being closed and leverage reduced, often occurring after volatile moves or liquidation events, typically leading to reduced volatility as speculative positioning decreases and risk is removed from the system.
+
+**High open interest with rising prices** reveals strong bullish conviction with leveraged long positions accumulating, indicating confidence but also creating vulnerability to sharp corrections if sentiment shifts, as concentrated long positions face liquidation risk on downward moves.
+
+**High open interest with falling prices** indicates leveraged short positions building or long liquidations cascading, suggesting bearish pressure amplified by derivatives positioning, though extreme short concentration can create violent short squeeze potential if price reverses upward.
+
+### Use Cases
+
+This metric provides essential insight into leverage levels and speculative positioning that drives short-term volatility beyond spot market fundamentals. Open interest reveals the magnitude of derivative exposure that can amplify price movements through liquidation cascades, making it critical for risk assessment and volatility prediction. Rising open interest during rallies warns of growing liquidation risk, as accumulated long positions face margin calls if prices reverse, potentially triggering cascading liquidations that accelerate declines. Conversely, rising open interest during declines indicates building short positions that create short squeeze potential, as bearish positions must be covered on upward price movements, potentially accelerating rallies. Extreme open interest levels relative to spot market size indicate excessive leverage that increases fragility, with high ratios historically preceding volatile deleveraging events and sharp price movements. Comparing open interest changes to price action distinguishes between sustainable moves supported by spot demand versus leverage-driven moves vulnerable to reversal. Rapid open interest increases often precede volatile periods as new speculative positions create unstable equilibrium, while stable or declining open interest suggests healthier market structure with reduced liquidation risk. Tracking open interest across exchanges identifies concentration risks, with high concentration on specific platforms creating systemic vulnerability to exchange-specific issues or liquidation engine failures. This metric also helps time entries and exits, as extremely elevated open interest often marks local extremes where leveraged positions become overcrowded and vulnerable to violent reversals.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/open-interest', async (req, res) => {
+  try {
+    const exchange = req.query.exchange || 'all_exchange'
+    const symbol = req.query.symbol || 'all_symbol'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `open-interest?window=${window}&exchange=${exchange}&symbol=${symbol}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      open_interest: d.open_interest,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

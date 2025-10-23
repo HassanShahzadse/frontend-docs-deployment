@@ -1,0 +1,143 @@
+export const metadata = {
+  title: 'Quickstart',
+  description:
+    'This guide will get you all set up and ready to use the Blocklytics API. We will cover how to get started and how to make your first API request to access Bitcoin on-chain data.',
+}
+
+# Quickstart
+
+This guide will get you all set up and ready to use the Blocklytics API. We will cover how to get started making API requests and how to retrieve your first Bitcoin on-chain metrics. We will also look at where to go next to find all the information you need to take full advantage of our comprehensive on-chain data REST API. {{ className: 'lead' }}
+
+<Note>
+  Before you can make requests to the Blocklytics API, you will need to grab
+  your API key from your dashboard.
+</Note>
+
+## Choose your client
+
+Before making your first API request, you need to pick which API client you will use. In addition to good ol' cURL HTTP requests, Blocklytics works with JavaScript, Python, and PHP. In the following example, you can see how to install each client.
+
+<CodeGroup>
+
+```bash {{ title: 'cURL' }}
+# cURL is most likely already installed on your machine
+curl --version
+```
+
+```bash {{ language: 'js' }}
+# Install the Node.js fetch package
+npm install node-fetch --save
+```
+
+```bash {{ language: 'python' }}
+# Install the Python requests library
+pip install requests
+```
+
+```bash {{ language: 'php' }}
+# Install Guzzle HTTP client for PHP
+composer require guzzlehttp/guzzle
+```
+
+</CodeGroup>
+
+<div className="not-prose">
+  <Button href="/authentication" variant="text" arrow="right">
+    <>Read more about authentication</>
+  </Button>
+</div>
+
+## Making your first API request
+
+After picking your preferred client, you are ready to make your first call to the Blocklytics API. Below, you can see how to send a GET request to the Active Addresses endpoint to get Bitcoin network activity data. In the cURL example, results are limited to ten data points.
+
+<CodeGroup tag="GET" label="/active-addresses">
+
+```bash {{ title: 'cURL' }}
+curl -G https://api.blocklytics.net/api/public/v1/active-addresses \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d limit=10
+```
+
+```js
+const fetch = require('node-fetch')
+
+const BLOCKLYTICS_API_KEY = 'YOUR_API_KEY'
+const BASE_URL = 'https://api.blocklytics.net/api/public/v1'
+
+async function getActiveAddresses() {
+  const response = await fetch(
+    `${BASE_URL}/active-addresses?window=day&limit=10`,
+    {
+      headers: {
+        'x-api-key': BLOCKLYTICS_API_KEY,
+        'Content-Type': 'application/json',
+      },
+    },
+  )
+
+  return await response.json()
+}
+
+getActiveAddresses()
+```
+
+```python
+import requests
+
+BLOCKLYTICS_API_KEY = 'YOUR_API_KEY'
+BASE_URL = 'https://api.blocklytics.net/api/public/v1'
+
+def get_active_addresses():
+    response = requests.get(
+        f'{BASE_URL}/active-addresses',
+        headers={
+            'x-api-key': BLOCKLYTICS_API_KEY,
+            'Content-Type': 'application/json'
+        },
+        params={
+            'window': 'day',
+            'limit': 10
+        }
+    )
+    return response.json()
+
+data = get_active_addresses()
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+use GuzzleHttp\Client;
+
+$apiKey = 'YOUR_API_KEY';
+$baseUrl = 'https://api.blocklytics.net/api/public/v1';
+
+$client = new Client([
+    'base_uri' => $baseUrl,
+    'headers' => [
+        'x-api-key' => $apiKey,
+        'Content-Type' => 'application/json'
+    ]
+]);
+
+$response = $client->request('GET', '/active-addresses', [
+    'query' => [
+        'window' => 'day',
+        'limit' => 10
+    ]
+]);
+
+$data = json_decode($response->getBody());
+```
+
+</CodeGroup>
+
+<div className="not-prose">
+  <Button href="/endpoints/active-addresses" variant="text" arrow="right">
+    <>Read the docs for the Active Addresses endpoint</>
+  </Button>
+</div>

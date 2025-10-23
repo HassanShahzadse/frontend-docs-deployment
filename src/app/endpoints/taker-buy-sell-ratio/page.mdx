@@ -1,0 +1,159 @@
+export const metadata = {
+  title: 'Taker Buy Sell Ratio',
+  description:
+    'Use the Taker Buy Sell Ratio endpoint to compare aggressive buy volume directly against aggressive sell volume, revealing the intensity of directional conviction through order flow imbalance.',
+}
+
+# Taker Buy Sell Ratio
+
+The **Taker Buy Sell Ratio** directly compares aggressive buy volume to aggressive sell volume in perpetual swap markets, revealing order flow imbalance intensity. {{ className: 'lead' }}
+
+This metric quantifies the strength of bullish versus bearish aggression through a ratio format, with values above 1 indicating buying dominance and below 1 indicating selling dominance.
+
+---
+
+## Endpoint
+
+`GET /taker-buy-sell-ratio`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Taker Buy Sell Ratio to assess the relative strength of aggressive buying versus selling pressure through order flow imbalance.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>min</code>.
+  </Property>
+  <Property name="exchange" type="string">
+    Exchange to query. Options: <code>all_exchange</code>, <code>binance</code>,{' '}
+    <code>bybit</code>, <code>bitmex</code>, <code>deribit</code>,{' '}
+    <code>htx_global</code>, <code>okx</code>. Default:{' '}
+    <code>all_exchange</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Taker Buy Sell Ratio data"}
+curl -G "https://api.blocklytics.net/api/public/v1/taker-buy-sell-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d exchange=binance \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "taker_buy_sell_ratio": 1.18
+  },
+  {
+    "date": "2025-01-06",
+    "taker_buy_sell_ratio": 0.92
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/taker-buy-sell-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d exchange=all_exchange \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="taker_buy_sell_ratio" type="number">
+    The ratio of taker buy volume to taker sell volume in perpetual swap
+    markets, representing the relative strength of aggressive buying versus
+    selling, with values above 1 indicating buy dominance and below 1 indicating
+    sell dominance.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High buy-sell ratio (above 1.2)** indicates aggressive buying significantly outweighs aggressive selling, revealing strong bullish conviction where impatient longs dominate order flow and create upward pressure through liquidity absorption.
+
+**Low buy-sell ratio (below 0.8)** demonstrates aggressive selling significantly outweighs aggressive buying, showing strong bearish conviction where impatient shorts dominate order flow and create downward pressure.
+
+**Buy-sell ratio near 1.0** suggests balanced aggression between buyers and sellers, indicating neutral order flow without clear directional dominance as bulls and bears demonstrate equal urgency.
+
+**Rising buy-sell ratio** reveals growing buying dominance relative to selling, signaling strengthening bullish sentiment as aggressive long positioning increasingly outweighs aggressive short positioning.
+
+### Use Cases
+
+This metric provides an intuitive ratio format for assessing order flow imbalance, with the magnitude directly indicating dominance strength. Values significantly above 1 reveal bulls are more aggressive than bears by a quantifiable multiple, making interpretation straightforward. A ratio of 1.5 indicates aggressive buyers outweigh aggressive sellers by 50 percent, providing clear measurement of conviction imbalance. The ratio format amplifies extreme readings, with values above 1.5 or below 0.67 indicating highly one-sided order flow that suggests either strong trends or potential exhaustion. Comparing the buy-sell ratio to price action reveals alignment quality, with rallies accompanied by high ratios confirming demand strength while rallies with low ratios warn of weak conviction. The metric identifies momentum shifts through ratio transitions, with moves from below 1 to above 1 signaling bullish momentum emergence as aggressive buying overtakes aggressive selling. Extreme ratio readings often precede reversals after extended trends, as exhaustion of one-sided order flow creates conditions for counter-moves when the dominant side has no remaining urgency. Tracking the ratio across different timeframes reveals conviction consistency, with aligned high ratios across hourly, daily, and weekly windows confirming sustained buying dominance. The metric also enables exchange comparison, revealing whether order flow imbalance is exchange-specific or market-wide when comparing individual exchange ratios to the aggregate.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/taker-buy-sell-ratio', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `taker-buy-sell-ratio?window=${window}&exchange=${exchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      taker_buy_sell_ratio: d.taker_buy_sell_ratio,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

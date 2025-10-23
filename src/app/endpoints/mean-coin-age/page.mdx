@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Mean Coin Age (MCA)',
+  description:
+    'Use the Mean Coin Age endpoint to track the average age of unspent coins, revealing holder behavior and accumulation versus distribution patterns.',
+}
+
+# Mean Coin Age (MCA)
+
+The **Mean Coin Age** metric tracks the average age of unspent transaction outputs weighted by their value. {{ className: 'lead' }}
+
+This metric reveals holder behavior by measuring how long coins remain unspent. Rising MCA indicates accumulation and holding, while declining MCA suggests distribution and increased transaction activity.
+
+---
+
+## Endpoint
+
+`GET /mean-coin-age`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor mean coin age to identify accumulation phases, holder conviction, and potential distribution events.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Mean Coin Age data"}
+curl -G "https://api.blocklytics.net/api/public/v1/mean-coin-age" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "mean_coin_age": 1825.4
+  },
+  {
+    "date": "2025-01-06",
+    "mean_coin_age": 1823.7
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/mean-coin-age" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="mean_coin_age" type="number">
+    The average age of unspent transaction outputs weighted by their value,
+    measured in days. Higher values indicate coins are held longer without
+    moving.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising mean coin age** indicates accumulation behavior where holders keep coins unspent for longer periods, suggesting strong conviction and reducing circulating supply available for trading. This often occurs during bear markets and early bull markets.
+
+**Declining mean coin age** reveals increased spending activity as older coins move, typically indicating distribution phases where long-term holders take profits or lose conviction. This pattern often appears during bull market tops.
+
+**Stable high mean coin age** suggests sustained holding behavior with minimal old coin movement, indicating a mature holder base with strong conviction that creates supply squeeze conditions favorable for price appreciation.
+
+**Sharp drops in mean coin age** signal significant old coin distribution events, often marking market tops as long-term holders who accumulated during previous cycles exit their positions into new demand.
+
+### Use Cases
+
+This metric provides insights into holder conviction and supply dynamics that aren't visible through price alone. Rising mean coin age during bear markets indicates accumulation by patient holders building positions while weak hands capitulate, often preceding major rallies. Declining mean coin age during bull markets warns of increasing distribution as long-term holders take profits. The metric helps distinguish between price movements driven by new money entering versus old holders rotating positions. Sudden mean coin age drops can identify when dormant supply awakens, potentially overwhelming demand and causing corrections. Comparing mean coin age with price trends reveals divergences where strong holder behavior contradicts price action, suggesting accumulation opportunities or distribution warnings. For long-term investors, rising mean coin age confirms increasing holder conviction and decreasing readily available supply.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/mean-coin-age', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `mean-coin-age?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      mean_coin_age: d.mean_coin_age,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

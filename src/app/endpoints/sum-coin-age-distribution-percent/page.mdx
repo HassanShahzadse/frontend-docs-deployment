@@ -1,0 +1,205 @@
+export const metadata = {
+  title: 'Sum Coin Age Distribution (%)',
+  description:
+    'Use the Sum Coin Age Distribution (%) endpoint to track the percentage distribution of accumulated coin age across holder cohorts, revealing the relative conviction levels of different holder types.',
+}
+
+# Sum Coin Age Distribution (%)
+
+The **Sum Coin Age Distribution (%)** metric distributes accumulated coin age across holder age cohorts as percentages, showing the relative concentration of holding commitment. {{ className: 'lead' }}
+
+This metric reveals which holder cohorts dominate network conviction in proportional terms, enabling analysis of whether short-term or long-term holders control the majority of accumulated holding commitment.
+
+---
+
+## Endpoint
+
+`GET /sum-coin-age-distribution-percent`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the percentage distribution of accumulated coin age to assess the relative conviction levels across different holder age cohorts.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Sum Coin Age Distribution (%) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/sum-coin-age-distribution-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "range_0d_1d_percent": 0.2,
+    "range_1d_1w_percent": 0.7,
+    "range_1w_1m_percent": 1.4,
+    "range_1m_3m_percent": 2.4,
+    "range_3m_6m_percent": 3.6,
+    "range_6m_12m_percent": 5.3,
+    "range_12m_18m_percent": 7.0,
+    "range_18m_2y_percent": 8.7,
+    "range_2y_3y_percent": 12.1,
+    "range_3y_5y_percent": 18.9,
+    "range_5y_7y_percent": 15.2,
+    "range_7y_10y_percent": 11.7,
+    "range_10y_inf_percent": 8.3
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/sum-coin-age-distribution-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="range_0d_1d_percent" type="number">
+    Percentage of total coin age from UTXOs aged 0-1 days.
+  </Property>
+  <Property name="range_1d_1w_percent" type="number">
+    Percentage of total coin age from UTXOs aged 1 day to 1 week.
+  </Property>
+  <Property name="range_1w_1m_percent" type="number">
+    Percentage of total coin age from UTXOs aged 1 week to 1 month.
+  </Property>
+  <Property name="range_1m_3m_percent" type="number">
+    Percentage of total coin age from UTXOs aged 1-3 months.
+  </Property>
+  <Property name="range_3m_6m_percent" type="number">
+    Percentage of total coin age from UTXOs aged 3-6 months.
+  </Property>
+  <Property name="range_6m_12m_percent" type="number">
+    Percentage of total coin age from UTXOs aged 6-12 months.
+  </Property>
+  <Property name="range_12m_18m_percent" type="number">
+    Percentage of total coin age from UTXOs aged 12-18 months.
+  </Property>
+  <Property name="range_18m_2y_percent" type="number">
+    Percentage of total coin age from UTXOs aged 18 months to 2 years.
+  </Property>
+  <Property name="range_2y_3y_percent" type="number">
+    Percentage of total coin age from UTXOs aged 2-3 years.
+  </Property>
+  <Property name="range_3y_5y_percent" type="number">
+    Percentage of total coin age from UTXOs aged 3-5 years.
+  </Property>
+  <Property name="range_5y_7y_percent" type="number">
+    Percentage of total coin age from UTXOs aged 5-7 years.
+  </Property>
+  <Property name="range_7y_10y_percent" type="number">
+    Percentage of total coin age from UTXOs aged 7-10 years.
+  </Property>
+  <Property name="range_10y_inf_percent" type="number">
+    Percentage of total coin age from UTXOs aged over 10 years.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High long-term percentages** indicate conviction concentrated among veteran holders who dominate network commitment, revealing that most holding patience resides in mature cohorts with demonstrated strong-hand behavior, strengthening supply stability through proven conviction.
+
+**Rising long-term percentages** demonstrate successful accumulation maturing into conviction as newly acquired coins age into long-term bands and accumulate proportionally more commitment, signaling strengthening holder base quality through graduation to strong hands.
+
+**High short-term percentages** reveal conviction dominated by recent holders and active traders, indicating the network's holding commitment concentrates in speculative positions without proven patience, suggesting weaker supply stability vulnerable to sentiment shifts.
+
+**Declining long-term percentages** signal erosion of veteran conviction as long-held coins move and reset their age contribution, often marking distribution phases when patient capital breaks its commitment and reallocates to newer, less proven holders.
+
+### Use Cases
+
+This metric provides normalized insight into the relative distribution of holding conviction across cohorts, removing the influence of absolute coin age values and focusing on proportional commitment. The percentage view enables identification of conviction regime shifts regardless of total network age changes, revealing whether the character of holder commitment is migrating toward or away from long-term conviction. High long-term band percentages indicate networks dominated by proven holders who have accumulated substantial commitment through years of demonstrated patience, suggesting strong supply fundamentals. The metric reveals accumulation quality by tracking how conviction migrates across bands, with rising long-term percentages confirming successful conversion of weak hands into strong hands through sustained holding. During bear markets, growing long-term percentages indicate accumulation is working as new capital demonstrates conviction by holding through adversity, strengthening the holder base. During bull markets, declining long-term percentages warn of deteriorating conviction quality as veteran holders distribute and reduce their relative commitment contribution. The normalized view enables comparison across different market environments and supply levels, showing whether current conviction distribution differs from historical patterns regardless of network size. Rising long-term percentages historically coincide with bullish environments as highlighted in the metric documentation, since growing veteran conviction typically precedes or accompanies sustainable rallies supported by strong holder base.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/sum-coin-age-distribution-percent', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `sum-coin-age-distribution-percent?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      range_0d_1d_percent: d.range_0d_1d_percent,
+      range_1d_1w_percent: d.range_1d_1w_percent,
+      range_1w_1m_percent: d.range_1w_1m_percent,
+      range_1m_3m_percent: d.range_1m_3m_percent,
+      range_3m_6m_percent: d.range_3m_6m_percent,
+      range_6m_12m_percent: d.range_6m_12m_percent,
+      range_12m_18m_percent: d.range_12m_18m_percent,
+      range_18m_2y_percent: d.range_18m_2y_percent,
+      range_2y_3y_percent: d.range_2y_3y_percent,
+      range_3y_5y_percent: d.range_3y_5y_percent,
+      range_5y_7y_percent: d.range_5y_7y_percent,
+      range_7y_10y_percent: d.range_7y_10y_percent,
+      range_10y_inf_percent: d.range_10y_inf_percent,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

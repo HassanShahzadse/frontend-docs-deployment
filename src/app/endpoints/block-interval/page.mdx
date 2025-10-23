@@ -1,0 +1,140 @@
+export const metadata = {
+  title: 'Block Interval (Mean)',
+  description:
+    'Learn how to use the Block Interval (Mean) endpoint to measure the average time between Bitcoin blocks in seconds, helping assess network stability and mining conditions.',
+}
+
+# Block Interval (Mean)
+
+The **Block Interval (Mean)** metric represents the average time (in seconds) between consecutive Bitcoin blocks. {{ className: 'lead' }}
+
+This indicator reflects how quickly new blocks are being mined and can highlight changes in mining difficulty, hash rate fluctuations, or temporary network slowdowns.
+
+---
+
+## Endpoint
+
+`GET /block-interval`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+This example retrieves the mean block interval for daily time windows. Adjust parameters to query specific periods or output formats.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Block Interval data"}
+curl -G "https://api.blocklytics.net/api/public/v1/block-interval" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "block_interval": 715
+  },
+  {
+    "date": "2025-01-06",
+    "block_interval": 680
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/block-interval" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+The **Block Interval (Mean)** indicates how efficiently blocks are being mined:
+
+<Properties>
+  <Property name="block_interval" type="number">
+    Average time between two consecutive blocks, in seconds.
+  </Property>
+</Properties>
+
+A shorter block interval suggests increased network hash rate or easier mining conditions, while longer intervals can imply congestion, reduced hash rate, or higher difficulty adjustments.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/block-interval', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `block-interval?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      block_interval: d.block_interval,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

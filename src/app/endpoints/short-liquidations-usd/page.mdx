@@ -1,0 +1,162 @@
+export const metadata = {
+  title: 'Short Liquidations (USD)',
+  description:
+    'Use the Short Liquidations USD endpoint to track the dollar value of forced short position closures across derivative exchanges, revealing the scale of bearish positioning failures and short squeeze intensity.',
+}
+
+# Short Liquidations (USD)
+
+The **Short Liquidations (USD)** metric tracks the dollar value of short positions forcibly closed due to adverse price movements across Bitcoin derivative exchanges. {{ className: 'lead' }}
+
+This metric reveals the economic scale of failed bearish bets in normalized dollar terms, enabling comparison of short squeeze intensity across different price environments and market conditions.
+
+---
+
+## Endpoint
+
+`GET /short-liquidations-usd`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor short liquidations in USD to assess the dollar-value scale of bearish positioning failures and short squeeze dynamics.
+
+<Properties>
+  <Property name="exchange" type="string">
+    Derivative exchange name. Example: <code>binance</code>, <code>bitmex</code>
+    , <code>bybit</code>. Default: <code>all_exchange</code>.
+  </Property>
+  <Property name="symbol" type="string">
+    Trading symbol. Example: <code>btc_usd</code>, <code>btc_usdt</code>,{' '}
+    <code>btc_busd</code>. Default: <code>all_symbol</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>min</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Short Liquidations USD data"}
+curl -G "https://api.blocklytics.net/api/public/v1/short-liquidations-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=binance \
+  -d symbol=btc_usdt \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "short_liquidations_usd": 145000000
+  },
+  {
+    "date": "2025-01-06",
+    "short_liquidations_usd": 89000000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/short-liquidations-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=all_exchange \
+  -d symbol=all_symbol \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="short_liquidations_usd" type="number">
+    The dollar value of short positions forcibly closed on the specified
+    exchange and symbol during the time period, measured in USD.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High USD liquidation values during rallies** indicate substantial dollar-denominated bearish capital being forcibly unwound, revealing the economic scale of failed short positions and the magnitude of forced buying pressure driving price acceleration.
+
+**Record short liquidation amounts** signal exceptional bearish positioning failures at unprecedented scale, often marking major sentiment shifts where massive leveraged capital bet against appreciation and created violent squeezes through cascading forced closures.
+
+**Rising USD liquidations with price acceleration** demonstrates intensifying short squeeze dynamics where growing dollar amounts of forced buying amplify upward pressure, creating self-reinforcing cycles that can produce parabolic moves exceeding fundamental justification.
+
+**Low USD liquidations despite price gains** suggest healthy appreciation without significant leverage unwind, indicating demand-driven moves supported by genuine buying interest rather than technical dynamics vulnerable to reversal once forced buying exhausts.
+
+### Use Cases
+
+This metric provides dollar-normalized insight into the economic scale of short positioning failures, enabling meaningful comparisons across different market regimes and price levels. The USD denomination reveals the actual capital destroyed through failed bearish bets and the magnitude of forced buying that contributes to price rallies. Large short liquidation values during rallies confirm short squeeze dynamics at economically significant scale, distinguishing between minor technical squeezes and major positioning unwinds that fundamentally alter market structure. Tracking liquidation values relative to market capitalization or daily trading volume contextualizes their market impact, with large ratios indicating liquidations represent meaningful portions of market activity capable of driving substantial price moves. Historical comparisons of liquidation values identify extreme events, with record-breaking liquidations often marking major sentiment capitulations where bearish positioning reached unsustainable extremes. The metric also reveals leverage cycle dynamics, with periods of high liquidations indicating elevated leverage unwinding while low liquidations suggest reduced leverage and more stable market structure. Comparing short to long liquidation dollar values reveals positioning asymmetry, with heavy short liquidations indicating prior bearish crowding that unwound while balanced values suggest two-sided markets. Tracking liquidation patterns across exchanges in dollar terms identifies systemic risks and concentration, with large liquidations on single platforms potentially threatening broader market stability through contagion effects.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/short-liquidations-usd', async (req, res) => {
+  try {
+    const exchange = req.query.exchange || 'all_exchange'
+    const symbol = req.query.symbol || 'all_symbol'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `short-liquidations-usd?window=${window}&exchange=${exchange}&symbol=${symbol}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      short_liquidations_usd: d.short_liquidations_usd,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

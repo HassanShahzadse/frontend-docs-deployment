@@ -1,0 +1,149 @@
+export const metadata = {
+  title: 'Average Cap',
+  description:
+    'Learn how to use the Average Cap endpoint to analyze Bitcoin’s fundamental valuation by comparing market capitalization metrics over time.',
+}
+
+# Average Cap
+
+The **Average Cap** represents Bitcoin’s long-term valuation trend by taking the cumulative sum of daily market capitalization and dividing it by the age of the market. {{ className: 'lead' }}  
+Unlike fixed-period moving averages (e.g., 50-day or 200-day MAs), the Average Cap serves as a true historical mean, smoothing short-term volatility and helping identify cyclical market phases.
+
+Together with **Realized Cap** and **Delta Cap**, this metric is used by on-chain analysts to evaluate market bottoms and assess whether Bitcoin is overvalued or undervalued.
+
+---
+
+## Endpoint
+
+`GET /average-cap`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+This example retrieves Bitcoin’s Average Cap values for daily intervals. Adjust parameters to query different time ranges or export as CSV.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Average Cap data"}
+curl -G "https://api.blocklytics.net/api/public/v1/average-cap" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "average_cap": 4.92e11
+  },
+  {
+    "date": "2025-01-06",
+    "average_cap": 4.91e11
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/average-cap" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=block \
+  -d from=510000 \
+  -d to=510500 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+The **Average Cap** metric provides a deep view into Bitcoin’s fundamental valuation:
+
+<Properties>
+  <Property name="average_cap" type="number">
+    The lifetime moving average of Bitcoin’s market capitalization — calculated
+    as cumulative market cap divided by the total market age.
+  </Property>
+</Properties>
+
+When plotted alongside **Market Cap**, **Realized Cap**, and **Delta Cap**, analysts can:
+
+<ul>
+  <li>Identify long-term support and resistance zones.</li>
+  <li>Detect overvalued or undervalued phases in the macro cycle.</li>
+  <li>
+    Spot potential market bottoms when <code>Delta Cap ≈ Average Cap</code>.
+  </li>
+</ul>
+
+  </Col>
+<Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/average-cap', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `average-cap?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      average_cap: d.average_cap,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

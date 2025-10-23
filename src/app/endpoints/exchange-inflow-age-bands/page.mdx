@@ -1,0 +1,204 @@
+export const metadata = {
+  title: 'Exchange Inflow – Spent Output Age Bands',
+  description:
+    'Learn how to use the Exchange Inflow – Spent Output Age Bands endpoint to analyze the age distribution of BTC deposits entering exchange wallets, helping identify the behavior of long-term and short-term holders.',
+}
+
+# Exchange Inflow – Spent Output Age Bands
+
+The **Exchange Inflow – Spent Output Age Bands** metric breaks down Bitcoin deposits to exchanges based on the age of spent outputs. {{ className: 'lead' }}
+
+This helps distinguish between deposits made by **long-term holders (LTHs)** and **short-term holders (STHs)** — offering insight into whether older coins are being moved to exchanges, potentially indicating profit-taking behavior.
+
+---
+
+## Endpoint
+
+`GET /exchange-inflow-age-bands`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Retrieve inflow age distribution data for a specific exchange and timeframe. Each band represents BTC deposits grouped by the age of the spent outputs.
+
+<Properties>
+  <Property name="exchange" type="string">
+    The name of the exchange. Example: <code>binance</code>,{' '}
+    <code>coinbase</code>, <code>kraken</code>. Default:{' '}
+    <code>all_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Exchange Inflow Age Bands data"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-inflow-age-bands" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=binance \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "range_0d_1d": 12.3,
+    "range_1d_1w": 8.4,
+    "range_1w_1m": 6.1,
+    "range_1m_3m": 4.8,
+    "range_3m_6m": 3.7,
+    "range_6m_12m": 2.9,
+    "range_12m_18m": 1.8,
+    "range_18m_2y": 1.3,
+    "range_2y_3y": 0.9,
+    "range_3y_5y": 0.6,
+    "range_5y_7y": 0.3,
+    "range_7y_10y": 0.1,
+    "range_10y_inf": 0.05
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-inflow-age-bands" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=kraken \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+The **Exchange Inflow Age Bands** distribution provides a detailed view of the age of BTC entering exchanges:
+
+<Properties>
+  <Property name="range_0d_1d" type="number">
+    Deposits from coins moved within the last 24 hours.
+  </Property>
+  <Property name="range_1d_1w" type="number">
+    Deposits from coins moved within the past week.
+  </Property>
+  <Property name="range_1w_1m" type="number">
+    Deposits from coins held between one week and one month.
+  </Property>
+  <Property name="range_1m_3m" type="number">
+    Deposits from coins held for 1–3 months.
+  </Property>
+  <Property name="range_3m_6m" type="number">
+    Deposits from coins held for 3–6 months.
+  </Property>
+  <Property name="range_6m_12m" type="number">
+    Deposits from coins held for 6–12 months.
+  </Property>
+  <Property name="range_12m_18m" type="number">
+    Deposits from coins held for 12–18 months.
+  </Property>
+  <Property name="range_18m_2y" type="number">
+    Deposits from coins held between 18 months and 2 years.
+  </Property>
+  <Property name="range_2y_3y" type="number">
+    Deposits from coins aged between 2 and 3 years.
+  </Property>
+  <Property name="range_3y_5y" type="number">
+    Deposits from coins aged between 3 and 5 years.
+  </Property>
+  <Property name="range_5y_7y" type="number">
+    Deposits from coins aged between 5 and 7 years.
+  </Property>
+  <Property name="range_7y_10y" type="number">
+    Deposits from coins aged between 7 and 10 years.
+  </Property>
+  <Property name="range_10y_inf" type="number">
+    Deposits from coins older than 10 years.
+  </Property>
+</Properties>
+
+Increased inflows from **older age bands** (e.g., 3y–10y) may indicate long-term holders realizing profits, while dominance of **younger bands** (e.g., 0d–1w) reflects short-term speculative activity.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/exchange-inflow-age-bands', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `exchange-inflow-age-bands?window=${window}&exchange=${exchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      range_0d_1d: d.range_0d_1d,
+      range_1d_1w: d.range_1d_1w,
+      range_1w_1m: d.range_1w_1m,
+      range_1m_3m: d.range_1m_3m,
+      range_3m_6m: d.range_3m_6m,
+      range_6m_12m: d.range_6m_12m,
+      range_12m_18m: d.range_12m_18m,
+      range_18m_2y: d.range_18m_2y,
+      range_2y_3y: d.range_2y_3y,
+      range_3y_5y: d.range_3y_5y,
+      range_5y_7y: d.range_5y_7y,
+      range_7y_10y: d.range_7y_10y,
+      range_10y_inf: d.range_10y_inf,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

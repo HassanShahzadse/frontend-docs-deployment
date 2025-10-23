@@ -1,0 +1,152 @@
+export const metadata = {
+  title: 'Transaction Count (Total)',
+  description:
+    'Use the Transaction Count (Total) endpoint to track the aggregate number of transactions processed on the Bitcoin network, revealing overall usage intensity and network activity levels.',
+}
+
+# Transaction Count (Total)
+
+The **Transaction Count (Total)** measures the aggregate number of transactions processed by the Bitcoin network over a given period, revealing overall usage intensity. {{ className: 'lead' }}
+
+This metric quantifies network activity through transaction volume, with high counts indicating intense usage and participation, and low counts suggesting reduced network demand or activity.
+
+---
+
+## Endpoint
+
+`GET /transaction-count-total`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor total transaction count to assess overall network activity levels and identify periods of high or low usage intensity.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Transaction Count (Total) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/transaction-count-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "transactions_count_total": 456789
+  },
+  {
+    "date": "2025-01-06",
+    "transactions_count_total": 423456
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/transaction-count-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="transactions_count_total" type="number">
+    The total number of transactions processed on the Bitcoin network during the
+    specified period, representing aggregate network usage and activity
+    intensity.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High transaction count** indicates intense network usage, revealing substantial activity as many participants create transactions, typical during volatile periods or high engagement when users actively transact.
+
+**Low transaction count** demonstrates reduced network usage, showing minimal activity where few participants create transactions, typical during consolidation or bear markets when user engagement declines.
+
+**Rising transaction count** reveals growing network usage, signaling increasing adoption or activity as more participants transact, often accompanying market movements or ecosystem growth.
+
+**Declining transaction count** shows decreasing network usage, indicating reduced adoption or activity as fewer participants transact, often preceding consolidation or suggesting user disengagement.
+
+### Use Cases
+
+This metric provides fundamental measurement of Bitcoin network utilization through transaction volume, revealing the intensity of actual blockchain usage. High transaction counts indicate active ecosystems where numerous participants create on-chain activity, suggesting healthy engagement and network effects. These elevated counts often characterize bull markets or periods of high volatility when participants actively trade, rebalance, or respond to market conditions. Conversely, low transaction counts indicate reduced network usage where participants remain inactive, typical during bear markets or consolidation when holders avoid transacting. The metric reveals network adoption trends through longer-term count patterns, with steadily growing counts suggesting increasing usage and ecosystem maturity while stagnant or declining counts warn of adoption challenges. Comparing current counts to historical levels contextualizes activity intensity, revealing whether current usage is high or low relative to typical patterns. Spikes in transaction counts often accompany major market events, as participants respond to volatility, news, or price movements by transacting more frequently. The metric also identifies fee market dynamics, as sustained high transaction counts create competition for block space that drives fee increases, while low counts indicate abundant capacity that suppresses fees. Tracking transaction count growth rates reveals network health, with accelerating growth suggesting viral adoption while decelerating growth warns of maturation or saturation.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/transaction-count-total', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `transaction-count-total?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      transactions_count_total: d.transactions_count_total,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

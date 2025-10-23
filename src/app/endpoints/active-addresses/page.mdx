@@ -1,0 +1,150 @@
+export const metadata = {
+  title: 'Active Addresses',
+  description:
+    'Learn how to use the Active Addresses endpoint to analyze Bitcoin network activity over time, including active senders, receivers, and total unique addresses.',
+}
+
+# Active Addresses
+
+This guide explains how to use the **Active Addresses** endpoint to analyze Bitcoin network activity over time.  
+This metric is one of the most fundamental on-chain indicators, representing the level of real economic usage and user engagement with the Bitcoin blockchain. {{ className: 'lead' }}
+
+Each data point reflects the number of **unique addresses** that participated in transactions—either as senders or receivers—within a given time window.  
+By tracking changes across daily, hourly, or block intervals, analysts can infer user adoption trends, network activity intensity, and overall blockchain health.
+
+---
+
+## Endpoint
+
+`GET /active-addresses`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+The request below retrieves active address metrics for the daily window.  
+You can adjust parameters to fetch data for different resolutions or export it as CSV.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For <code>window=block</code>, specify a block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For <code>window=block</code>, specify a block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>. Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting daily active addresses"}
+curl -G "https://api.blocklytics.net/api/public/v1/active-addresses" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "active_addresses": 915203,
+    "sender_addresses": 512321,
+    "receiver_addresses": 402882
+  },
+  {
+    "date": "2025-01-06",
+    "active_addresses": 887412,
+    "sender_addresses": 498231,
+    "receiver_addresses": 389181
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/active-addresses" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=hour \
+  -d from=20250101T000000 \
+  -d to=20250101T120000 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metrics
+
+<Row>
+  <Col>
+
+The **Active Addresses** dataset includes several key metrics derived directly from Bitcoin transaction data:
+
+<Properties>
+  <Property name="active_addresses" type="integer">
+    Total number of unique addresses active as either senders or receivers within the selected time window.
+  </Property>
+  <Property name="sender_addresses" type="integer">
+    Number of unique addresses that sent transactions during the selected window.
+  </Property>
+  <Property name="receiver_addresses" type="integer">
+    Number of unique addresses that received transactions during the selected window.
+  </Property>
+</Properties>
+
+Tracking these values helps identify user activity surges, dormant network phases, or periods of market volatility driven by increased on-chain movement.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get("/active-addresses", async (req, res) => {
+  try {
+    const window = req.query.window || "day";
+    const from = req.query.from ? `&from=${req.query.from}` : "";
+    const to = req.query.to ? `&to=${req.query.to}` : "";
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : "";
+    const format = req.query.format ? `&format=${req.query.format}` : "";
+
+    const path = `active-addresses?window=${window}${from}${to}${limit}${format}`;
+    const data = await blocklyticsFetch(path);
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: "Unexpected API format", data });
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      active_addresses: d.active_addresses,
+      sender_addresses: d.sender_addresses,
+      receiver_addresses: d.receiver_addresses,
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+```
+  </Col>
+</Row>

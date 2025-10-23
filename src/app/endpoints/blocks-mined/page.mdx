@@ -1,0 +1,140 @@
+export const metadata = {
+  title: 'Blocks Mined',
+  description:
+    'Learn how to use the Blocks Mined endpoint to track the total number of Bitcoin blocks generated within a specific time window.',
+}
+
+# Blocks Mined
+
+The **Blocks Mined** metric measures the total number of Bitcoin blocks created within a given time period. {{ className: 'lead' }}
+
+It helps monitor network health and block production consistency — deviations from the expected 144 blocks per day may indicate hash rate fluctuations or temporary network slowdowns.
+
+---
+
+## Endpoint
+
+`GET /blocks-mined`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+This example retrieves the number of blocks mined per day. Adjust parameters to target different time ranges or export formats.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Blocks Mined data"}
+curl -G "https://api.blocklytics.net/api/public/v1/blocks-mined" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "blocks_mined": 152
+  },
+  {
+    "date": "2025-01-06",
+    "blocks_mined": 139
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/blocks-mined" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+**Blocks Mined** helps track the operational state of the Bitcoin network:
+
+<Properties>
+  <Property name="blocks_mined" type="integer">
+    The total number of Bitcoin blocks generated within the specified time
+    window.
+  </Property>
+</Properties>
+
+A steady block count near the expected average (≈144 per day) indicates stable network conditions, while significant drops or spikes may reflect hash rate changes or network delays.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/blocks-mined', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `blocks-mined?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      blocks_mined: d.blocks_mined,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

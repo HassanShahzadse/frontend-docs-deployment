@@ -1,0 +1,146 @@
+export const metadata = {
+  title: 'Block Rewards',
+  description:
+    'Learn how to use the Block Rewards endpoint to track the total mining and transaction fee rewards per block, expressed in BTC and USD.',
+}
+
+# Block Rewards
+
+The **Block Rewards** metric measures the total value miners receive from block subsidies and transaction fees. {{ className: 'lead' }}
+
+This includes both the base mining reward (which halves approximately every four years) and the transaction fees paid by users. Monitoring block rewards helps assess miner profitability and network security.
+
+---
+
+## Endpoint
+
+`GET /block-rewards`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+This example retrieves the sum of block rewards per day. Adjust parameters to query specific time windows or export in CSV format.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Block Rewards data"}
+curl -G "https://api.blocklytics.net/api/public/v1/block-rewards" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "block_rewards": 27.45,
+    "block_rewards_usd": 1312500.23
+  },
+  {
+    "date": "2025-01-06",
+    "block_rewards": 28.02,
+    "block_rewards_usd": 1348700.91
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/block-rewards" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=block \
+  -d from=820000 \
+  -d to=820500 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+**Block Rewards** offer insights into Bitcoin’s economic and security model:
+
+<Properties>
+  <Property name="block_rewards" type="number">
+    The total rewards per block in BTC, including both the block subsidy and
+    transaction fees.
+  </Property>
+  <Property name="block_rewards_usd" type="number">
+    The equivalent value of total block rewards in USD at the time of the block.
+  </Property>
+</Properties>
+
+Rising transaction fees or total rewards indicate higher network activity or congestion, while falling rewards can result from reduced fee pressure or halving events.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/block-rewards', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `block-rewards?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      block_rewards: d.block_rewards,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

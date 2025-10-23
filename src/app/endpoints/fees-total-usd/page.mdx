@@ -1,0 +1,150 @@
+export const metadata = {
+  title: 'Fees USD (Total)',
+  description:
+    'Use the Fees Total USD endpoint to track the total transaction fees paid to miners in USD terms, revealing the dollar value of network activity and miner revenue.',
+}
+
+# Fees USD (Total)
+
+The **Fees Total USD** metric tracks the sum of all transaction fees paid to miners during a specified time window, denominated in US dollars. {{ className: 'lead' }}
+
+This metric reveals the dollar value of network usage and miner fee revenue, making it easier to compare network activity across different time periods regardless of price fluctuations.
+
+---
+
+## Endpoint
+
+`GET /fees-total-usd`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor total transaction fees in USD to understand the real economic value of network activity and miner fee revenue.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Fees Total USD data"}
+curl -G "https://api.blocklytics.net/api/public/v1/fees-total-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "fees_total_usd": 1542380.45
+  },
+  {
+    "date": "2025-01-06",
+    "fees_total_usd": 1287650.23
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/fees-total-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="fees_total_usd" type="number">
+    The total sum of transaction fees paid to miners during the specified time
+    window, denominated in US dollars.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising USD fees** indicate either increased network activity or rising token prices amplifying the dollar value of fees. This metric helps separate genuine activity growth from price-driven revenue increases.
+
+**Declining USD fees** suggest reduced network activity in dollar terms, which could result from lower transaction volumes, falling token prices, or both. This provides clearer insight into the real economic value being generated.
+
+**High USD fees during price peaks** reveal periods when network activity is most valuable in economic terms, often correlating with speculative peaks and maximum user engagement.
+
+**Stable USD fees despite price volatility** indicate consistent real-world usage and adoption, as users continue transacting regardless of price movements, signaling genuine utility rather than speculation.
+
+### Use Cases
+
+This metric is essential for understanding miner economics in real dollar terms. While BTC-denominated fees show network usage, USD fees reveal actual miner revenue power and profitability. High USD fee periods often indicate times when miners have the strongest cash flow to cover operational expenses. Comparing USD fees across different market cycles helps identify whether current network activity represents genuine adoption growth or merely price-driven speculation. This metric also helps assess network sustainability, as miners ultimately need sufficient dollar-denominated revenue to maintain operations and security. When combined with hashrate data, you can evaluate whether fee revenue adequately supports network security costs.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/fees-total-usd', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `fees-total-usd?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      fees_total_usd: d.fees_total_usd,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

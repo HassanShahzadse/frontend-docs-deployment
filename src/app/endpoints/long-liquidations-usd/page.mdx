@@ -1,0 +1,165 @@
+export const metadata = {
+  title: 'Long Liquidations USD',
+  description:
+    'Use the Long Liquidations USD endpoint to track the dollar value of forced long position closures, revealing the economic scale of bullish capitulation.',
+}
+
+# Long Liquidations USD
+
+The **Long Liquidations USD** metric tracks the dollar value of forced market orders closing leveraged long positions. {{ className: 'lead' }}
+
+This metric reveals the economic scale of overleveraged bullish positions being forcibly closed, providing a normalized view of liquidation severity across different price environments.
+
+---
+
+## Endpoint
+
+`GET /long-liquidations-usd`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor long liquidations in USD to assess the dollar-value impact of leverage unwinding and compare liquidation severity across time periods.
+
+<Properties>
+  <Property name="exchange" type="string">
+    Derivative exchange name. Example: <code>binance</code>, <code>bitmex</code>
+    , <code>bybit</code>, <code>deribit</code>. Default:{' '}
+    <code>all_exchange</code>.
+  </Property>
+  <Property name="symbol" type="string">
+    Trading pair symbol. Example: <code>btc_usd</code>, <code>btc_usdt</code>.
+    Default: <code>all_symbol</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>min</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. If not
+    specified, returns data from earliest time.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. If not
+    specified, returns data to latest time.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Long Liquidations USD data"}
+curl -G "https://api.blocklytics.net/api/public/v1/long-liquidations-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=binance \
+  -d symbol=btc_usdt \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "long_liquidations_usd": 54235000
+  },
+  {
+    "date": "2025-01-06",
+    "long_liquidations_usd": 12347000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/long-liquidations-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=all_exchange \
+  -d symbol=all_symbol \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="long_liquidations_usd" type="number">
+    The total dollar value of leveraged long positions forcibly closed due to
+    insufficient margin, measured in USD.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High USD liquidations** reveal significant dollar-value destruction from overleveraged long positions, indicating the real economic impact of cascade events. Large USD values often correlate with major market corrections and panic selling.
+
+**Liquidation spikes exceeding $100M+** typically mark significant capitulation events where massive amounts of leveraged capital are wiped out, often preceding market bottoms as the last overleveraged participants are cleared.
+
+**Rising USD liquidations despite stable prices** suggest increasing leverage usage at current price levels, warning that the market is becoming more fragile and vulnerable to cascade events from small price moves.
+
+**Low USD liquidations during bull markets** indicate healthy spot-driven rallies without excessive leverage, suggesting more sustainable price appreciation with lower cascade risk and correction potential.
+
+### Use Cases
+
+This metric provides crucial insights into the real economic scale of leverage unwinding events. USD-denominated values allow meaningful comparisons across different price regimes, showing whether current liquidations are historically significant or routine. Hundred-million-dollar liquidation events often mark major inflection points where overleveraged sentiment reaches extremes. Comparing USD liquidations with BTC-denominated values reveals whether high liquidation counts result from many small positions or few large whales being forced out. For risk assessment, tracking daily USD liquidation totals helps identify when leverage in the system reaches dangerous levels that could trigger systemic cascades. Historical analysis shows liquidation events exceeding several hundred million dollars typically clear out weak hands and create strong support levels. Monitoring liquidations across exchanges in USD terms reveals which platforms carry the most systemic risk from concentrated leverage.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/long-liquidations-usd', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const symbol = req.query.symbol || 'all_symbol'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `long-liquidations-usd?window=${window}&exchange=${exchange}&symbol=${symbol}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      long_liquidations_usd: d.long_liquidations_usd,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

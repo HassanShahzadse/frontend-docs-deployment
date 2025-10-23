@@ -1,0 +1,165 @@
+export const metadata = {
+  title: 'Exchange to Miner Transactions',
+  description:
+    'Use the Exchange to Miner Transactions endpoint to track the number of transactions from exchanges to mining pools, revealing miner purchasing frequency and behavior patterns.',
+}
+
+# Exchange to Miner Transactions
+
+The **Exchange to Miner Transactions** metric tracks the number of transactions occurring from exchanges to mining pools. {{ className: 'lead' }}
+
+This metric reveals the frequency of miner purchasing activity and helps distinguish between strategic accumulation patterns and operational purchasing behavior.
+
+---
+
+## Endpoint
+
+`GET /exchange-to-miner-transactions`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor transaction frequency from exchanges to miners to understand purchasing patterns and accumulation strategies.
+
+<Properties>
+  <Property name="from_exchange" type="string">
+    Source exchange name. Example: <code>binance</code>, <code>coinbase</code>,{' '}
+    <code>kraken</code>. Default: <code>all_exchange</code>.
+  </Property>
+  <Property name="to_miner" type="string">
+    Destination mining pool name. Example: <code>f2pool</code>,{' '}
+    <code>antpool</code>, <code>foundryusa</code>. Default:{' '}
+    <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Exchange to Miner Transactions data"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-to-miner-transactions" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_exchange=binance \
+  -d to_miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "transactions_count_flow": 127
+  },
+  {
+    "date": "2025-01-06",
+    "transactions_count_flow": 98
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-to-miner-transactions" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_exchange=coinbase \
+  -d to_miner=antpool \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="transactions_count_flow" type="integer">
+    The number of transactions flowing from the exchange to the mining pool
+    during the specified time window.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising transaction count** indicates increased frequency of miner purchases from exchanges, suggesting active accumulation behavior or regular operational purchasing patterns. Higher frequency may signal sustained buying interest from mining operations.
+
+**Declining transaction count** suggests reduced miner purchasing frequency, which may indicate miners are satisfied with current holdings, focusing on selling mined tokens, or awaiting more favorable price levels.
+
+**High count with low total volume** (from Flow Total metric) reveals many small transactions, typically indicating operational purchasing for expenses, fees, or distributed buying strategies to minimize market impact.
+
+**Low count with high total volume** suggests fewer but larger strategic purchases, indicating concentrated accumulation events by well-capitalized mining operations making significant position entries.
+
+### Use Cases
+
+This metric is crucial for understanding miner purchasing behavior and distinguishing between operational and strategic activity. When combined with Flow Total and Flow Mean metrics, you can identify whether miners are making regular small purchases for operations or executing large strategic accumulation. Sudden increases in transaction count during price dips often signal miner confidence in current valuations. Monitoring specific mining pool transaction patterns reveals which operations are most active in market participation and which maintain more passive holding strategies. Regular transaction patterns can indicate scheduled purchasing programs by mining operations with strong treasury management.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/exchange-to-miner-transactions', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const fromExchange = req.query.from_exchange || 'all_exchange'
+    const toMiner = req.query.to_miner || 'all_miner'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `exchange-to-miner-transactions?window=${window}&from_exchange=${fromExchange}&to_miner=${toMiner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      transactions_count_flow: d.transactions_count_flow,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

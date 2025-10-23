@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Funding Rates',
+  description:
+    'Use the Funding Rates endpoint to track perpetual swap funding rates, revealing trader sentiment and positioning in derivatives markets.',
+}
+
+# Funding Rates
+
+The **Funding Rates** metric tracks the periodic payments between long and short positions in perpetual swap markets. {{ className: 'lead' }}
+
+This metric reveals trader sentiment and market positioning. Positive rates indicate bullish sentiment with longs paying shorts, while negative rates suggest bearish sentiment with shorts paying longs.
+
+---
+
+## Endpoint
+
+`GET /funding-rates`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor funding rates to identify market sentiment extremes, overleveraged positions, and potential reversal signals.
+
+<Properties>
+  <Property name="exchange" type="string">
+    Derivative exchange name. Example: <code>binance</code>, <code>bitmex</code>
+    , <code>bybit</code>, <code>okx</code>. Default: <code>all_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>min</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. If not
+    specified, returns data from earliest time.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. If not
+    specified, returns data to latest time.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Funding Rates data"}
+curl -G "https://api.blocklytics.net/api/public/v1/funding-rates" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=binance \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "funding_rates": 0.0085
+  },
+  {
+    "date": "2025-01-06",
+    "funding_rates": -0.0032
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/funding-rates" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=all_exchange \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="funding_rates" type="number">
+    The funding rate as a percentage. Positive values mean longs pay shorts
+    (bullish sentiment), negative values mean shorts pay longs (bearish
+    sentiment).
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Positive funding rates** indicate bullish market sentiment where long positions dominate and traders are willing to pay to maintain leveraged long exposure. Higher positive rates suggest increasing bullish conviction but also overleveraged long positions vulnerable to liquidation cascades.
+
+**Negative funding rates** reveal bearish market sentiment where short positions dominate and traders pay to maintain leveraged short exposure. Deeply negative rates suggest extreme bearishness but also overleveraged shorts that may fuel short squeezes.
+
+**Extremely high positive rates (0.05%+)** signal excessive long leverage and potential market tops, as unsustainable funding costs eventually force longs to close positions, creating selling pressure and downward price action.
+
+**Extremely negative rates (-0.05%+)** indicate excessive short leverage and potential market bottoms, as high costs force shorts to cover, creating buying pressure that can trigger powerful relief rallies or trend reversals.
+
+### Use Cases
+
+This metric is essential for identifying overleveraged market conditions and potential reversal points. Extremely high funding rates in either direction suggest unsustainable positioning that often precedes sharp corrections. Contrarian traders use extreme funding rates as reversal signals, betting against the overleveraged majority. Funding rate divergences across exchanges reveal arbitrage opportunities where traders can take opposing positions on different platforms. Sustained moderate positive rates during uptrends confirm healthy bullish sentiment without excessive leverage, while neutral or negative rates during rallies suggest accumulation by spot buyers rather than leverage-driven pumps. Tracking funding rate changes helps predict liquidation events, as rapid increases signal building leverage that may unwind violently. For risk management, high funding rates warn of unstable market conditions where cascade liquidations could trigger extreme volatility.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/funding-rates', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `funding-rates?window=${window}&exchange=${exchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      funding_rates: d.funding_rates,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

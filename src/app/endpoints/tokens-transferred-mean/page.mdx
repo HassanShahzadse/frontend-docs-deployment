@@ -1,0 +1,152 @@
+export const metadata = {
+  title: 'Tokens Transferred (Mean)',
+  description:
+    'Use the Tokens Transferred (Mean) endpoint to track the average amount of Bitcoin moved per transaction, revealing the typical transaction size and participant profile.',
+}
+
+# Tokens Transferred (Mean)
+
+The **Tokens Transferred (Mean)** measures the average amount of Bitcoin transferred per transaction, revealing the typical transaction size and network usage patterns. {{ className: 'lead' }}
+
+This metric identifies shifts in participant behavior by showing whether large institutional transfers or small retail transactions dominate network activity, with rising means indicating increasing transaction sizes.
+
+---
+
+## Endpoint
+
+`GET /tokens-transferred-mean`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor mean tokens transferred to assess the typical transaction size and identify shifts between retail and institutional activity patterns.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Tokens Transferred (Mean) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/tokens-transferred-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "tokens_transferred_mean": 1.45
+  },
+  {
+    "date": "2025-01-06",
+    "tokens_transferred_mean": 1.38
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/tokens-transferred-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="tokens_transferred_mean" type="number">
+    The average amount of Bitcoin transferred per transaction, measured in BTC,
+    representing the typical transaction size and revealing the participant
+    profile.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High mean transfer size** indicates large transactions dominate activity, revealing institutional or whale movements where significant capital concentrates in fewer but larger transfers, typical during major capital reallocation events.
+
+**Low mean transfer size** demonstrates small transactions dominate, showing retail participation or frequent small movements where numerous low-value transfers characterize network activity, typical during consolidation or retail accumulation.
+
+**Rising mean transfer size** reveals growing transaction sizes, signaling increasing institutional activity or large holder movements as average transfer amounts increase, often accompanying major market events or distribution phases.
+
+**Declining mean transfer size** shows shrinking transaction sizes, indicating retail activity domination or capital fragmentation as average transfers decrease, typical during bear markets when small holders dominate while large capital remains dormant.
+
+### Use Cases
+
+This metric provides insight into the character of network participants through average transaction size, revealing whether institutions or retail dominate activity. High mean transfer sizes indicate markets dominated by large capital movements, as significant Bitcoin amounts change hands in each transaction. These elevated means often coincide with whale activity, exchange flows, or institutional rebalancing events where concentrated capital moves in large blocks. Conversely, low mean transfer sizes indicate retail-driven activity where numerous small participants make modest transfers, fragmenting volume across many transactions. The metric identifies participant shifts through mean changes, with rising means suggesting institutional activity increase while declining means suggest retail dominance growth. Comparing mean to median reveals distribution skew, with large gaps indicating a few very large transactions pulling the mean up while median stays low. The mean proves sensitive to outlier transactions, as single enormous transfers can significantly impact averages, making it useful for detecting whale movements. During bull markets, rising mean transfer sizes often indicate institutional participation growth as sophisticated capital enters through large transactions. During bear markets, declining means suggest retail dominance as large capital reduces activity while small holders maintain transaction frequency. The metric also contextualizes volume interpretation, as similar total volume with very different means reveals completely different market character.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/tokens-transferred-mean', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `tokens-transferred-mean?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      tokens_transferred_mean: d.tokens_transferred_mean,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

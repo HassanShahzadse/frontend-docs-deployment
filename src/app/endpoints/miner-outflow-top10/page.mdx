@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Miner Outflow (Top10)',
+  description:
+    'Use the Miner Outflow Top10 endpoint to track the sum of the 10 largest outflow transactions, revealing concentration of major distributions and whale movements.',
+}
+
+# Miner Outflow (Top10)
+
+The **Miner Outflow Top10** metric tracks the combined value of the 10 largest transactions flowing out of mining pool wallets. {{ className: 'lead' }}
+
+This metric reveals the concentration of large outflows, helping identify major distribution events, strategic selling activity, and the scale of concentrated miner movements to exchanges or other destinations.
+
+---
+
+## Endpoint
+
+`GET /miner-outflow-top10`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor top 10 outflows to identify concentrated distribution events and major miner movements that could impact markets.
+
+<Properties>
+  <Property name="miner" type="string">
+    Mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner Outflow Top10 data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-outflow-top10" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "miner_outflow_top10": 587.42
+  },
+  {
+    "date": "2025-01-06",
+    "miner_outflow_top10": 423.89
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-outflow-top10" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=all_miner \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="miner_outflow_top10" type="number">
+    The sum of the 10 largest outflow transactions from the mining pool during
+    the specified time window, denominated in BTC.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High top10 relative to total outflow** indicates that miner distribution is concentrated in large transactions, suggesting strategic selling events, major exchange deposits, or significant cold storage movements rather than distributed gradual selling.
+
+**Low top10 relative to total outflow** reveals more distributed selling with many smaller transactions contributing, indicating cautious distribution strategies designed to minimize market impact or regular operational payment patterns.
+
+**Rising top10 values** suggest increasing concentration of large outflows, potentially signaling that miners are preparing major selling events, consolidating for strategic position exits, or moving substantial holdings toward distribution channels.
+
+**Sudden spikes in top10** often reveal exceptional distribution events where miners execute major strategic moves, potentially including large exchange deposits ahead of significant selling, treasury rebalancing, or responses to market opportunities.
+
+### Use Cases
+
+This metric is critical for identifying when miners execute major distribution events that could significantly impact markets. Comparing top10 with total outflow reveals what percentage of miner selling comes from concentrated large transactions versus distributed smaller ones. High concentration percentages warn of potential market impact as large transactions hitting exchanges can move prices more dramatically than gradual distributed selling. Tracking top10 spikes helps predict significant selling pressure events, as miners typically consolidate holdings internally before executing large external transfers. For competitive analysis, comparing top10 ratios across mining pools reveals which operations employ concentrated strategic selling versus gradual distributed approaches. Rising top10 during price rallies confirms miners are executing major profit-taking through large transactions, potentially indicating smart money distribution at favorable levels.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-outflow-top10', async (req, res) => {
+  try {
+    const miner = req.query.miner || 'all_miner'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-outflow-top10?window=${window}&miner=${miner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      miner_outflow_top10: d.miner_outflow_top10,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

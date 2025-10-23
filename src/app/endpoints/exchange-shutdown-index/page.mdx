@@ -1,0 +1,150 @@
+export const metadata = {
+  title: 'Exchange Shutdown Index',
+  description:
+    'Use the Exchange Shutdown Index endpoint to detect potential exchange outages or hacks by identifying abrupt changes in exchange outflow activity.',
+}
+
+# Exchange Shutdown Index
+
+The **Exchange Shutdown Index** monitors on-chain activity to detect potential **exchange hacks or operational shutdowns**. {{ className: 'lead' }}
+
+This metric identifies sudden drops (or total halts) in exchange outflows that may indicate wallet freezes, withdrawals suspension, or security incidents.
+
+---
+
+## Endpoint
+
+`GET /exchange-shutdown-index`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Track whether a specific exchange experienced suspicious activity or a shutdown event.
+
+<Properties>
+  <Property name="exchange" type="string">
+    Exchange name. Example: <code>binance</code>, <code>coinbase</code>,{' '}
+    <code>kraken</code>. Default: <code>all_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Exchange Shutdown Index data"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-shutdown-index" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=binance \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "is_shutdown": false
+  },
+  {
+    "date": "2025-01-06",
+    "is_shutdown": true
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-shutdown-index" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=kraken \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="is_shutdown" type="boolean">
+    Indicates whether the exchange activity was halted (true = potential
+    shutdown or hack).
+  </Property>
+</Properties>
+
+### Interpretation
+
+- **is_shutdown = true** → Exchange outflow halted. May indicate a **withdrawal suspension, maintenance event, or security incident**.
+- **is_shutdown = false** → Exchange functioning normally.
+
+Combine this with outflow and netflow data to identify anomalies in real-time.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/exchange-shutdown-index', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `exchange-shutdown-index?window=${window}&exchange=${exchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      is_shutdown: d.is_shutdown,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

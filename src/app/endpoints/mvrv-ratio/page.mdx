@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'MVRV Ratio',
+  description:
+    'Use the MVRV Ratio endpoint to track market value relative to realized value, revealing overvaluation and undervaluation extremes across market cycles.',
+}
+
+# MVRV Ratio
+
+The **MVRV Ratio** (Market-Value-to-Realized-Value) compares market capitalization to realized capitalization. {{ className: 'lead' }}
+
+This metric reveals the relationship between current market price and the aggregate cost basis of all holders, identifying overvalued and undervalued market conditions across cycles.
+
+---
+
+## Endpoint
+
+`GET /mvrv-ratio`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor MVRV to identify market cycle extremes, overvaluation bubbles, and undervaluation opportunities.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting MVRV Ratio data"}
+curl -G "https://api.blocklytics.net/api/public/v1/mvrv-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "mvrv": 2.35
+  },
+  {
+    "date": "2025-01-06",
+    "mvrv": 2.28
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/mvrv-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="mvrv" type="number">
+    The ratio of market capitalization to realized capitalization. Values above
+    1.0 indicate holders are in aggregate profit, below 1.0 indicate aggregate
+    loss.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**MVRV above 3.5-4.0** indicates extreme overvaluation where market price significantly exceeds aggregate holder cost basis, historically marking bull market tops and signaling distribution opportunities as unrealized profits reach unsustainable levels.
+
+**MVRV below 1.0** reveals market trading below aggregate cost basis with most holders underwater, typically occurring only during severe bear markets and often marking major accumulation opportunities near cycle bottoms.
+
+**MVRV between 1.0-2.0** suggests relatively fair valuation where market price reasonably reflects aggregate holder cost basis, indicating neither extreme fear nor greed and representing stable mid-cycle conditions.
+
+**Rising MVRV during rallies** confirms bull market progression as unrealized profits accumulate, though acceleration above 3.0 warns of overheating conditions where profit-taking pressure builds.
+
+### Use Cases
+
+This metric is essential for identifying major market cycle turning points and valuation extremes. MVRV below 1.0 has historically marked excellent long-term accumulation zones where the entire market trades at a loss, suggesting capitulation and oversold conditions. Conversely, MVRV above 3.5-4.0 has preceded major tops as unrealized profits reach levels that trigger massive distribution. The ratio helps distinguish between healthy corrections and bear market beginnings by showing whether the market maintains profitable aggregate positioning or slides into widespread losses. Comparing current MVRV with historical cycle peaks and troughs provides context for assessing whether markets are early, mid, or late cycle. Sharp MVRV reversals from extreme highs often signal the beginning of bear markets as aggregate profitability rapidly contracts. For portfolio management, low MVRV periods justify aggressive accumulation while extremely high values warrant profit-taking or risk reduction strategies.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/mvrv-ratio', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `mvrv-ratio?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      mvrv: d.mvrv,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

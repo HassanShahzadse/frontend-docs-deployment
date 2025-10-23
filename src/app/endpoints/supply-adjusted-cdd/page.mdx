@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Supply-Adjusted CDD',
+  description:
+    'Use the Supply-Adjusted CDD endpoint to measure coin age destruction normalized by total supply, revealing long-term holder distribution intensity across different network maturation stages.',
+}
+
+# Supply-Adjusted CDD
+
+The **Supply-Adjusted CDD** normalizes Coin Days Destroyed by Bitcoin's total supply, enabling comparison of long-term holder distribution intensity across network history. {{ className: 'lead' }}
+
+This metric reveals whether current long-term holder spending is high or low relative to network size, providing supply-normalized signals of veteran distribution that correct for Bitcoin's growing supply over time.
+
+---
+
+## Endpoint
+
+`GET /supply-adjusted-cdd`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Supply-Adjusted CDD to identify long-term holder distribution intensity normalized for network maturation and supply growth.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Supply-Adjusted CDD data"}
+curl -G "https://api.blocklytics.net/api/public/v1/supply-adjusted-cdd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "sa_cdd": 0.0034
+  },
+  {
+    "date": "2025-01-06",
+    "sa_cdd": 0.0029
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/supply-adjusted-cdd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="sa_cdd" type="number">
+    Coin Days Destroyed divided by total Bitcoin supply, measuring the intensity
+    of long-term holder distribution relative to network size, normalized to
+    enable comparison across different stages of network maturation.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High supply-adjusted CDD** indicates elevated long-term holder distribution relative to network size, revealing veteran capital is actively moving at intensity levels high compared to the total supply base, often marking major distribution events.
+
+**Low supply-adjusted CDD** demonstrates minimal long-term holder activity relative to network size, showing patient capital remains dormant at low intensity despite opportunities to take profits, typical during accumulation when veterans hold firm.
+
+**Rising supply-adjusted CDD** signals accelerating long-term holder distribution intensity, warning of growing veteran activity that, when normalized by supply, indicates increasing willingness to break holding commitments and realize accumulated gains.
+
+**Declining supply-adjusted CDD** reveals decreasing long-term holder activity intensity, indicating veterans are reducing distribution and maintaining positions despite potential profit opportunities, suggesting conviction strengthening or exhaustion of willing sellers.
+
+### Use Cases
+
+This metric provides supply-normalized insight into long-term holder distribution that enables meaningful comparison across Bitcoin's entire history despite massive supply growth. The supply adjustment corrects for the natural tendency of raw CDD to increase as network matures and more old coins exist, isolating behavioral changes from structural supply growth. High supply-adjusted CDD readings indicate long-term holders are distributing at elevated intensity relative to total network size, signaling significant veteran activity regardless of when it occurs in Bitcoin's history. This normalization enables identification of extreme distribution events across different eras, revealing whether current long-term holder behavior is historically unusual for the network's current maturity level. Comparing supply-adjusted CDD to its historical average identifies periods of above-average versus below-average veteran activity, with sustained readings above average warning of distribution regimes while readings below average suggest accumulation or holding conviction. The metric proves particularly valuable for cross-cycle analysis, enabling assessment of whether current long-term holder distribution intensity matches, exceeds, or falls short of previous cycle peaks despite radically different supply levels. During bull markets, spikes in supply-adjusted CDD warn of major long-term holder distribution waves at intensity levels historically associated with tops, normalized for current supply. The supply normalization also reveals network maturation effects on distribution patterns, showing whether long-term holders have become more or less active relative to supply base as Bitcoin evolves.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/supply-adjusted-cdd', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `supply-adjusted-cdd?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      sa_cdd: d.sa_cdd,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

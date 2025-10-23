@@ -1,0 +1,152 @@
+export const metadata = {
+  title: 'UTXO Count',
+  description:
+    'Use the UTXO Count endpoint to track the total number of unspent transaction outputs on the Bitcoin network, revealing network usage patterns and holder fragmentation levels.',
+}
+
+# UTXO Count
+
+The **UTXO Count** measures the total number of unspent transaction outputs (UTXOs) existing on the Bitcoin blockchain, revealing network usage patterns and capital fragmentation. {{ className: 'lead' }}
+
+This metric quantifies how Bitcoin holdings are distributed across discrete outputs, with rising counts indicating increasing network usage or holder fragmentation, and declining counts suggesting consolidation or reduced activity.
+
+---
+
+## Endpoint
+
+`GET /utxo-count`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor UTXO count to assess network usage intensity and identify periods of increasing fragmentation or consolidation activity.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting UTXO Count data"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxo-count" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "utxo_count": 78500000
+  },
+  {
+    "date": "2025-01-06",
+    "utxo_count": 78350000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxo-count" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="utxo_count" type="number">
+    The total number of unspent transaction outputs existing on the Bitcoin
+    blockchain at the specified time, representing the fragmentation level of
+    Bitcoin holdings.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High UTXO count** indicates fragmented Bitcoin holdings across many discrete outputs, revealing extensive network usage where numerous transactions have created many unspent outputs without subsequent consolidation.
+
+**Low UTXO count** demonstrates consolidated Bitcoin holdings, showing reduced fragmentation where holders have merged outputs or activity has declined, creating fewer discrete unspent outputs.
+
+**Rising UTXO count** reveals increasing fragmentation from growing network usage, signaling active transaction creation that generates new outputs faster than consolidation, typical during high-activity periods.
+
+**Declining UTXO count** shows consolidation activity or reduced transaction creation, indicating holders are merging outputs or network usage has slowed, reducing the total number of discrete unspent outputs.
+
+### Use Cases
+
+This metric provides fundamental insight into Bitcoin's on-chain state structure by quantifying the number of discrete unspent outputs. Each transaction creates new UTXOs while consuming existing ones, with the net balance revealing whether the network is fragmenting or consolidating. Rising UTXO counts indicate active network usage where transaction creation outpaces consolidation, as participants receive payments and create change outputs faster than they merge holdings. These conditions often characterize bull markets or periods of high adoption when new users join and existing users transact frequently. Conversely, declining UTXO counts indicate consolidation dominance, where holders actively merge fragmented outputs or network usage slows and natural consolidation exceeds new UTXO creation. The metric also reveals network health through growth patterns, with steady UTXO count increases suggesting sustained usage and ecosystem expansion while stagnant or declining counts warn of reduced activity. UTXO count impacts blockchain resource usage, as higher counts increase full node storage and validation requirements, making the metric relevant for assessing infrastructure demands. Tracking UTXO count alongside transaction volume reveals efficiency patterns, with volume growing faster than UTXOs indicating larger average transactions while UTXOs growing faster suggests increasing fragmentation. The metric also identifies consolidation periods when holders deliberately merge UTXOs to optimize future fees, visible as UTXO count declines during low-fee environments.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/utxo-count', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `utxo-count?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      utxo_count: d.utxo_count,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

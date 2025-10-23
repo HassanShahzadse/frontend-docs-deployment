@@ -1,0 +1,156 @@
+export const metadata = {
+  title: 'Fund Volume',
+  description:
+    'Use the Fund Volume endpoint to track trading volume of investment fund shares, revealing market interest and liquidity in regulated digital asset products.',
+}
+
+# Fund Volume
+
+The **Fund Volume** metric tracks the trading volume of investment fund shares. {{ className: 'lead' }}
+
+This metric reveals market interest and activity levels in regulated digital asset products, with higher volumes indicating increased participation from traditional finance investors.
+
+---
+
+## Endpoint
+
+`GET /fund-volume`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor fund trading volume to assess market interest, liquidity conditions, and participation levels from traditional investors.
+
+<Properties>
+  <Property name="symbol" type="string">
+    Stock symbol (ticker) for the fund. Example: <code>gbtc</code> (Grayscale
+    Bitcoin Trust), <code>ethe</code> (Grayscale Ethereum Trust). Default:{' '}
+    <code>all_symbol</code> (aggregate across all funds).
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Currently only supports <code>day</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. If not
+    specified, returns data from earliest time.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. If not
+    specified, returns data to latest time.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Fund Volume data"}
+curl -G "https://api.blocklytics.net/api/public/v1/fund-volume" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d symbol=gbtc \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "volume": 15423890
+  },
+  {
+    "date": "2025-01-06",
+    "volume": 12847563
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/fund-volume" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d symbol=gbtc \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="volume" type="number">
+    The total number of shares traded during the specified time window.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising volume** indicates increasing market interest and participation from traditional finance investors, suggesting growing demand for regulated digital asset exposure through stock market products. High volume often precedes significant price movements.
+
+**Declining volume** suggests reduced market interest or activity, which may indicate consolidation periods, investor apathy, or shifts in preference toward direct cryptocurrency purchases or alternative investment vehicles.
+
+**Volume spikes during price rallies** confirm strong buying interest and bullish sentiment from traditional investors, validating price movements and suggesting sustainable trends backed by genuine demand.
+
+**Volume spikes during price declines** reveal panic selling or distribution from traditional market participants, often indicating capitulation events or significant sentiment shifts that may precede bottoms.
+
+### Use Cases
+
+This metric is essential for confirming price movements and assessing liquidity in regulated digital asset products. High volume validates price trends, while low volume price movements suggest weak conviction that may reverse easily. For traders, volume analysis helps identify optimal entry and exit points, as high volume periods offer better liquidity and tighter spreads. Sudden volume spikes often signal major sentiment shifts or institutional activity that may not yet be reflected in spot cryptocurrency markets, providing early warning signals. Comparing volume across multiple funds reveals which products maintain strongest market interest and investor preference. Sustained high volume indicates healthy market participation and sufficient liquidity for large positions, while chronically low volume suggests illiquid products where large trades may move prices significantly. Volume patterns also help identify accumulation and distribution phases, with rising volume on rallies suggesting accumulation and rising volume on declines indicating distribution.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/fund-volume', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const symbol = req.query.symbol || 'all_symbol'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `fund-volume?window=${window}&symbol=${symbol}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      volume: d.volume,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

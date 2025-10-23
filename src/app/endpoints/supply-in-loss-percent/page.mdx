@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Supply in Loss (%)',
+  description:
+    'Use the Supply in Loss (%) endpoint to track the percentage of Bitcoin held at a loss, revealing relative market pain levels and identifying capitulation extremes.',
+}
+
+# Supply in Loss (%)
+
+The **Supply in Loss (%)** metric measures the percentage of Bitcoin currently held below its acquisition price, revealing the proportion of holders facing unrealized losses. {{ className: 'lead' }}
+
+This metric normalizes holder pain by showing what percentage of supply trades underwater, enabling comparison across different market environments and cycles to identify extreme capitulation conditions.
+
+---
+
+## Endpoint
+
+`GET /supply-in-loss-percent`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Supply in Loss percentage to assess the relative scale of underwater positions and identify extreme capitulation conditions.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Supply in Loss (%) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/supply-in-loss-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "loss_percent": 23.4
+  },
+  {
+    "date": "2025-01-06",
+    "loss_percent": 25.8
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/supply-in-loss-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="loss_percent" type="number">
+    The percentage of total Bitcoin supply held in UTXOs where the current price
+    is below the acquisition price, representing the proportion of holders
+    facing unrealized losses.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High loss percentage (over 50%)** indicates the majority of supply trades underwater, revealing widespread pain and maximum capitulation risk, historically marking bear market bottoms when most holders face losses and weak hands finally surrender.
+
+**Low loss percentage (under 20%)** demonstrates most supply trades in profit, showing healthy market conditions where the majority of holders maintain gains, typical during bull markets when broad-based appreciation keeps most participants profitable.
+
+**Rising loss percentage** reveals growing proportion of underwater holders as prices decline below more cost bases, signaling deteriorating market health and increasing capitulation pressure as more participants move into psychological distress territory.
+
+**Declining loss percentage** shows recovery lifting greater proportion of supply to profit, indicating healing market conditions and building confidence as increasing percentages of holders escape underwater positions and regain psychological comfort.
+
+### Use Cases
+
+This metric provides normalized measurement of holder pain that enables meaningful comparison across Bitcoin's history despite changing supply levels. The percentage view reveals whether current conditions represent extreme pain relative to historical precedent, with readings above 60-70 percent historically marking major bottoms when the vast majority of holders face losses. These extreme conditions create maximum capitulation pressure, as the psychological burden of widespread losses forces weak hands to finally surrender, often marking inflection points before recoveries. Conversely, readings below 10-15 percent indicate nearly universal profitability that historically precedes corrections, as broad-based gains reduce fear while increasing complacency. The metric reveals market cycle phases through characteristic patterns, with bear markets showing steadily rising loss percentages culminating in extreme peaks, while bull markets show declining percentages as appreciation lifts supply into profit. Comparing current loss percentage to previous cycle extremes contextualizes pain levels, revealing whether current conditions represent typical corrections or unprecedented distress. The normalized view also enables assessment of capitulation intensity during drawdowns, with rapid spikes in loss percentage indicating swift pain infliction while gradual increases suggest grinding attrition. Tracking the metric during recoveries identifies healing progress, with declining loss percentages confirming sustainable appreciation that repairs holder psychology versus false rallies that fail to lift significant supply to profit.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/supply-in-loss-percent', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `supply-in-loss-percent?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      loss_percent: d.loss_percent,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

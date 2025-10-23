@@ -1,0 +1,206 @@
+export const metadata = {
+  title: 'UTXO Age Bands (%)',
+  description:
+    'Use the UTXO Age Bands (%) endpoint to track the percentage distribution of Bitcoin supply across different age cohorts, revealing the relative composition of short-term versus long-term holders.',
+}
+
+# UTXO Age Bands (%)
+
+The **UTXO Age Bands (%)** metric distributes the active Bitcoin supply across age cohorts as percentages, revealing the relative composition of holder types. {{ className: 'lead' }}
+
+This metric identifies the proportional distribution of supply by age, enabling analysis of whether short-term traders or long-term holders dominate the current holder base through normalized age-based segmentation.
+
+---
+
+## Endpoint
+
+`GET /utxo-age-bands-percent`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor UTXO age percentage distribution to assess the relative composition of holder conviction levels across different age cohorts.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting UTXO Age Bands (%) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxo-age-bands-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "range_0d_1d_percent": 0.23,
+    "range_1d_1w_percent": 0.63,
+    "range_1w_1m_percent": 1.2,
+    "range_1m_3m_percent": 2.34,
+    "range_3m_6m_percent": 3.48,
+    "range_6m_12m_percent": 4.57,
+    "range_12m_18m_percent": 5.24,
+    "range_18m_2y_percent": 5.91,
+    "range_2y_3y_percent": 6.88,
+    "range_3y_5y_percent": 12.58,
+    "range_5y_7y_percent": 16.03,
+    "range_7y_10y_percent": 14.84,
+    "range_10y_inf_percent": 23.41
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxo-age-bands-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="range_0d_1d_percent" type="number">
+    Percentage of supply in UTXOs aged 0-1 days.
+  </Property>
+  <Property name="range_1d_1w_percent" type="number">
+    Percentage of supply in UTXOs aged 1 day to 1 week.
+  </Property>
+  <Property name="range_1w_1m_percent" type="number">
+    Percentage of supply in UTXOs aged 1 week to 1 month.
+  </Property>
+  <Property name="range_1m_3m_percent" type="number">
+    Percentage of supply in UTXOs aged 1-3 months.
+  </Property>
+  <Property name="range_3m_6m_percent" type="number">
+    Percentage of supply in UTXOs aged 3-6 months.
+  </Property>
+  <Property name="range_6m_12m_percent" type="number">
+    Percentage of supply in UTXOs aged 6-12 months.
+  </Property>
+  <Property name="range_12m_18m_percent" type="number">
+    Percentage of supply in UTXOs aged 12-18 months.
+  </Property>
+  <Property name="range_18m_2y_percent" type="number">
+    Percentage of supply in UTXOs aged 18 months to 2 years.
+  </Property>
+  <Property name="range_2y_3y_percent" type="number">
+    Percentage of supply in UTXOs aged 2-3 years.
+  </Property>
+  <Property name="range_3y_5y_percent" type="number">
+    Percentage of supply in UTXOs aged 3-5 years.
+  </Property>
+  <Property name="range_5y_7y_percent" type="number">
+    Percentage of supply in UTXOs aged 5-7 years.
+  </Property>
+  <Property name="range_7y_10y_percent" type="number">
+    Percentage of supply in UTXOs aged 7-10 years.
+  </Property>
+  <Property name="range_10y_inf_percent" type="number">
+    Percentage of supply in UTXOs aged over 10 years.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High young band percentages** indicate supply dominated by recent movers and active traders, revealing markets characterized by frequent turnover where conviction has not yet solidified into long-term positions.
+
+**High old band percentages** demonstrate supply dominated by long-term holders, showing networks characterized by patient capital where most supply demonstrates conviction through years of inactivity, strengthening fundamentals.
+
+**Rising old band percentages** reveal supply migrating from young to old bands, signaling successful accumulation maturing into conviction as holders maintain positions and graduate into strong hands category.
+
+**Declining old band percentages** signal long-term holder distribution, indicating veteran capital is breaking its holding commitment and moving coins that reset into young bands, often marking profit-taking phases.
+
+### Use Cases
+
+This metric provides normalized insight into holder composition that enables meaningful comparison across different market environments and supply levels. The percentage view removes the influence of absolute supply changes, focusing on the relative character of the holder base regardless of total Bitcoin in circulation. High old band percentages indicate networks dominated by proven holders who have demonstrated commitment through sustained inactivity, suggesting strong supply fundamentals through reduced liquid float. These conditions historically precede or accompany bull markets, as dominant long-term holder bases create supply scarcity that amplifies demand pressure. Conversely, high young band percentages reveal trader-dominated environments where supply frequently changes hands without establishing conviction, suggesting weaker supply fundamentals vulnerable to panic selling. The metric tracks accumulation success through percentage migration patterns, with rising old band percentages confirming holders are successfully graduating from weak to strong hands. Comparing percentage distributions across cycles reveals whether current holder composition demonstrates stronger or weaker conviction than historical precedent, contextualizing market risk. Rising old band percentages during bear markets confirm accumulation is working despite price weakness, as new buyers demonstrate conviction by holding through adversity. Declining old band percentages during bull markets warn of distribution intensity, indicating the proportion of veteran holdings is shrinking as patient capital takes profits.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/utxo-age-bands-percent', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `utxo-age-bands-percent?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      range_0d_1d_percent: d.range_0d_1d_percent,
+      range_1d_1w_percent: d.range_1d_1w_percent,
+      range_1w_1m_percent: d.range_1w_1m_percent,
+      range_1m_3m_percent: d.range_1m_3m_percent,
+      range_3m_6m_percent: d.range_3m_6m_percent,
+      range_6m_12m_percent: d.range_6m_12m_percent,
+      range_12m_18m_percent: d.range_12m_18m_percent,
+      range_18m_2y_percent: d.range_18m_2y_percent,
+      range_2y_3y_percent: d.range_2y_3y_percent,
+      range_3y_5y_percent: d.range_3y_5y_percent,
+      range_5y_7y_percent: d.range_5y_7y_percent,
+      range_7y_10y_percent: d.range_7y_10y_percent,
+      range_10y_inf_percent: d.range_10y_inf_percent,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

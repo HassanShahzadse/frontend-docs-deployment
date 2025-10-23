@@ -1,0 +1,189 @@
+export const metadata = {
+  title: 'Authentication',
+  description:
+    'In this guide, we will look at how authentication works with the Blocklytics API. All requests require an API key to authenticate and access Bitcoin on-chain data endpoints.',
+}
+
+# Authentication
+
+You'll need to authenticate your requests to access any of the endpoints in the Blocklytics API. In this guide, we will look at how authentication works using API key authentication — the only supported authentication method for accessing Bitcoin on-chain metrics. {{ className: 'lead' }}
+
+## API Key Authentication
+
+With API key authentication, you include your API key in the `x-api-key` header with every request. You will find your API key in the Blocklytics dashboard under API settings. Here's how to authenticate using cURL:
+
+```bash {{ title: 'Example request with API key' }}
+curl https://api.blocklytics.net/api/public/v1/active-addresses?window=day&limit=10 \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json"
+```
+
+Always keep your API key safe and reset it if you suspect it has been compromised.
+
+## Best Practices
+
+When working with the Blocklytics API, follow these security best practices:
+
+- Store your API key in environment variables, never hardcode it in your source code
+- Add `.env` files to your `.gitignore` to prevent accidental commits
+- Rotate your API keys regularly and immediately if compromised
+- Implement proper error handling for authentication failures and rate limits
+
+## Node.js Helper Function
+
+If you're building a Node.js application, here's a reusable helper function for making authenticated requests:
+
+```javascript {{ title: 'blocklytics-helper.js' }}
+const fetch = require('node-fetch')
+
+const BLOCKLYTICS_API_KEY = process.env.BLOCKLYTICS_API_KEY
+const BLOCKLYTICS_BASE_URL =
+  process.env.BLOCKLYTICS_BASE_URL ||
+  'https://api.blocklytics.net/api/public/v1'
+
+async function blocklyticsFetch(endpoint) {
+  const url = `${BLOCKLYTICS_BASE_URL}/${endpoint}`
+
+  const response = await fetch(url, {
+    headers: {
+      'x-api-key': BLOCKLYTICS_API_KEY,
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (!response.ok) {
+    const text = await response.text()
+    throw new Error(`Blocklytics API error: ${response.status} ${text}`)
+  }
+
+  return response.json()
+}
+
+module.exports = { blocklyticsFetch }
+```
+
+This helper function handles authentication automatically and provides clean error handling.
+
+## Express.js Integration
+
+Here's how to integrate the Blocklytics API into an Express.js application:
+
+```javascript {{ title: 'routes/bitcoin.js' }}
+const express = require('express')
+const { blocklyticsFetch } = require('../utils/blocklytics-helper')
+
+const router = express.Router()
+
+router.get('/active-addresses', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const limit = req.query.limit || '100'
+
+    const data = await blocklyticsFetch(
+      `active-addresses?window=${window}&limit=${limit}`,
+    )
+
+    res.json(data)
+  } catch (error) {
+    console.error('API Error:', error)
+    res.status(500).json({
+      error: 'Failed to fetch data',
+      message: error.message,
+    })
+  }
+})
+
+module.exports = router
+```
+
+The helper function takes care of authentication, so you can focus on building your application logic.
+
+## Environment Configuration
+
+Create a `.env` file in your project root to store your API credentials:
+
+```bash {{ title: '.env' }}
+BLOCKLYTICS_API_KEY=your_api_key_here
+BLOCKLYTICS_BASE_URL=https://api.blocklytics.net/api/public/v1
+```
+
+Make sure to add `.env` to your `.gitignore`:
+
+```bash {{ title: '.gitignore' }}
+.env
+node_modules/
+```
+
+This prevents accidentally committing sensitive credentials to version control.
+
+## Error Handling
+
+The Blocklytics API returns standard HTTP status codes. Here's how to handle common scenarios:
+
+```javascript {{ title: 'Enhanced error handling' }}
+async function blocklyticsFetchWithRetry(endpoint, maxRetries = 3) {
+  let lastError
+
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const response = await fetch(`${BLOCKLYTICS_BASE_URL}/${endpoint}`, {
+        headers: {
+          'x-api-key': BLOCKLYTICS_API_KEY,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (response.ok) {
+        return await response.json()
+      }
+
+      switch (response.status) {
+        case 401:
+          throw new Error('Invalid API key')
+        case 403:
+          throw new Error('Access forbidden')
+        case 429:
+          const retryAfter = response.headers.get('Retry-After') || 60
+          await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000))
+          continue
+        case 500:
+        case 502:
+        case 503:
+          await new Promise((resolve) =>
+            setTimeout(resolve, Math.pow(2, i) * 1000),
+          )
+          continue
+        default:
+          const text = await response.text()
+          throw new Error(`API error ${response.status}: ${text}`)
+      }
+    } catch (error) {
+      lastError = error
+      if (i === maxRetries - 1) throw error
+    }
+  }
+
+  throw lastError
+}
+```
+
+This implementation includes retry logic for transient failures and rate limiting.
+
+## Testing Your API Key
+
+Verify your API key is working correctly with this simple test:
+
+```bash {{ title: 'Test your API key' }}
+curl -X GET \
+  "https://api.blocklytics.net/api/public/v1/active-addresses?window=day&limit=1" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json"
+```
+
+If authentication is successful, you will receive a JSON response with Bitcoin on-chain data.
+
+<div className="not-prose">
+  <Button href="/endpoints/active-addresses" variant="text" arrow="right">
+    <>Start exploring endpoints</>
+  </Button>
+</div>

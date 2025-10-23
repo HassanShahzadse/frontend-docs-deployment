@@ -1,0 +1,181 @@
+export const metadata = {
+  title: 'Spent Output Value Bands (USD)',
+  description:
+    'Use the Spent Output Value Bands (USD) endpoint to track the dollar value of spending activity across different UTXO size cohorts, revealing the economic scale of whale versus retail distribution.',
+}
+
+# Spent Output Value Bands (USD)
+
+The **Spent Output Value Bands (USD)** metric distributes spending activity across UTXO size cohorts in dollar values, showing the economic scale of Bitcoin spending by different holder wealth tiers. {{ className: 'lead' }}
+
+This metric reveals the absolute economic impact of each wealth segment's spending activity, enabling analysis of distribution intensity and capital flows in normalized dollar terms across holder sizes.
+
+---
+
+## Endpoint
+
+`GET /spent-output-value-bands-usd`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor dollar-value spending across UTXO value bands to assess the economic scale of distribution activity by different wealth tiers.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Spent Output Value Bands (USD) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/spent-output-value-bands-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "range_0_1_usd": 450000000,
+    "range_1_10_usd": 890000000,
+    "range_10_100_usd": 1540000000,
+    "range_100_1k_usd": 2400000000,
+    "range_1k_10k_usd": 1930000000,
+    "range_10k_100k_usd": 1320000000,
+    "range_100k_1M_usd": 890000000,
+    "range_1M_inf_usd": 570000000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/spent-output-value-bands-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="range_0_1_usd" type="number">
+    Dollar value of spending from UTXOs valued $0-$1, in USD.
+  </Property>
+  <Property name="range_1_10_usd" type="number">
+    Dollar value of spending from UTXOs valued $1-$10, in USD.
+  </Property>
+  <Property name="range_10_100_usd" type="number">
+    Dollar value of spending from UTXOs valued $10-$100, in USD.
+  </Property>
+  <Property name="range_100_1k_usd" type="number">
+    Dollar value of spending from UTXOs valued $100-$1,000, in USD.
+  </Property>
+  <Property name="range_1k_10k_usd" type="number">
+    Dollar value of spending from UTXOs valued $1,000-$10,000, in USD.
+  </Property>
+  <Property name="range_10k_100k_usd" type="number">
+    Dollar value of spending from UTXOs valued $10,000-$100,000, in USD.
+  </Property>
+  <Property name="range_100k_1M_usd" type="number">
+    Dollar value of spending from UTXOs valued $100,000-$1,000,000, in USD.
+  </Property>
+  <Property name="range_1M_inf_usd" type="number">
+    Dollar value of spending from UTXOs valued over $1,000,000, in USD.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High small UTXO dollar values** indicate substantial economic activity from retail participants, revealing significant aggregate capital flow from numerous small holders, typical during panic selling waves or grassroots accumulation periods.
+
+**High large UTXO dollar values** demonstrate major economic distribution from whales and institutions, revealing billions in concentrated capital moving, often marking cycle tops when substantial whale positions hit markets or bottoms when they accumulate.
+
+**Rising large UTXO dollar spending during rallies** warns of accelerating whale distribution at economic scale, indicating growing dollar amounts of concentrated capital exiting positions, often preceding major corrections when this supply overwhelms demand.
+
+**Record large UTXO dollar spending** signals unprecedented whale distribution where the largest ever dollar amounts from concentrated holders enter circulation, often marking generational peaks when multi-billion dollar positions finally exit.
+
+### Use Cases
+
+This metric provides dollar-normalized insight into the economic scale of spending activity across wealth tiers, enabling meaningful comparison across different price environments and market cycles. The USD denomination reveals the actual economic impact of each wealth segment's spending, distinguishing between token volume movements and genuine capital flows by size. Large dollar values from whale bands indicate economically significant distribution events where billions in concentrated capital enter circulation, carrying more market impact than equivalent value dispersed across retail. Tracking whale band dollar spending relative to market capitalization contextualizes distribution intensity, with high ratios indicating large holders are releasing meaningful portions of network value. Historical comparison of dollar spending identifies extreme events, with record-breaking whale spending often marking major cycle peaks when unprecedented concentrated capital decides to exit. The metric also reveals wealth concentration dynamics through spending patterns, with disproportionate large band spending indicating concentrated capital dominance while balanced spending suggests more democratic market structure. Comparing dollar spending growth rates across bands identifies which wealth tiers are accelerating activity, with disproportionate whale growth warning of major distribution intensification. The absolute dollar values enable assessment of actual selling pressure magnitude by wealth tier, as large whale band spending indicates substantial supply from few entities regardless of retail activity. Monitoring total spending across all bands in dollar terms reveals overall market liquidity by participant type, with elevated whale totals indicating institutional activity levels while retail totals show grassroots engagement.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/spent-output-value-bands-usd', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `spent-output-value-bands-usd?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      range_0_1_usd: d.range_0_1_usd,
+      range_1_10_usd: d.range_1_10_usd,
+      range_10_100_usd: d.range_10_100_usd,
+      range_100_1k_usd: d.range_100_1k_usd,
+      range_1k_10k_usd: d.range_1k_10k_usd,
+      range_10k_100k_usd: d.range_10k_100k_usd,
+      range_100k_1M_usd: d.range_100k_1M_usd,
+      range_1M_inf_usd: d.range_1M_inf_usd,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

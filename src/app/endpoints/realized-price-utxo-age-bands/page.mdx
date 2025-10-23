@@ -1,0 +1,206 @@
+export const metadata = {
+  title: 'Realized Price - UTXO Age Bands',
+  description:
+    'Use the Realized Price UTXO Age Bands endpoint to track the average acquisition price for different holder age cohorts, revealing cost basis levels and profit/loss positions by holding period.',
+}
+
+# Realized Price - UTXO Age Bands
+
+The **Realized Price UTXO Age Bands** metric calculates the average acquisition price for Bitcoin held across different age cohorts. {{ className: 'lead' }}
+
+This metric reveals the cost basis of different holder types by holding period, enabling analysis of which cohorts are in profit or loss and identifying potential support/resistance levels from specific holder groups.
+
+---
+
+## Endpoint
+
+`GET /realized-price-utxo-age-bands`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor realized prices across age bands to understand the cost basis of different holder cohorts and their profit/loss positions.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Realized Price UTXO Age Bands data"}
+curl -G "https://api.blocklytics.net/api/public/v1/realized-price-utxo-age-bands" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "range_0d_1d": 94250.5,
+    "range_1d_1w": 92830.2,
+    "range_1w_1m": 88450.75,
+    "range_1m_3m": 79820.3,
+    "range_3m_6m": 68340.9,
+    "range_6m_12m": 54230.6,
+    "range_12m_18m": 47890.4,
+    "range_18m_2y": 41560.2,
+    "range_2y_3y": 32340.8,
+    "range_3y_5y": 24670.5,
+    "range_5y_7y": 18920.3,
+    "range_7y_10y": 12450.7,
+    "range_10y_inf": 6780.2
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/realized-price-utxo-age-bands" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="range_0d_1d" type="number">
+    Average realized price for UTXOs aged 0-1 days, in USD.
+  </Property>
+  <Property name="range_1d_1w" type="number">
+    Average realized price for UTXOs aged 1 day to 1 week, in USD.
+  </Property>
+  <Property name="range_1w_1m" type="number">
+    Average realized price for UTXOs aged 1 week to 1 month, in USD.
+  </Property>
+  <Property name="range_1m_3m" type="number">
+    Average realized price for UTXOs aged 1-3 months, in USD.
+  </Property>
+  <Property name="range_3m_6m" type="number">
+    Average realized price for UTXOs aged 3-6 months, in USD.
+  </Property>
+  <Property name="range_6m_12m" type="number">
+    Average realized price for UTXOs aged 6-12 months, in USD.
+  </Property>
+  <Property name="range_12m_18m" type="number">
+    Average realized price for UTXOs aged 12-18 months, in USD.
+  </Property>
+  <Property name="range_18m_2y" type="number">
+    Average realized price for UTXOs aged 18 months to 2 years, in USD.
+  </Property>
+  <Property name="range_2y_3y" type="number">
+    Average realized price for UTXOs aged 2-3 years, in USD.
+  </Property>
+  <Property name="range_3y_5y" type="number">
+    Average realized price for UTXOs aged 3-5 years, in USD.
+  </Property>
+  <Property name="range_5y_7y" type="number">
+    Average realized price for UTXOs aged 5-7 years, in USD.
+  </Property>
+  <Property name="range_7y_10y" type="number">
+    Average realized price for UTXOs aged 7-10 years, in USD.
+  </Property>
+  <Property name="range_10y_inf" type="number">
+    Average realized price for UTXOs aged over 10 years, in USD.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High short-term realized prices** indicate recent buyers acquired at elevated levels, creating potential resistance as these holders lack significant gains and may sell on modest appreciation to recoup investments or cut losses if sentiment deteriorates.
+
+**Low long-term realized prices** reveal veteran holders acquired at historically low levels, indicating substantial unrealized gains that provide both conviction through profit cushion and potential supply if these holders decide to take profits.
+
+**Current price above cohort realized price** shows that specific age band maintains unrealized profits, suggesting reduced selling pressure from this cohort as holders enjoy gains and possess psychological comfort to maintain positions through volatility.
+
+**Current price below cohort realized price** indicates that specific age band holds underwater positions, revealing potential capitulation risk from this cohort as extended losses increase psychological pressure to sell and recover remaining capital.
+
+### Use Cases
+
+This metric provides sophisticated insight into the profit/loss positions and potential behavior of different holder cohorts by revealing their average cost basis. Comparing current price to each cohort's realized price immediately reveals which holder types are profitable versus underwater, enabling targeted analysis of potential supply pressure or support. Short-term cohorts with high realized prices near current levels represent holders with minimal gains who are more likely to sell on modest appreciation, creating resistance zones around these cost basis levels. Conversely, long-term cohorts with low realized prices far below current levels represent strong hands with substantial gains less likely to panic sell, providing support even during corrections. During bull markets, tracking which cohorts are beginning to show underwater positions during pullbacks helps identify potential support levels, as cohorts transitioning from profit to loss often provide strong buying interest to defend their cost basis. The spread between short-term and long-term realized prices reveals profit heterogeneity across the holder base, with large spreads indicating substantial gains for veterans while recent buyers hold minimal profits. Rising realized prices across all bands during rallies confirms broad-based capital inflows at higher levels, strengthening fundamental support structure, while stagnant realized prices despite price appreciation warns of limited turnover and potential fragility. The metric also identifies generational cohort characteristics, with cohorts acquired during previous cycle peaks holding at elevated realized prices that may act as resistance during recovery attempts.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/realized-price-utxo-age-bands', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `realized-price-utxo-age-bands?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      range_0d_1d: d.range_0d_1d,
+      range_1d_1w: d.range_1d_1w,
+      range_1w_1m: d.range_1w_1m,
+      range_1m_3m: d.range_1m_3m,
+      range_3m_6m: d.range_3m_6m,
+      range_6m_12m: d.range_6m_12m,
+      range_12m_18m: d.range_12m_18m,
+      range_18m_2y: d.range_18m_2y,
+      range_2y_3y: d.range_2y_3y,
+      range_3y_5y: d.range_3y_5y,
+      range_5y_7y: d.range_5y_7y,
+      range_7y_10y: d.range_7y_10y,
+      range_10y_inf: d.range_10y_inf,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

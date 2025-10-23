@@ -1,0 +1,205 @@
+export const metadata = {
+  title: 'Sum Coin Age Distribution',
+  description:
+    'Use the Sum Coin Age Distribution endpoint to track how accumulated coin age is distributed across holder age cohorts, revealing the conviction levels and holding commitment of different holder types.',
+}
+
+# Sum Coin Age Distribution
+
+The **Sum Coin Age Distribution** metric distributes accumulated coin age across holder age cohorts, showing where holding commitment concentrates. {{ className: 'lead' }}
+
+This metric reveals which holder cohorts demonstrate the strongest conviction through age-weighted analysis, distinguishing between short-term speculation and long-term accumulation by measuring commitment intensity.
+
+---
+
+## Endpoint
+
+`GET /sum-coin-age-distribution`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Sum Coin Age Distribution to assess which holder age cohorts accumulate the most conviction through sustained holding behavior.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Sum Coin Age Distribution data"}
+curl -G "https://api.blocklytics.net/api/public/v1/sum-coin-age-distribution" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "range_0d_1d": 12000000,
+    "range_1d_1w": 45000000,
+    "range_1w_1m": 89000000,
+    "range_1m_3m": 156000000,
+    "range_3m_6m": 234000000,
+    "range_6m_12m": 345000000,
+    "range_12m_18m": 456000000,
+    "range_18m_2y": 567000000,
+    "range_2y_3y": 789000000,
+    "range_3y_5y": 1230000000,
+    "range_5y_7y": 987000000,
+    "range_7y_10y": 765000000,
+    "range_10y_inf": 543000000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/sum-coin-age-distribution" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="range_0d_1d" type="number">
+    Accumulated coin age for UTXOs aged 0-1 days, in Bitcoin-days.
+  </Property>
+  <Property name="range_1d_1w" type="number">
+    Accumulated coin age for UTXOs aged 1 day to 1 week, in Bitcoin-days.
+  </Property>
+  <Property name="range_1w_1m" type="number">
+    Accumulated coin age for UTXOs aged 1 week to 1 month, in Bitcoin-days.
+  </Property>
+  <Property name="range_1m_3m" type="number">
+    Accumulated coin age for UTXOs aged 1-3 months, in Bitcoin-days.
+  </Property>
+  <Property name="range_3m_6m" type="number">
+    Accumulated coin age for UTXOs aged 3-6 months, in Bitcoin-days.
+  </Property>
+  <Property name="range_6m_12m" type="number">
+    Accumulated coin age for UTXOs aged 6-12 months, in Bitcoin-days.
+  </Property>
+  <Property name="range_12m_18m" type="number">
+    Accumulated coin age for UTXOs aged 12-18 months, in Bitcoin-days.
+  </Property>
+  <Property name="range_18m_2y" type="number">
+    Accumulated coin age for UTXOs aged 18 months to 2 years, in Bitcoin-days.
+  </Property>
+  <Property name="range_2y_3y" type="number">
+    Accumulated coin age for UTXOs aged 2-3 years, in Bitcoin-days.
+  </Property>
+  <Property name="range_3y_5y" type="number">
+    Accumulated coin age for UTXOs aged 3-5 years, in Bitcoin-days.
+  </Property>
+  <Property name="range_5y_7y" type="number">
+    Accumulated coin age for UTXOs aged 5-7 years, in Bitcoin-days.
+  </Property>
+  <Property name="range_7y_10y" type="number">
+    Accumulated coin age for UTXOs aged 7-10 years, in Bitcoin-days.
+  </Property>
+  <Property name="range_10y_inf" type="number">
+    Accumulated coin age for UTXOs aged over 10 years, in Bitcoin-days.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High long-term band values** indicate substantial conviction concentrated among veteran holders who accumulate massive coin-days through years of inactivity, revealing committed capital with deep holding conviction less likely to panic sell during volatility.
+
+**Growing long-term band values** demonstrate increasing commitment from patient holders as coins age into mature cohorts without movement, signaling successful accumulation graduating into strong hands and reducing available supply through conviction strengthening.
+
+**High short-term band values** reveal active trading and frequent position changes with limited age accumulation, indicating speculative behavior without conviction as coins rapidly turnover preventing substantial coin-day accumulation.
+
+**Shifting from long-term to short-term bands** signals distribution from committed holders as aged coins move and reset their age counters, often marking profit-taking events when patient capital breaks its holding commitment.
+
+### Use Cases
+
+This metric provides age-weighted insight into holder conviction distribution, revealing where commitment concentrates across different holding time horizons. Unlike simple UTXO age distributions that count coins equally, Sum Coin Age Distribution weights each cohort by accumulated holding time, emphasizing the conviction demonstrated through extended dormancy. High concentrations in long-term bands indicate the network is dominated by holders who have proven commitment through years of inactivity, strengthening supply stability through demonstrated patience. The metric reveals accumulation success by tracking how newly acquired coins graduate into long-term bands, with steady long-term growth indicating successful conversion of weak hands to strong hands. During bear markets, rising long-term band concentrations confirm accumulation is working as new buyers demonstrate conviction by holding through pain without capitulation. During bull markets, tracking long-term band behavior identifies distribution intensity, with declining values warning that veteran holders are breaking their commitment and taking profits. The age weighting amplifies the significance of long-term holdings, as a coin held for years contributes far more to its band's total than recently acquired coins, properly emphasizing conviction quality. Comparing distribution across cycles reveals whether current holder base conviction differs from historical norms, with higher long-term concentrations indicating stronger hands. The metric also identifies generational cohort characteristics, with specific bands representing distinct entry cohorts that may demonstrate similar behavior based on shared acquisition contexts.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/sum-coin-age-distribution', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `sum-coin-age-distribution?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      range_0d_1d: d.range_0d_1d,
+      range_1d_1w: d.range_1d_1w,
+      range_1w_1m: d.range_1w_1m,
+      range_1m_3m: d.range_1m_3m,
+      range_3m_6m: d.range_3m_6m,
+      range_6m_12m: d.range_6m_12m,
+      range_12m_18m: d.range_12m_18m,
+      range_18m_2y: d.range_18m_2y,
+      range_2y_3y: d.range_2y_3y,
+      range_3y_5y: d.range_3y_5y,
+      range_5y_7y: d.range_5y_7y,
+      range_7y_10y: d.range_7y_10y,
+      range_10y_inf: d.range_10y_inf,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

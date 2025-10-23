@@ -1,0 +1,148 @@
+export const metadata = {
+  title: "Miners' Position Index (MPI)",
+  description:
+    "Use the Miners' Position Index endpoint to track standardized miner selling pressure through z-score analysis, identifying extreme periods of miner distribution activity.",
+}
+
+# Miners' Position Index (MPI)
+
+The **Miners' Position Index (MPI)** is a standardized measure (z-score) that quantifies miner outflow behavior relative to historical patterns. {{ className: 'lead' }}
+
+This metric normalizes total miner outflows to identify statistically significant periods of extreme selling or accumulation, providing a standardized indicator of miner position changes across different market environments.
+
+---
+
+## Endpoint
+
+`GET /miners-position-index`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the Miners' Position Index to identify statistically significant periods of extreme miner selling or reduced distribution activity.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Currently only supports: <code>day</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. Note:
+    The period range must be 2 days or more.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miners' Position Index data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miners-position-index" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "mpi": 1.34
+  },
+  {
+    "date": "2025-01-06",
+    "mpi": 2.47
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miners-position-index" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="mpi" type="number">
+    The z-score of total miner outflows, representing how many standard
+    deviations current outflow activity deviates from the historical mean.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**MPI above 2** indicates extreme miner selling where outflow volumes are more than two standard deviations above historical norms, suggesting most miners are actively distributing holdings and creating significant supply pressure that historically correlates with local market tops or exhaustion.
+
+**MPI between 0 and 2** represents elevated but not extreme miner selling where outflows exceed historical averages but remain within normal variance, indicating moderate distribution activity without extreme pressure that may be sustainable during bull markets.
+
+**MPI below 0** signals reduced miner selling pressure where outflows fall below historical averages, suggesting miners are accumulating or holding reserves rather than distributing, typically indicating confidence in future price appreciation or strong operational cash flows reducing selling needs.
+
+**MPI trending upward** reveals accelerating miner distribution regardless of absolute level, indicating miners are progressively increasing selling activity in response to market conditions, profitability changes, or strategic positioning that warrants attention even before reaching extreme thresholds.
+
+### Use Cases
+
+This metric provides a standardized framework for identifying historically significant miner selling periods that transcends absolute volume comparisons across different market environments. The z-score normalization makes MPI particularly valuable for comparing miner behavior across bull and bear markets, as it accounts for the different baseline outflow levels in various price regimes. MPI values above 2 have historically coincided with local price peaks or exhaustion points, as extreme miner distribution often signals the end of strong upward moves when supply pressure overwhelms demand. Conversely, sustained negative MPI values often appear near market bottoms when miners minimize selling despite potentially challenging profitability, indicating capitulation has passed or strong conviction in recovery. The standardized nature allows for consistent threshold-based strategies, where MPI crossing above 2 serves as a systematic warning signal regardless of absolute BTC amounts or USD values involved. During bull markets, watching for MPI spikes above 2 helps identify profit-taking exhaustion points, while during bear markets, negative MPI readings signal when distress selling has subsided. Combining MPI with price action distinguishes between healthy corrections during strong trends (where MPI remains moderate) versus potential reversals (where MPI reaches extremes). The metric's statistical foundation also enables quantitative backtesting and strategy development, as threshold crossings provide objective signals rather than subjective interpretations of "high" or "low" selling.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miners-position-index', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miners-position-index?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      mpi: d.mpi,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

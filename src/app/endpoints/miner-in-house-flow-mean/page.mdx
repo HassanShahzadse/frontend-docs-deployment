@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Miner In-House Flow (Mean)',
+  description:
+    'Use the Miner In-House Flow Mean endpoint to track the average size of internal transfers within miner wallets, revealing treasury management patterns.',
+}
+
+# Miner In-House Flow (Mean)
+
+The **Miner In-House Flow Mean** metric tracks the average transaction value for transfers occurring within the same mining pool's wallets. {{ className: 'lead' }}
+
+This metric reveals internal treasury management patterns and operational fund movements within mining operations, providing insights into how miners organize and manage their holdings.
+
+---
+
+## Endpoint
+
+`GET /miner-in-house-flow-mean`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor average in-house transaction sizes to understand miner treasury management and internal fund allocation strategies.
+
+<Properties>
+  <Property name="miner" type="string">
+    Mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner In-House Flow Mean data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-in-house-flow-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "miner_in_house_flow_mean": 15.42
+  },
+  {
+    "date": "2025-01-06",
+    "miner_in_house_flow_mean": 12.87
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-in-house-flow-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=all_miner \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="miner_in_house_flow_mean" type="number">
+    The average value of transactions moving between wallets controlled by the
+    same mining pool during the specified time window, denominated in BTC.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising mean in-house flow** indicates larger average internal transfers within mining operations, potentially signaling treasury consolidation, preparation for major operational changes, or reorganization of fund management structures.
+
+**Declining mean in-house flow** suggests smaller average internal movements, which may reflect more distributed treasury management, frequent small reallocations, or changes in operational cash flow strategies.
+
+**High mean values** reveal that miners are moving substantial amounts internally, possibly consolidating holdings into cold storage, preparing for exchange deposits, or reorganizing wallet structures for operational efficiency.
+
+**Stable mean values** indicate consistent internal fund management patterns, suggesting mature operational processes with established treasury management practices and predictable cash flow allocation.
+
+### Use Cases
+
+This metric provides unique insights into miner operational sophistication and treasury management practices. High mean in-house flows often precede external movements, as miners first consolidate holdings internally before sending to exchanges or other destinations. Rising mean values can signal miners preparing for major distribution events or operational changes. Comparing in-house flow patterns across different mining pools reveals which operations employ more sophisticated treasury management with frequent internal optimization versus those maintaining simpler wallet structures. Sudden changes in mean in-house flow sizes can indicate shifts in operational strategy, such as moving from distributed to consolidated treasury management or vice versa. For predicting miner selling behavior, tracking when in-house consolidation occurs helps anticipate subsequent exchange deposits, as large internal movements often precede external transfers.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-in-house-flow-mean', async (req, res) => {
+  try {
+    const miner = req.query.miner || 'all_miner'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-in-house-flow-mean?window=${window}&miner=${miner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      miner_in_house_flow_mean: d.miner_in_house_flow_mean,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

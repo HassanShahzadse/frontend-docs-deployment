@@ -1,0 +1,152 @@
+export const metadata = {
+  title: 'Total Supply',
+  description:
+    'Use the Total Supply endpoint to track the cumulative amount of Bitcoin ever issued through block rewards, revealing the progression toward the 21 million hard cap.',
+}
+
+# Total Supply
+
+The **Total Supply** measures the cumulative amount of Bitcoin that has been issued through coinbase rewards since genesis, tracking progression toward the 21 million hard cap. {{ className: 'lead' }}
+
+This metric reveals Bitcoin's monetary inflation over time, with growth slowing after each halving event as the protocol progresses toward its fixed maximum supply around the year 2140.
+
+---
+
+## Endpoint
+
+`GET /total-supply`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor total supply to track Bitcoin's monetary issuance and observe the predictable progression toward the 21 million coin hard cap.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Total Supply data"}
+curl -G "https://api.blocklytics.net/api/public/v1/total-supply" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "supply_total": 19750000.5
+  },
+  {
+    "date": "2025-01-06",
+    "supply_total": 19749850.25
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/total-supply" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="supply_total" type="number">
+    The cumulative amount of Bitcoin issued through block rewards since genesis,
+    measured in BTC, representing the total supply in existence approaching the
+    21 million hard cap.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Supply approaching 21 million** indicates Bitcoin nears its hard cap, revealing the protocol's progression toward maximum scarcity where issuance eventually ceases entirely around 2140, fundamentally distinguishing it from fiat currencies.
+
+**Supply growth slowing after halvings** demonstrates Bitcoin's disinflationary schedule, showing issuance rate cuts that occur every 210,000 blocks, progressively reducing new supply and increasing scarcity.
+
+**Supply over 19 million** reveals Bitcoin has crossed 90 percent of its total issuance, indicating the protocol is in its mature phase where remaining supply to be issued represents a shrinking proportion of total.
+
+**Predictable supply curve** shows Bitcoin's transparent and unchangeable monetary policy, contrasting with fiat systems where supply changes remain opaque and subject to arbitrary central bank decisions.
+
+### Use Cases
+
+This metric provides fundamental tracking of Bitcoin's monetary issuance, revealing the progression of its unique, algorithmically-enforced scarcity. Total supply increases monotonically according to Bitcoin's programmed schedule, with growth slowing after each halving event that cuts block rewards in half. The predictable and transparent issuance schedule represents one of Bitcoin's core value propositions, as the 21 million hard cap creates provable scarcity impossible to achieve with fiat currencies or other assets subject to arbitrary supply changes. Tracking supply reveals Bitcoin's disinflationary nature, as the percentage growth rate decreases over time despite absolute supply increasing, creating conditions where demand growth translates more effectively to price appreciation as new supply dwindles. The metric also contextualizes Bitcoin's maturity level, with supply over 19 million indicating more than 90 percent of coins have been issued and only about 1.5 million remain to be mined over the next century. This progression toward the cap creates a scarcity premium that should theoretically increase as remaining issuance becomes negligible. Halvings create step-function changes in issuance rate visible through supply growth deceleration, with each halving doubling Bitcoin's stock-to-flow ratio and strengthening its hard money properties. The transparent supply schedule enables precise forecasting of future issuance, allowing market participants to plan with certainty about future supply dynamics rather than facing surprise policy changes common with fiat currencies.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/total-supply', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `total-supply?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      supply_total: d.supply_total,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

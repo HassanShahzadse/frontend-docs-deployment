@@ -1,0 +1,148 @@
+export const metadata = {
+  title: 'Puell Multiple',
+  description:
+    'Use the Puell Multiple endpoint to assess miner revenue relative to historical averages, identifying periods of extreme miner stress or profitability that historically precede market turning points.',
+}
+
+# Puell Multiple
+
+The **Puell Multiple** measures daily mining revenue relative to its 365-day moving average, revealing periods of historically extreme miner profitability or distress. {{ className: 'lead' }}
+
+This metric normalizes miner revenue to identify statistically significant extremes that have historically coincided with major market cycle turning points, providing a miner-centric market timing indicator.
+
+---
+
+## Endpoint
+
+`GET /puell-multiple`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the Puell Multiple to identify periods of extreme miner revenue that historically signal market cycle turning points.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Currently only supports: <code>day</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Puell Multiple data"}
+curl -G "https://api.blocklytics.net/api/public/v1/puell-multiple" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "puell_multiple": 1.87
+  },
+  {
+    "date": "2025-01-06",
+    "puell_multiple": 1.92
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/puell-multiple" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="puell_multiple" type="number">
+    The ratio of daily mining revenue (in USD) to the 365-day moving average of
+    daily mining revenue, representing current miner profitability relative to
+    historical norms.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Puell Multiple above 4** indicates extreme miner profitability where daily revenue significantly exceeds annual averages, historically marking market tops or euphoric peaks when miners capitalize on exceptional conditions, often preceding corrections as elevated selling pressure emerges.
+
+**Puell Multiple between 1 and 4** represents normal to elevated profitability where miner revenue remains healthy, typically characterizing bull markets and stable operational environments without extreme stress or unsustainable euphoria.
+
+**Puell Multiple below 0.5** reveals severe miner distress where revenue falls far below historical averages, historically marking capitulation events and market bottoms when mining becomes unprofitable for marginal operations, forcing distress selling or shutdown.
+
+**Declining Puell Multiple during bear markets** indicates worsening miner conditions as revenue deteriorates relative to historical norms, potentially signaling approaching capitulation when the metric reaches extreme lows and weak miners exit.
+
+### Use Cases
+
+This metric provides a sophisticated framework for identifying market cycle extremes through the lens of miner economics, which are fundamental to Bitcoin's supply dynamics. Created by analyst David Puell, the metric has proven remarkably effective at identifying major turning points across Bitcoin's history. Extremely high Puell Multiple readings above 4 have consistently coincided with cycle tops, as they indicate miners are receiving unsustainably high revenues that inevitably attract aggressive selling to capitalize on favorable conditions. These periods mark maximum miner profitability when operational cushions are largest, paradoxically creating conditions for subsequent corrections as miners lock in gains. Conversely, extremely low readings below 0.5 have reliably identified major bottoms and accumulation opportunities, as they indicate severe miner distress where continued operations become questionable for many miners. These capitulation periods force weak miners offline and create intense selling pressure from remaining operations struggling with cash flow, but also mark the clearing of marginal supply and setup for recovery. The metric's 365-day moving average denominator provides excellent normalization across different market environments and halving epochs, making thresholds consistently applicable throughout Bitcoin's history. Tracking Puell Multiple trends helps investors anticipate behavioral shifts, as rising multiples during rallies eventually signal unsustainable miner profitability while declining multiples during downturns warn of approaching capitulation. The miner-centric perspective proves particularly valuable because miners represent the most consistent and predictable source of selling pressure, making their economic health directly relevant to supply-demand balance.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/puell-multiple', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `puell-multiple?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      puell_multiple: d.puell_multiple,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

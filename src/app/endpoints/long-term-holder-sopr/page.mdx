@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Long Term Holder SOPR',
+  description:
+    'Use the Long Term Holder SOPR endpoint to track profit ratios of long-term holders when they spend, revealing strategic holder behavior and market cycle positioning.',
+}
+
+# Long Term Holder SOPR
+
+The **Long Term Holder SOPR** metric tracks the Spent Output Profit Ratio specifically for long-term holders (coins held 155+ days). {{ className: 'lead' }}
+
+This metric reveals whether long-term holders are selling at profit or loss, providing insights into strategic holder behavior and identifying major market cycle turning points.
+
+---
+
+## Endpoint
+
+`GET /long-term-holder-sopr`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor LTH-SOPR to identify when long-term holders capitulate or take profits, signaling potential market cycle inflection points.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Long Term Holder SOPR data"}
+curl -G "https://api.blocklytics.net/api/public/v1/long-term-holder-sopr" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "lth_sopr": 1.85
+  },
+  {
+    "date": "2025-01-06",
+    "lth_sopr": 1.92
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/long-term-holder-sopr" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="lth_sopr" type="number">
+    The ratio of spent output value at spending time to creation time for
+    long-term holders. Values above 1.0 indicate profit-taking, below 1.0
+    indicate loss-taking.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**LTH-SOPR above 1.0** indicates long-term holders are spending coins at profit, suggesting distribution during bull markets or late-cycle profit-taking by patient holders who accumulated during previous bear markets.
+
+**LTH-SOPR below 1.0** reveals long-term holders capitulating at losses, typically occurring only during severe bear markets when even patient holders lose conviction. This is extremely rare and often marks major market bottoms.
+
+**LTH-SOPR significantly above 2.0** suggests long-term holders are taking substantial profits with 100%+ gains, often signaling late bull market phases where early accumulators distribute to new entrants at elevated prices.
+
+**LTH-SOPR declining toward 1.0 during rallies** indicates long-term holders reducing distribution as they anticipate further upside, potentially signaling bull market continuation with strong holder conviction.
+
+### Use Cases
+
+This metric is one of the most powerful for identifying major market cycle turning points. Long-term holders represent the smartest money, having survived multiple cycles and typically buying low and selling high. When LTH-SOPR drops below 1.0, it signals extreme capitulation where even patient holders surrender, historically marking significant market bottoms. Conversely, extremely high LTH-SOPR values above 3.0-4.0 have preceded major tops as long-term holders distribute maximum profits. The metric helps distinguish healthy bull market corrections from bear market beginnings by showing whether long-term holders maintain conviction or start exiting. Sharp LTH-SOPR drops during uptrends can signal temporary corrections as profit-taking occurs, while gradual increases suggest steady distribution into strength. Comparing LTH-SOPR with overall SOPR reveals whether long-term strategic holders behave differently from short-term traders, providing insight into smart money versus speculative positioning.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/long-term-holder-sopr', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `long-term-holder-sopr?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      lth_sopr: d.lth_sopr,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

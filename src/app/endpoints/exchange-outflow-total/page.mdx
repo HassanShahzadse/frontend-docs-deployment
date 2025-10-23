@@ -1,0 +1,150 @@
+export const metadata = {
+  title: 'Exchange Outflow (Total)',
+  description:
+    'Learn how to use the Exchange Outflow (Total) endpoint to analyze the total daily amount of Bitcoin withdrawn from exchanges, indicating liquidity movement and investor sentiment.',
+}
+
+# Exchange Outflow (Total)
+
+The **Exchange Outflow (Total)** metric represents the **total volume of BTC withdrawn from exchange wallets** over a selected time period. {{ className: 'lead' }}
+
+High outflows often suggest accumulation or capital flight from exchanges, while low outflows may indicate reduced investor activity or stronger exchange retention.
+
+---
+
+## Endpoint
+
+`GET /exchange-outflow-total`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Retrieve the total BTC outflow from exchanges for a given time window and exchange.
+
+<Properties>
+  <Property name="exchange" type="string">
+    Exchange name. Example: <code>binance</code>, <code>coinbase</code>,{' '}
+    <code>kraken</code>. Default: <code>all_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Exchange Outflow (Total) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-outflow-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=binance \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "outflow_total": 32456.89
+  },
+  {
+    "date": "2025-01-06",
+    "outflow_total": 18974.33
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-outflow-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=kraken \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="outflow_total" type="number">
+    Total amount of BTC withdrawn from exchange wallets during the selected
+    period.
+  </Property>
+</Properties>
+
+### Interpretation
+
+- **High Total Outflow (↑)** → Indicates accumulation or capital withdrawal, usually **bullish** (investors moving BTC to cold storage).
+- **Low Total Outflow (↓)** → Suggests fewer withdrawals, potentially **neutral** or **bearish** depending on inflow data.
+
+Correlate with inflow and netflow metrics to better understand market behavior and liquidity changes.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/exchange-outflow-total', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `exchange-outflow-total?window=${window}&exchange=${exchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      outflow_total: d.outflow_total,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

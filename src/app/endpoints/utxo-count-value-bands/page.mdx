@@ -1,0 +1,181 @@
+export const metadata = {
+  title: 'UTXO Count - Value Bands',
+  description:
+    'Use the UTXO Count - Value Bands endpoint to track the number of unspent outputs distributed across value size cohorts, revealing the fragmentation patterns of retail versus whale holdings.',
+}
+
+# UTXO Count - Value Bands
+
+The **UTXO Count - Value Bands** metric distributes the total number of UTXOs across value size cohorts, revealing how output fragmentation varies by holder size. {{ className: 'lead' }}
+
+This metric identifies the count of discrete outputs held by different economic tiers, enabling analysis of whether small retail holders or large whales maintain more fragmented position structures.
+
+---
+
+## Endpoint
+
+`GET /utxo-count-value-bands`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor UTXO count distribution across value bands to assess fragmentation patterns and distinguish between retail dust and whale consolidation behaviors.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting UTXO Count - Value Bands data"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxo-count-value-bands" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "range_0_001": 45000000,
+    "range_001_01": 18000000,
+    "range_01_1": 9500000,
+    "range_1_10": 4200000,
+    "range_10_100": 1100000,
+    "range_100_1k": 280000,
+    "range_1k_10k": 45000,
+    "range_10k_inf": 3500
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxo-count-value-bands" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="range_0_001" type="number">
+    Number of UTXOs containing 0 to 0.001 BTC (dust outputs).
+  </Property>
+  <Property name="range_001_01" type="number">
+    Number of UTXOs containing 0.001 to 0.01 BTC (micro outputs).
+  </Property>
+  <Property name="range_01_1" type="number">
+    Number of UTXOs containing 0.01 to 1 BTC (small retail outputs).
+  </Property>
+  <Property name="range_1_10" type="number">
+    Number of UTXOs containing 1 to 10 BTC (retail outputs).
+  </Property>
+  <Property name="range_10_100" type="number">
+    Number of UTXOs containing 10 to 100 BTC (mid-tier outputs).
+  </Property>
+  <Property name="range_100_1k" type="number">
+    Number of UTXOs containing 100 to 1,000 BTC (large holder outputs).
+  </Property>
+  <Property name="range_1k_10k" type="number">
+    Number of UTXOs containing 1,000 to 10,000 BTC (whale outputs).
+  </Property>
+  <Property name="range_10k_inf" type="number">
+    Number of UTXOs containing over 10,000 BTC (mega whale outputs).
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High small value UTXO counts** indicate massive fragmentation in dust and micro outputs, revealing extensive retail activity creates countless tiny uneconomical outputs that dominate total UTXO count through sheer volume.
+
+**High large value UTXO counts** demonstrate substantial fragmentation even among whales, showing large holders maintain many discrete high-value outputs rather than consolidating into single massive positions.
+
+**Rising small value UTXO counts** reveal increasing dust accumulation from retail activity, signaling growing network usage produces fragmented small outputs faster than consolidation, creating blockchain bloat.
+
+**Declining small value UTXO counts** show dust consolidation or cleanup, indicating holders are merging uneconomical small outputs during low-fee periods or network activity has slowed dust creation.
+
+### Use Cases
+
+This metric provides granular insight into how different economic tiers fragment their holdings through UTXO-level analysis by value. High small value UTXO counts indicate retail-dominated networks where countless dust and micro outputs represent the majority of total UTXO count, even though they contain minimal actual value. These fragmented small outputs create blockchain bloat and increase full node resource requirements despite representing insignificant economic value. The metric reveals dust accumulation patterns through small band count growth, with rising counts indicating active retail trading generates uneconomical outputs faster than consolidation. Conversely, declining small value counts suggest cleanup activity where holders merge dust during low-fee environments to optimize future transaction costs. Comparing UTXO counts across value bands reveals distribution shape, with heavily skewed distributions toward small values indicating retail-dominated networks while more balanced distributions suggest diverse participant sizes. High large value UTXO counts reveal even whales maintain fragmented positions, suggesting they accumulated through numerous transactions without consolidating or deliberately maintain separate outputs for privacy or operational reasons. The metric also identifies whale consolidation activity through declining large value UTXO counts, indicating sophisticated holders are merging positions to optimize efficiency. Rising middle-band UTXO counts during bull markets confirm retail graduation as small holders accumulate into larger positions, visible through growing mid-tier output counts.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/utxo-count-value-bands', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `utxo-count-value-bands?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      range_0_001: d.range_0_001,
+      range_001_01: d.range_001_01,
+      range_01_1: d.range_01_1,
+      range_1_10: d.range_1_10,
+      range_10_100: d.range_10_100,
+      range_100_1k: d.range_100_1k,
+      range_1k_10k: d.range_1k_10k,
+      range_10k_inf: d.range_10k_inf,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

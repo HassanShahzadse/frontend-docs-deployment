@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Exchange In-House Flow (Total)',
+  description:
+    'Learn how to use the Exchange In-House Flow (Total) endpoint to measure the total internal Bitcoin movement between wallets of the same exchange — a signal of internal fund rebalancing or cold wallet transfers.',
+}
+
+# Exchange In-House Flow (Total)
+
+The **Exchange In-House Flow (Total)** metric tracks the total amount of Bitcoin transferred between wallets belonging to the same exchange. {{ className: 'lead' }}
+
+This value represents internal transfers such as hot-to-cold wallet movements, internal bookkeeping, or liquidity management. It provides insights into exchange-level activity unrelated to external user deposits or withdrawals.
+
+---
+
+## Endpoint
+
+`GET /exchange-inhouse-flow-total`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+This example retrieves total daily in-house Bitcoin flow values. Adjust parameters to query specific exchanges, timeframes, or export formats.
+
+<Properties>
+  <Property name="exchange" type="string">
+    The name of the exchange. Example: <code>binance</code>,{' '}
+    <code>coinbase</code>, <code>kraken</code>. Default:{' '}
+    <code>all_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Exchange In-House Flow (Total) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-inhouse-flow-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=binance \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "flow_total": 4531.25
+  },
+  {
+    "date": "2025-01-06",
+    "flow_total": 5120.73
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-inhouse-flow-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=kraken \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+The **Exchange In-House Flow (Total)** provides visibility into the scale of internal fund movement within exchanges:
+
+<Properties>
+  <Property name="flow_total" type="number">
+    Total Bitcoin amount transferred internally between exchange-owned wallets
+    during the given period.
+  </Property>
+  <Property name="flow_mean" type="number">
+    Average value of in-house transactions within the same timeframe.
+  </Property>
+  <Property name="transactions_count_flow" type="integer">
+    Number of internal transactions between exchange wallets.
+  </Property>
+  <Property name="exchange" type="string">
+    Name of the exchange for which data is collected.
+  </Property>
+</Properties>
+
+Spikes in **flow_total** may indicate reserve reallocation or custodial maintenance. Low values suggest minimal internal wallet activity.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/exchange-inhouse-flow-total', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `exchange-inhouse-flow-total?window=${window}&exchange=${exchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      flow_total: d.flow_total,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

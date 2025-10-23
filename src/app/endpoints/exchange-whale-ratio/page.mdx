@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Exchange Whale Ratio',
+  description:
+    'Use the Exchange Whale Ratio endpoint to identify whale-focused exchanges by analyzing the concentration of large inflows relative to total inflows.',
+}
+
+# Exchange Whale Ratio
+
+The **Exchange Whale Ratio** identifies which exchanges are preferred by whale traders by analyzing the concentration of large inflows. {{ className: 'lead' }}
+
+This metric calculates the ratio of the top 10 largest inflows relative to total inflows, revealing exchanges with whale-concentrated activity. High ratios suggest greater price volatility potential and arbitrage opportunities.
+
+---
+
+## Endpoint
+
+`GET /exchange-whale-ratio`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor whale activity concentration across different exchanges to identify potential volatility and arbitrage opportunities.
+
+<Properties>
+  <Property name="exchange" type="string">
+    Exchange name. Example: <code>binance</code>, <code>coinbase</code>,{' '}
+    <code>kraken</code>. Default: <code>all_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Exchange Whale Ratio data"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-whale-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=binance \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "exchange_whale_ratio": 0.68
+  },
+  {
+    "date": "2025-01-06",
+    "exchange_whale_ratio": 0.72
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-whale-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=gemini \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="exchange_whale_ratio" type="number">
+    The ratio of top 10 inflow amounts to total inflows. Range: 0 to 1, where
+    higher values indicate greater whale concentration.
+  </Property>
+</Properties>
+
+### Interpretation
+
+- **High ratio (0.7+)** → Exchange is whale-dominated. Exchanges like Gemini often show high ratios, indicating concentrated large trades that can cause **dramatic price movements** and **arbitrage opportunities**.
+- **Low ratio (0.3-)** → Retail-focused exchange with distributed activity. More stable but fewer arbitrage opportunities.
+- **Rising ratio** → Increasing whale interest, potential for volatility.
+
+Use this metric to identify exchanges where whale activity creates price inefficiencies and trading opportunities.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/exchange-whale-ratio', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `exchange-whale-ratio?window=${window}&exchange=${exchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      exchange_whale_ratio: d.exchange_whale_ratio,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

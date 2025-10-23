@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Net Unrealized Profit (NUP)',
+  description:
+    'Use the Net Unrealized Profit endpoint to track the aggregate unrealized gains held by Bitcoin holders, revealing profit-taking potential and market euphoria levels.',
+}
+
+# Net Unrealized Profit (NUP)
+
+The **Net Unrealized Profit (NUP)** metric measures the aggregate unrealized gains across all Bitcoin held at current prices relative to their acquisition costs. {{ className: 'lead' }}
+
+This metric isolates only UTXOs currently in profit, revealing the magnitude of paper gains and providing insight into potential selling pressure from profit-taking behavior.
+
+---
+
+## Endpoint
+
+`GET /net-unrealized-profit`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Net Unrealized Profit to assess the magnitude of paper gains and potential profit-taking pressure in the Bitcoin network.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Net Unrealized Profit data"}
+curl -G "https://api.blocklytics.net/api/public/v1/net-unrealized-profit" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "nup": 0.647
+  },
+  {
+    "date": "2025-01-06",
+    "nup": 0.589
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/net-unrealized-profit" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="nup" type="number">
+    The net unrealized profit as a ratio of market capitalization, calculated by
+    summing the dollar gains of all UTXOs currently in profit (held above
+    acquisition price) divided by total market cap. Always positive or zero.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High NUP values** indicate substantial aggregate unrealized gains where most holders maintain significant profits on their positions, revealing widespread paper gains that create potential for profit-taking selling pressure, particularly when euphoria or fear of reversal motivates realization of gains.
+
+**Low NUP values** suggest minimal unrealized profits where few holders maintain significant gains, indicating limited profit-taking pressure but also reflecting either market distress (if due to price decline) or early bull market phases where most holders remain near cost basis.
+
+**Rising NUP** reveals growing aggregate profits as prices appreciate above more holder cost bases, indicating improving holder profitability that increases both conviction and profit-taking potential as more participants accumulate substantial gains they may seek to realize.
+
+**Declining NUP** signals shrinking aggregate profits as prices decline below previous holder cost bases, indicating deteriorating holder profitability that reduces profit-taking pressure but increases anxiety as paper gains evaporate and more holders approach or enter underwater positions.
+
+### Use Cases
+
+This metric provides essential insight into the profit-taking potential and psychological state of Bitcoin holders by isolating positions in profit. Extreme high NUP values historically coincide with market tops and euphoric peaks when excessive gains tempt widespread profit realization, making extremely elevated readings contrarian sell signals when greed reaches extremes. The magnitude of NUP relative to historical ranges helps identify genuine euphoria versus healthy bull markets, with NUP approaching all-time highs indicating excessive optimism that typically precedes corrections or reversals. During bull markets, tracking NUP progression reveals whether gains are accelerating (rising NUP) or stabilizing (steady NUP), with rapid acceleration often indicating unsustainable momentum while stable NUP suggests healthy consolidation. The metric also quantifies the supply of coins held by profitable holders who possess both means and motivation to take profits, making high NUP readings indicators of potential supply pressure from willing sellers rather than forced capitulation. Comparing NUP to price action distinguishes between price rallies creating widespread profits (rising NUP) versus rallies from extreme lows where most holders still lack significant gains (minimal NUP despite price recovery). Combining NUP with realized profits (NRPL) reveals whether profitable holders are actually taking profits (high realized profits with elevated NUP) or holding despite gains (high NUP with modest realized profits), which indicates different conviction levels and resistance to further appreciation. The metric also helps identify healthy corrections within bull markets, where NUP remains elevated but stable rather than at extremes, suggesting profit-taking is orderly rather than panicked or euphoric.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/net-unrealized-profit', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `net-unrealized-profit?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      nup: d.nup,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

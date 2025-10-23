@@ -1,0 +1,152 @@
+export const metadata = {
+  title: 'Hashrate',
+  description:
+    'Use the Hashrate endpoint to track the computational power securing the network, revealing mining activity and network security strength.',
+}
+
+# Hashrate
+
+The **Hashrate** metric tracks the mean speed at which miners solve hash problems across the network. {{ className: 'lead' }}
+
+This metric reveals the total computational power dedicated to mining and securing the network, measured in hashes per second. Rising hashrate indicates growing network security and miner confidence.
+
+---
+
+## Endpoint
+
+`GET /hashrate`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor network hashrate to assess security strength, miner confidence, and mining industry health.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Hashrate data"}
+curl -G "https://api.blocklytics.net/api/public/v1/hashrate" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "hashrate": 512000000000
+  },
+  {
+    "date": "2025-01-06",
+    "hashrate": 508000000000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/hashrate" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="hashrate" type="number">
+    The mean computational speed at which miners solve hash problems, measured
+    in hashes per second. Typically expressed in exahashes per second (EH/s) for
+    modern networks.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising hashrate** indicates increasing computational power dedicated to mining, suggesting miner confidence in future profitability and growing network security. New mining equipment deployment and expansion signal bullish long-term sentiment from miners.
+
+**Declining hashrate** reveals miners shutting down operations, typically due to unprofitability, rising electricity costs, or bearish market outlook. Reduced hashrate temporarily decreases network security and may signal miner capitulation during bear markets.
+
+**All-time high hashrate** demonstrates peak network security and maximum miner participation, often indicating strong fundamentals and miner willingness to invest in expanding operations despite current market conditions.
+
+**Hashrate drops after difficulty adjustments** may indicate marginal miners being forced offline as mining becomes temporarily less profitable, representing natural market clearing where only efficient operations survive.
+
+### Use Cases
+
+This metric is fundamental for assessing network security and miner economics. Higher hashrate makes 51% attacks exponentially more expensive and difficult, providing confidence in network immutability. Hashrate trends reveal miner sentiment, as these sophisticated participants vote with significant capital on their expectations for future profitability. Rising hashrate during bear markets suggests miners remain confident in long-term value despite short-term price weakness. Comparing hashrate with price reveals interesting dynamics where hashrate often lags price during rallies as miners wait for profitability confirmation before expanding, but leads during recoveries as miners anticipate improving conditions. Sudden hashrate drops can indicate miner capitulation events that historically mark bear market bottoms. For investors, sustained hashrate growth despite price stagnation suggests strong fundamental support and accumulation by those closest to network operations.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/hashrate', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `hashrate?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      hashrate: d.hashrate,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

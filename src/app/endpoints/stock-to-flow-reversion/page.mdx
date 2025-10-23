@@ -1,0 +1,152 @@
+export const metadata = {
+  title: 'Stock-to-Flow Reversion',
+  description:
+    'Use the Stock-to-Flow Reversion endpoint to measure how far Bitcoin price deviates from its stock-to-flow model value, identifying periods of overvaluation and undervaluation.',
+}
+
+# Stock-to-Flow Reversion
+
+The **Stock-to-Flow Reversion** measures the deviation between Bitcoin's actual price and its theoretical Stock-to-Flow model price. {{ className: 'lead' }}
+
+This metric reveals whether Bitcoin trades above or below its scarcity-based fair value, identifying periods of extreme overvaluation or undervaluation relative to the fundamental supply constraint model.
+
+---
+
+## Endpoint
+
+`GET /stock-to-flow-reversion`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Stock-to-Flow Reversion to identify periods when Bitcoin price significantly deviates from its scarcity-based valuation model.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Stock-to-Flow Reversion data"}
+curl -G "https://api.blocklytics.net/api/public/v1/stock-to-flow-reversion" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "stock_to_flow_reversion": 1.15
+  },
+  {
+    "date": "2025-01-06",
+    "stock_to_flow_reversion": 1.12
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/stock-to-flow-reversion" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="stock_to_flow_reversion" type="number">
+    The ratio of Bitcoin's actual price to its Stock-to-Flow model predicted
+    price, where values above 1 indicate overvaluation and below 1 indicate
+    undervaluation relative to the scarcity model.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Reversion above 2** indicates significant overvaluation where Bitcoin price trades at double or more its stock-to-flow model value, historically marking cycle tops and euphoric peaks when speculative premium exceeds scarcity-based fundamentals by extreme margins.
+
+**Reversion near 1** suggests price trades at fair value according to the stock-to-flow model, indicating equilibrium between scarcity-based fundamentals and market valuation without significant over or undervaluation requiring correction.
+
+**Reversion below 0.5** reveals severe undervaluation where Bitcoin trades at half or less its stock-to-flow model value, historically marking cycle bottoms and maximum pessimism when prices fall far below scarcity-justified levels.
+
+**Rising reversion during rallies** warns of growing speculative excess as price appreciation outpaces the scarcity model's expectations, indicating potential bubble formation where valuations become detached from fundamental supply constraints.
+
+### Use Cases
+
+This metric provides a mean-reversion framework for identifying cyclical extremes relative to Bitcoin's fundamental scarcity value. Stock-to-Flow Reversion quantifies the speculative premium or discount applied to Bitcoin's base scarcity value, revealing when markets become excessively optimistic or pessimistic. Historical analysis shows price consistently oscillates around the stock-to-flow model value across cycles, with extreme deviations inevitably reverting toward the mean through corrections or consolidations. High reversion values above 2 have reliably marked major cycle tops, as they indicate unsustainable speculative excess where prices race far ahead of scarcity fundamentals. These overvaluation periods create mean-reversion opportunities, as prices eventually correct back toward model values through downturns. Conversely, low reversion values below 0.5 have consistently identified major bottoms, representing maximum opportunity when fear drives prices far below fundamental scarcity value. The metric also reveals cycle maturity through reversion trends, with early bull markets showing moderate reversion increases while late stages show explosive reversion spikes indicating terminal euphoria. Tracking reversion during bear markets identifies capitulation intensity, with reversion troughs marking maximum despair when prices fall furthest below fair value. The model assumes demand remains constant, so reversion changes can reflect either price movements or shifts in fundamental demand beyond pure scarcity effects. Comparing current reversion to historical extremes contextualizes valuation risk, with readings approaching previous cycle highs warning of tops while readings near previous lows suggesting bottoms.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/stock-to-flow-reversion', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `stock-to-flow-reversion?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      stock_to_flow_reversion: d.stock_to_flow_reversion,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

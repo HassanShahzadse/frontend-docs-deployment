@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Miner Supply Ratio',
+  description:
+    'Use the Miner Supply Ratio endpoint to track miner holdings as a percentage of total supply, revealing concentration and potential supply overhang.',
+}
+
+# Miner Supply Ratio
+
+The **Miner Supply Ratio** metric tracks miner reserves as a percentage of total circulating supply. {{ className: 'lead' }}
+
+This metric reveals what proportion of all coins are held by miners, helping assess supply concentration, potential selling pressure magnitude, and miner influence over market dynamics.
+
+---
+
+## Endpoint
+
+`GET /miner-supply-ratio`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the miner supply ratio to understand how much of total supply miners control and potential market impact of their distribution.
+
+<Properties>
+  <Property name="miner" type="string">
+    Mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner Supply Ratio data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-supply-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "miner_supply_ratio": 0.0087
+  },
+  {
+    "date": "2025-01-06",
+    "miner_supply_ratio": 0.0089
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-supply-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=all_miner \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="miner_supply_ratio" type="number">
+    The ratio of miner reserves to total circulating supply. For example, 0.01
+    means miners hold 1% of all circulating coins.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising supply ratio** indicates miners are accumulating faster than new supply enters circulation, suggesting strong conviction from network operators who are net buyers of their production and reducing freely available supply.
+
+**Declining supply ratio** reveals miners are distributing holdings faster than new production accumulates, indicating either bearish sentiment, profitability pressures, or strategic treasury management that increases circulating supply available to markets.
+
+**High supply ratio** suggests significant supply concentration in miner hands, creating potential overhang where large distributions could substantially impact markets if miners shift from holding to selling strategies.
+
+**Low supply ratio** indicates miners have already distributed most holdings with less supply concentration, reducing potential overhang but also suggesting less supply absorption capacity from mining sector.
+
+### Use Cases
+
+This metric contextualizes absolute miner reserves by showing their significance relative to total supply. A high ratio means miners control substantial portions of supply, giving them significant market influence through distribution decisions. Tracking ratio changes over cycles reveals whether miners are net accumulators or distributors relative to overall supply growth. Declining ratios during bull markets often indicate healthy profit-taking where miners distribute accumulated holdings, while rising ratios during bear markets show accumulation by those who survived downturns. For supply analysis, high miner supply ratios represent concentrated potential selling pressure, as large distributions from this cohort could meaningfully impact available supply. Comparing current ratios with historical ranges helps assess whether miners are over or under-accumulated relative to typical patterns.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-supply-ratio', async (req, res) => {
+  try {
+    const miner = req.query.miner || 'all_miner'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-supply-ratio?window=${window}&miner=${miner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      miner_supply_ratio: d.miner_supply_ratio,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

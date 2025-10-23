@@ -1,0 +1,182 @@
+export const metadata = {
+  title: 'UTXO Value Bands',
+  description:
+    'Use the UTXO Value Bands endpoint to track the distribution of Bitcoin supply across UTXO value size cohorts, revealing how wealth concentrates in retail dust versus whale positions.',
+}
+
+# UTXO Value Bands
+
+The **UTXO Value Bands** metric distributes the active Bitcoin supply across UTXO value size cohorts, revealing how wealth concentrates across different output sizes. {{ className: 'lead' }}
+
+This metric identifies the amount of Bitcoin held in outputs of various sizes, enabling analysis of whether supply concentrates in numerous small retail outputs or fewer large whale positions.
+
+---
+
+## Endpoint
+
+`GET /utxo-value-bands`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor UTXO value distribution across size bands to assess wealth concentration patterns and distinguish between retail dust and whale capital dominance.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting UTXO Value Bands data"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxo-value-bands" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "range_0_001": 12500,
+    "range_001_01": 89000,
+    "range_01_1": 456000,
+    "range_1_10": 2340000,
+    "range_10_100": 4560000,
+    "range_100_1k": 3890000,
+    "range_1k_10k": 2780000,
+    "range_10k_inf": 5124500
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxo-value-bands" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="range_0_001" type="number">
+    Bitcoin in UTXOs containing 0 to 0.001 BTC (dust), measured in BTC.
+  </Property>
+  <Property name="range_001_01" type="number">
+    Bitcoin in UTXOs containing 0.001 to 0.01 BTC (micro), measured in BTC.
+  </Property>
+  <Property name="range_01_1" type="number">
+    Bitcoin in UTXOs containing 0.01 to 1 BTC (small retail), measured in BTC.
+  </Property>
+  <Property name="range_1_10" type="number">
+    Bitcoin in UTXOs containing 1 to 10 BTC (retail), measured in BTC.
+  </Property>
+  <Property name="range_10_100" type="number">
+    Bitcoin in UTXOs containing 10 to 100 BTC (mid-tier), measured in BTC.
+  </Property>
+  <Property name="range_100_1k" type="number">
+    Bitcoin in UTXOs containing 100 to 1,000 BTC (large holders), measured in
+    BTC.
+  </Property>
+  <Property name="range_1k_10k" type="number">
+    Bitcoin in UTXOs containing 1,000 to 10,000 BTC (whales), measured in BTC.
+  </Property>
+  <Property name="range_10k_inf" type="number">
+    Bitcoin in UTXOs containing over 10,000 BTC (mega whales), measured in BTC.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High small value band supply** indicates substantial Bitcoin locked in dust and micro outputs, revealing retail fragmentation where significant supply disperses across countless tiny uneconomical positions.
+
+**High large value band supply** demonstrates massive Bitcoin concentration in whale-sized outputs, showing substantial supply consolidates in fewer but much larger positions held by sophisticated capital.
+
+**Growing small value band supply** reveals increasing retail fragmentation, signaling Bitcoin supply is dispersing into smaller outputs through distribution or new participant influx creating numerous modest positions.
+
+**Growing large value band supply** signals whale accumulation and consolidation, indicating sophisticated capital is concentrating supply into larger discrete positions through acquisition and output merging.
+
+### Use Cases
+
+This metric provides insight into how Bitcoin supply distributes across different output sizes, revealing wealth concentration versus dispersion patterns. High large value band supply indicates substantial capital consolidates in whale-sized outputs, suggesting sophisticated holders maintain significant positions in discrete large outputs rather than fragmenting across many addresses. These concentrated large positions represent patient capital with conviction, as maintaining substantial amounts in single outputs demonstrates confidence and long-term orientation. Conversely, high small value band supply reveals supply fragmentation across countless retail-sized outputs, indicating wealth disperses among many participants holding modest individual positions. The metric tracks wealth concentration shifts through supply migration between bands, with growing large bands confirming accumulation concentrates supply while growing small bands indicate distribution disperses holdings. Comparing supply amounts to UTXO counts in each band reveals average output sizes, with high supply relative to counts indicating fewer but larger outputs while low supply suggests many small outputs. This analysis identifies whether bands represent consolidated positions or fragmented holdings. Rising large value band supply during bear markets confirms accumulation as sophisticated capital consolidates supply into substantial positions. Declining large value band supply during bull markets warns of whale distribution as patient capital fragments large positions into smaller outputs for gradual selling. The metric also reveals retail participation through small band supply growth, with increasing amounts indicating new participants enter or existing holders accumulate into retail-sized positions.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/utxo-value-bands', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `utxo-value-bands?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      range_0_001: d.range_0_001,
+      range_001_01: d.range_001_01,
+      range_01_1: d.range_01_1,
+      range_1_10: d.range_1_10,
+      range_10_100: d.range_10_100,
+      range_100_1k: d.range_100_1k,
+      range_1k_10k: d.range_1k_10k,
+      range_10k_inf: d.range_10k_inf,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

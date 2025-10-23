@@ -1,0 +1,152 @@
+export const metadata = {
+  title: 'Tokens Transferred (Median)',
+  description:
+    'Use the Tokens Transferred (Median) endpoint to track the median amount of Bitcoin moved per transaction, revealing the typical retail transaction size unaffected by whale outliers.',
+}
+
+# Tokens Transferred (Median)
+
+The **Tokens Transferred (Median)** measures the median amount of Bitcoin transferred per transaction, revealing the typical retail transaction size resistant to outlier distortion. {{ className: 'lead' }}
+
+This metric provides a more robust view of typical transaction sizes than mean, as median resists skewing from occasional massive whale transfers, accurately representing ordinary participant behavior.
+
+---
+
+## Endpoint
+
+`GET /tokens-transferred-median`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor median tokens transferred to assess the typical retail transaction size, unaffected by occasional large whale movements that distort averages.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Tokens Transferred (Median) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/tokens-transferred-median" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "tokens_transferred_median": 0.034
+  },
+  {
+    "date": "2025-01-06",
+    "tokens_transferred_median": 0.031
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/tokens-transferred-median" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="tokens_transferred_median" type="number">
+    The median amount of Bitcoin transferred per transaction, measured in BTC,
+    representing the typical retail transaction size unaffected by whale
+    outliers.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High median transfer size** indicates even typical transactions move substantial amounts, revealing elevated retail transaction sizes or widespread larger transfers characteristic of active participation across all user tiers.
+
+**Low median transfer size** demonstrates typical transactions remain small, showing modest retail activity where most participants transfer small amounts, characteristic of cautious behavior or limited capital deployment.
+
+**Rising median transfer size** reveals growing typical transaction sizes across the participant base, signaling increasing confidence or capital deployment as ordinary users transact larger amounts, not just whales.
+
+**Declining median transfer size** shows shrinking typical transaction sizes, indicating retail caution or reduced capital deployment as ordinary participants transact smaller amounts, often during uncertainty or bear markets.
+
+### Use Cases
+
+This metric provides robust measurement of typical transaction size by using median instead of mean, eliminating distortion from occasional massive whale transfers that skew averages. The median represents the middle transaction when all are sorted by size, meaning half of transactions are smaller and half larger, accurately capturing typical participant behavior. This resistance to outliers makes median superior to mean for understanding ordinary user activity, as single billion-dollar whale transfers dramatically impact means while barely affecting medians. Comparing median to mean reveals transaction distribution character, with large gaps indicating significant whale activity distorting averages while median stays grounded in typical retail sizes. Low medians combined with high means signal whale-dominated environments where massive occasional transfers coexist with numerous small retail transactions. The median proves particularly valuable for tracking retail behavior changes, as shifts in median directly indicate changes in typical participant transaction sizes rather than whale activity changes. Rising medians during bull markets confirm retail participation growth through larger typical transactions, while declining medians during bears reveal retail caution through smaller typical transfers. The metric also contextualizes network usage, with very low medians indicating Bitcoin is used primarily for small payments or micro-transactions while higher medians suggest value transfer or investment use cases dominate.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/tokens-transferred-median', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `tokens-transferred-median?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      tokens_transferred_median: d.tokens_transferred_median,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

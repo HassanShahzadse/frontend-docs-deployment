@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Miner Depositing Transactions',
+  description:
+    'Use the Miner Depositing Transactions endpoint to track the number of inflow transactions to miners, revealing transaction frequency and activity patterns.',
+}
+
+# Miner Depositing Transactions
+
+The **Miner Depositing Transactions** metric tracks the number of transactions flowing into mining pools. {{ className: 'lead' }}
+
+This metric reveals the frequency of inflow transactions to miners, helping identify transaction patterns, operational activity levels, and changes in miner interaction dynamics.
+
+---
+
+## Endpoint
+
+`GET /miner-depositing-transactions`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor transaction frequency to miners to understand activity patterns and operational behavior.
+
+<Properties>
+  <Property name="miner" type="string">
+    Mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner Depositing Transactions data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-depositing-transactions" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "miner_depositing_transactions": 1547
+  },
+  {
+    "date": "2025-01-06",
+    "miner_depositing_transactions": 1423
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-depositing-transactions" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=all_miner \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="miner_depositing_transactions" type="number">
+    The number of transactions flowing into the mining pool during the specified
+    time window.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising transaction count** indicates increasing inflow activity to miners, which may reflect more frequent interactions, growing operational complexity, or increased participation in mining pool activities.
+
+**Declining transaction count** suggests reduced inflow frequency to miners, potentially indicating consolidation of transactions, changes in operational patterns, or decreased interaction with mining pool addresses.
+
+**High transaction count relative to address count** reveals many transactions from the same addresses, suggesting frequent operational activity, regular payments, or automated processes rather than diverse one-time interactions.
+
+**Low transaction count relative to address count** indicates fewer but potentially larger or more significant transactions, possibly reflecting consolidated operations or batch processing of payments and settlements.
+
+### Use Cases
+
+This metric helps analyze operational patterns and activity levels in mining operations. Rising transaction counts suggest increased mining pool activity, which could reflect growing participation, more frequent reward distributions, or expanding operational complexity. Comparing transaction counts across different mining pools reveals which operations process more frequent interactions versus those that consolidate into fewer, larger transactions. When combined with depositing addresses data, this metric reveals whether high activity comes from many participants making frequent small transactions or few participants making occasional large ones. Sudden spikes in transaction counts can indicate operational changes, payout policy adjustments, or shifts in how mining pools manage incoming funds. For understanding miner economics, tracking transaction frequency patterns helps identify operational efficiency improvements or changes in cash flow management strategies.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-depositing-transactions', async (req, res) => {
+  try {
+    const miner = req.query.miner || 'all_miner'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-depositing-transactions?window=${window}&miner=${miner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      miner_depositing_transactions: d.miner_depositing_transactions,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

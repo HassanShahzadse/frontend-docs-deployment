@@ -1,0 +1,165 @@
+export const metadata = {
+  title: 'Exchange to Exchange Flow (Mean)',
+  description:
+    'Use the Exchange to Exchange Flow Mean endpoint to track the average size of token transfers between exchanges, revealing inter-exchange liquidity patterns.',
+}
+
+# Exchange to Exchange Flow (Mean)
+
+The **Exchange to Exchange Flow Mean** metric tracks the average size of token transfers between exchanges. {{ className: 'lead' }}
+
+This metric reveals inter-exchange liquidity patterns, arbitrage activity, and institutional fund movements. Higher mean values often indicate whale transfers or institutional rebalancing between platforms.
+
+---
+
+## Endpoint
+
+`GET /exchange-to-exchange-flow-mean`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the average transaction size between exchanges to identify arbitrage opportunities, institutional movements, and liquidity flows.
+
+<Properties>
+  <Property name="from_exchange" type="string">
+    Source exchange name. Example: <code>binance</code>, <code>coinbase</code>,{' '}
+    <code>kraken</code>. Default: <code>all_exchange</code>.
+  </Property>
+  <Property name="to_exchange" type="string">
+    Destination exchange name. Example: <code>coinbase</code>,{' '}
+    <code>kraken</code>, <code>gemini</code>. Must be different from{' '}
+    <code>from_exchange</code>. Default: <code>spot_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Exchange to Exchange Flow Mean data"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-to-exchange-flow-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_exchange=binance \
+  -d to_exchange=coinbase \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "flow_mean": 12.45
+  },
+  {
+    "date": "2025-01-06",
+    "flow_mean": 8.92
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-to-exchange-flow-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_exchange=kraken \
+  -d to_exchange=gemini \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="flow_mean" type="number">
+    The average size of token transfers from the source exchange to the
+    destination exchange during the specified time window.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising mean values** indicate larger average transfers between exchanges, often signaling whale activity, institutional rebalancing, or concentrated arbitrage operations by sophisticated traders.
+
+**Declining mean values** suggest smaller, more retail-oriented transfers or distributed arbitrage activity across many smaller transactions.
+
+**Sudden spikes** may reveal large institutional movements, exchange rebalancing operations, or response to significant price discrepancies between platforms.
+
+**Consistent patterns** help identify regular institutional flows, scheduled rebalancing operations, or predictable arbitrage windows between specific exchange pairs.
+
+### Use Cases
+
+This metric is particularly useful for identifying arbitrage opportunities when combined with price data from both exchanges. High mean values often precede or follow significant price movements on the destination exchange. Monitoring flows from major exchanges like Binance to smaller platforms can reveal where institutional money is moving and potentially which platforms are gaining or losing liquidity.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/exchange-to-exchange-flow-mean', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const fromExchange = req.query.from_exchange || 'all_exchange'
+    const toExchange = req.query.to_exchange || 'spot_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `exchange-to-exchange-flow-mean?window=${window}&from_exchange=${fromExchange}&to_exchange=${toExchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      flow_mean: d.flow_mean,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

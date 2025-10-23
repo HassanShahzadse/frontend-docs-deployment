@@ -1,0 +1,150 @@
+export const metadata = {
+  title: 'SOPR Ratio (LTH-SOPR / STH-SOPR)',
+  description:
+    'Use the SOPR Ratio endpoint to compare profit-taking behavior between long-term and short-term holders, identifying market tops when veteran holders aggressively distribute to newer participants.',
+}
+
+# SOPR Ratio (LTH-SOPR / STH-SOPR)
+
+The **SOPR Ratio** measures the relative profit-taking intensity between Long-Term Holders (LTH) and Short-Term Holders (STH) by dividing LTH-SOPR by STH-SOPR. {{ className: 'lead' }}
+
+This metric reveals behavioral divergence between veteran and recent holders, identifying market cycle extremes when long-term holders take significantly larger profits than short-term holders, typically marking distribution phases and tops.
+
+---
+
+## Endpoint
+
+`GET /sopr-ratio`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the SOPR Ratio to identify periods when long-term holders take disproportionate profits compared to short-term holders, signaling potential market tops.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting SOPR Ratio data"}
+curl -G "https://api.blocklytics.net/api/public/v1/sopr-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "sopr_ratio": 1.87
+  },
+  {
+    "date": "2025-01-06",
+    "sopr_ratio": 1.92
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/sopr-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="sopr_ratio" type="number">
+    The ratio of Long-Term Holder SOPR to Short-Term Holder SOPR, representing
+    the relative profit-taking intensity between veteran and recent holders.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High SOPR Ratio (>2)** indicates long-term holders are taking significantly larger profits than short-term holders, revealing aggressive distribution from veterans who accumulated at much lower prices, historically marking market tops when smart money exits to newer participants.
+
+**SOPR Ratio near 1** suggests balanced profit-taking between long-term and short-term holders, indicating neither cohort dominates distribution activity and reflecting equilibrium where both groups realize similar relative gains on their respective cost bases.
+
+**Low SOPR Ratio (less than 1)** reveals short-term holders taking larger profits than long-term holders, typically appearing during early bull phases when recent buyers capture quick gains while veterans maintain positions anticipating further appreciation.
+
+**Rising SOPR Ratio** demonstrates accelerating long-term holder distribution relative to short-term holders, warning of increasing smart money exits as veterans progressively take profits while newer holders remain committed, often preceding corrections or tops.
+
+### Use Cases
+
+This metric provides sophisticated insight into behavioral divergence between experienced and inexperienced market participants, making it particularly valuable for identifying cycle tops. The ratio reveals when long-term holders, who accumulated at significantly lower prices and possess superior market knowledge through experience, begin distributing aggressively to short-term holders who entered more recently at elevated prices. High SOPR Ratios historically coincide with major cycle peaks, as they indicate the classic "smart money to dumb money" transition where veterans sell substantial positions to newer participants suffering from FOMO. Values above 2 particularly warn of dangerous market conditions, as they show long-term holders realizing twice the relative profit of short-term holders, indicating experienced capital is exiting while inexperienced capital remains engaged. The metric also identifies healthy bull market behavior versus unsustainable euphoria, with moderate SOPR Ratios during rallies suggesting balanced profit-taking while extreme ratios indicate one-sided distribution. During corrections, SOPR Ratio behavior reveals whether weakness represents temporary profit-taking or concerning distribution, with ratio normalization suggesting healthy consolidation while sustained elevation indicates continued smart money exits. The metric proves particularly powerful when combined with other distribution signals like exchange inflows and realized profits, as convergence of these indicators at high SOPR Ratios provides strong confirmation of topping processes. Tracking SOPR Ratio trends identifies accumulation versus distribution regimes, with declining ratios during bear markets indicating long-term holders accumulating while short-term holders capitulate, marking bottoming processes.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/sopr-ratio', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `sopr-ratio?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      sopr_ratio: d.sopr_ratio,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

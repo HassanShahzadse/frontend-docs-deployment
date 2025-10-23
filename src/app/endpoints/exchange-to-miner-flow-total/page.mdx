@@ -1,0 +1,165 @@
+export const metadata = {
+  title: 'Exchange to Miner Flow (Total)',
+  description:
+    'Use the Exchange to Miner Flow Total endpoint to track the total volume of tokens transferred from exchanges to mining pools, revealing miner accumulation trends.',
+}
+
+# Exchange to Miner Flow (Total)
+
+The **Exchange to Miner Flow Total** metric tracks the total volume of tokens transferred from exchanges to mining pools. {{ className: 'lead' }}
+
+This metric reveals overall miner accumulation trends and purchasing volume. High total flows indicate significant miner buying activity, often signaling confidence in future price appreciation from network operators.
+
+---
+
+## Endpoint
+
+`GET /exchange-to-miner-flow-total`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor total token volume flowing from exchanges to miners to identify major accumulation periods and miner market sentiment.
+
+<Properties>
+  <Property name="from_exchange" type="string">
+    Source exchange name. Example: <code>binance</code>, <code>coinbase</code>,{' '}
+    <code>kraken</code>. Default: <code>all_exchange</code>.
+  </Property>
+  <Property name="to_miner" type="string">
+    Destination mining pool name. Example: <code>f2pool</code>,{' '}
+    <code>antpool</code>, <code>foundryusa</code>. Default:{' '}
+    <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Exchange to Miner Flow Total data"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-to-miner-flow-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_exchange=binance \
+  -d to_miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "flow_total": 854.32
+  },
+  {
+    "date": "2025-01-06",
+    "flow_total": 623.78
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-to-miner-flow-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_exchange=coinbase \
+  -d to_miner=antpool \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="flow_total" type="number">
+    The total volume of tokens transferred from the exchange to the mining pool
+    during the specified time window.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising total flow** indicates increased miner accumulation from exchanges, often signaling bullish sentiment from network operators who have direct insight into mining economics and profitability. This can be a strong indicator that miners believe current prices are favorable for accumulation.
+
+**Declining total flow** suggests reduced miner purchasing activity, which may indicate miners are satisfied with current holdings, focusing on operational expenses, or anticipating lower prices ahead.
+
+**Sudden spikes** typically reveal major miner acquisition events, possibly indicating strategic accumulation by well-capitalized mining operations or responses to significant market dips that miners view as buying opportunities.
+
+**Extended high periods** can signal sustained miner confidence and accumulation strategies, often correlating with periods where mining profitability allows for token retention rather than immediate selling pressure.
+
+### Use Cases
+
+This metric is essential for understanding miner market behavior and sentiment. Miners are unique market participants who must balance operational costs with token holdings, making their accumulation patterns meaningful signals. High total flows during market downturns often indicate that miners view prices as undervalued relative to production costs. When combined with Miner to Exchange flows, you can calculate net miner position changes and identify whether the mining sector is in accumulation or distribution mode. Tracking specific mining pool behaviors reveals which operations have the strongest financial positions and most aggressive growth strategies.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/exchange-to-miner-flow-total', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const fromExchange = req.query.from_exchange || 'all_exchange'
+    const toMiner = req.query.to_miner || 'all_miner'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `exchange-to-miner-flow-total?window=${window}&from_exchange=${fromExchange}&to_miner=${toMiner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      flow_total: d.flow_total,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

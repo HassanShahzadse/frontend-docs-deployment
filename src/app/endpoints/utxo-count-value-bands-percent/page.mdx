@@ -1,0 +1,181 @@
+export const metadata = {
+  title: 'UTXO Count - Value Bands (%)',
+  description:
+    'Use the UTXO Count - Value Bands (%) endpoint to track the percentage distribution of unspent outputs across value size cohorts, revealing the relative fragmentation composition of retail versus whale holdings.',
+}
+
+# UTXO Count - Value Bands (%)
+
+The **UTXO Count - Value Bands (%)** metric distributes the total number of UTXOs across value size cohorts as percentages, revealing the relative fragmentation composition. {{ className: 'lead' }}
+
+This metric identifies the proportional distribution of output counts by value tier, enabling normalized analysis of whether small retail dust or large whale outputs dominate the UTXO set structure.
+
+---
+
+## Endpoint
+
+`GET /utxo-count-value-bands-percent`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor UTXO count percentage distribution across value bands to assess the relative composition of fragmentation across economic tiers.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting UTXO Count - Value Bands (%) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxo-count-value-bands-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "range_0_001_percent": 57.32,
+    "range_001_01_percent": 22.93,
+    "range_01_1_percent": 12.1,
+    "range_1_10_percent": 5.35,
+    "range_10_100_percent": 1.4,
+    "range_100_1k_percent": 0.36,
+    "range_1k_10k_percent": 0.057,
+    "range_10k_inf_percent": 0.004
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxo-count-value-bands-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="range_0_001_percent" type="number">
+    Percentage of UTXOs containing 0 to 0.001 BTC (dust outputs).
+  </Property>
+  <Property name="range_001_01_percent" type="number">
+    Percentage of UTXOs containing 0.001 to 0.01 BTC (micro outputs).
+  </Property>
+  <Property name="range_01_1_percent" type="number">
+    Percentage of UTXOs containing 0.01 to 1 BTC (small retail outputs).
+  </Property>
+  <Property name="range_1_10_percent" type="number">
+    Percentage of UTXOs containing 1 to 10 BTC (retail outputs).
+  </Property>
+  <Property name="range_10_100_percent" type="number">
+    Percentage of UTXOs containing 10 to 100 BTC (mid-tier outputs).
+  </Property>
+  <Property name="range_100_1k_percent" type="number">
+    Percentage of UTXOs containing 100 to 1,000 BTC (large holder outputs).
+  </Property>
+  <Property name="range_1k_10k_percent" type="number">
+    Percentage of UTXOs containing 1,000 to 10,000 BTC (whale outputs).
+  </Property>
+  <Property name="range_10k_inf_percent" type="number">
+    Percentage of UTXOs containing over 10,000 BTC (mega whale outputs).
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High small value percentages** indicate UTXO set dominated by dust and micro outputs, revealing retail fragmentation dominates the output count distribution despite representing minimal economic value, creating blockchain bloat.
+
+**High large value percentages** demonstrate substantial proportion of outputs are whale-sized, showing large holders maintain fragmented positions that represent significant share of total UTXO count despite their small number.
+
+**Rising small value percentages** reveal growing dust accumulation proportionally dominates UTXO set growth, signaling retail activity creates fragmented outputs faster than consolidation, increasing blockchain resource burden.
+
+**Declining small value percentages** show dust cleanup or consolidation proportionally exceeds new small output creation, indicating effective UTXO management reduces the relative burden of uneconomical outputs.
+
+### Use Cases
+
+This metric provides normalized insight into UTXO set composition that enables meaningful comparison across different network states and total UTXO count levels. The percentage view removes the influence of absolute UTXO count changes, focusing on the relative character of fragmentation regardless of total output numbers. High small value percentages indicate the UTXO set is dominated by dust and micro outputs despite their minimal economic significance, revealing blockchain bloat from retail fragmentation. These conditions show the network carries substantial infrastructure burden from countless tiny uneconomical outputs that represent negligible value but consume storage and validation resources. The metric quantifies dust accumulation severity through small band percentage growth, with rising percentages indicating dust creation outpaces cleanup and increasingly burdens the network. Conversely, declining small value percentages signal successful dust management where consolidation or reduced retail activity decreases the relative proportion of uneconomical outputs. Comparing percentage distributions across cycles reveals whether current fragmentation patterns demonstrate similar or different characteristics than historical precedent. The metric also identifies retail versus whale fragmentation dominance, with heavily skewed distributions toward small values indicating retail-created dust dominates while more balanced distributions suggest diverse participant sizes maintain comparable output counts. Rising middle-band percentages during bull markets confirm retail graduation as small holders accumulate into larger positions, visible through growing mid-tier output proportions. The metric proves valuable for assessing blockchain efficiency, as high small value percentages indicate poor UTXO hygiene where the set is bloated with uneconomical outputs.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/utxo-count-value-bands-percent', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `utxo-count-value-bands-percent?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      range_0_001_percent: d.range_0_001_percent,
+      range_001_01_percent: d.range_001_01_percent,
+      range_01_1_percent: d.range_01_1_percent,
+      range_1_10_percent: d.range_1_10_percent,
+      range_10_100_percent: d.range_10_100_percent,
+      range_100_1k_percent: d.range_100_1k_percent,
+      range_1k_10k_percent: d.range_1k_10k_percent,
+      range_10k_inf_percent: d.range_10k_inf_percent,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

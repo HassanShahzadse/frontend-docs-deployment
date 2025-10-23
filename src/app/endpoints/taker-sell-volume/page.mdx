@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Taker Sell Volume',
+  description:
+    'Use the Taker Sell Volume endpoint to track the absolute volume of aggressive sell orders in perpetual swap markets, revealing the scale of impatient short positioning and bearish conviction.',
+}
+
+# Taker Sell Volume
+
+The **Taker Sell Volume** measures the total dollar volume of aggressive sell orders in perpetual swap markets, revealing the scale of impatient short positioning. {{ className: 'lead' }}
+
+This metric quantifies the absolute magnitude of bearish order flow from traders willing to pay the spread for immediate execution, providing insight into the intensity of selling conviction.
+
+---
+
+## Endpoint
+
+`GET /taker-sell-volume`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Taker Sell Volume to assess the absolute scale of aggressive selling activity and bearish conviction in derivatives markets.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>min</code>.
+  </Property>
+  <Property name="exchange" type="string">
+    Exchange to query. Options: <code>all_exchange</code>, <code>binance</code>,{' '}
+    <code>bybit</code>, <code>bitmex</code>, <code>deribit</code>,{' '}
+    <code>htx_global</code>, <code>okx</code>. Default:{' '}
+    <code>all_exchange</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Taker Sell Volume data"}
+curl -G "https://api.blocklytics.net/api/public/v1/taker-sell-volume" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d exchange=binance \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "taker_sell_volume": 3890000000
+  },
+  {
+    "date": "2025-01-06",
+    "taker_sell_volume": 4230000000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/taker-sell-volume" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d exchange=all_exchange \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="taker_sell_volume" type="number">
+    The total dollar volume of aggressive sell orders (takers hitting bids) in
+    perpetual swap markets, measured in USD, representing the scale of impatient
+    short positioning.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High taker sell volume** indicates substantial aggressive selling activity, revealing large-scale impatient short positioning where significant capital demands immediate execution by hitting available bids and absorbing liquidity.
+
+**Low taker sell volume** demonstrates minimal aggressive selling, showing limited urgency among bears and weak demand for immediate short exposure, typical during bullish periods or consolidation when selling conviction lacks.
+
+**Rising taker sell volume** reveals growing aggressive selling activity, signaling increasing bearish conviction and urgency as more capital seeks immediate short positions rather than waiting passively.
+
+**Declining taker sell volume** shows decreasing aggressive selling, indicating weakening bearish conviction and reduced urgency to enter shorts, often preceding or accompanying price strength.
+
+### Use Cases
+
+This metric provides absolute measurement of selling aggression magnitude, revealing the scale of capital demanding immediate short exposure in derivatives markets. High taker sell volume indicates substantial bearish conviction, as large amounts of capital willingly pay the spread for instant execution rather than placing patient limit orders. The absolute volume reveals market participation intensity, with spikes indicating surges in selling urgency often accompanying breakdowns or sharp declines. Comparing taker sell volume to historical levels contextualizes current selling pressure, revealing whether current aggressive short positioning is high or low relative to typical activity. The metric also identifies distribution intensity during different market phases, with sustained high taker sell volume during rallies suggesting strong resistance from aggressive sellers. Rising taker sell volume during downtrends confirms selling conviction supports the decline, while declining volume warns of weakening supply despite price weakness. Sudden spikes in taker sell volume often mark capitulation or panic selling events where urgent selling overwhelms available liquidity and drives rapid price depreciation. Comparing taker sell volume across exchanges reveals where selling pressure concentrates, identifying whether specific venues drive supply or if aggression is market-wide. The metric proves particularly valuable when combined with taker buy volume, as comparing absolute volumes reveals which side demonstrates greater urgency and the actual order flow imbalance magnitude.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/taker-sell-volume', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `taker-sell-volume?window=${window}&exchange=${exchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      taker_sell_volume: d.taker_sell_volume,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

@@ -1,0 +1,148 @@
+export const metadata = {
+  title: 'UTXOs in Loss (%)',
+  description:
+    'Use the UTXOs in Loss (%) endpoint to track the percentage of spent Bitcoin that was sold at a loss, revealing the relative intensity of capitulation versus profit-taking activity.',
+}
+
+# UTXOs in Loss (%)
+
+The **UTXOs in Loss (%)** metric measures the percentage of spent Bitcoin volume that realized losses, revealing the relative intensity of capitulation. {{ className: 'lead' }}
+
+This metric identifies the proportion of activity representing distressed selling versus profitable distribution, with high percentages indicating panic-dominated markets and low percentages suggesting healthy profit-taking.
+
+---
+
+## Endpoint
+
+`GET /utxos-in-loss-percent`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor UTXOs in loss percentage to assess whether market activity is dominated by capitulation or profit-taking behavior.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Currently only supports: <code>day</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting UTXOs in Loss (%) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxos-in-loss-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "loss_percent": 0.23
+  },
+  {
+    "date": "2025-01-06",
+    "loss_percent": 0.35
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxos-in-loss-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="loss_percent" type="number">
+    The percentage of total spent Bitcoin volume that was sold at a loss,
+    ranging from 0 to 1, representing the proportion of activity driven by
+    capitulation versus profit-taking.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High loss percentage (above 0.60)** indicates activity dominated by capitulation, revealing most spending represents distressed selling from underwater holders, typical during panic events or major bear market bottoms when losses overwhelm profits.
+
+**Low loss percentage (below 0.30)** demonstrates activity dominated by profit-taking, showing most spending represents successful exits by profitable holders, typical during bull markets when gains are widely distributed.
+
+**Loss percentage near 0.50** suggests balanced activity between capitulation and profit-taking, indicating markets where neither distressed sellers nor profitable distributors clearly dominate spending behavior.
+
+**Rising loss percentage** reveals growing capitulation dominance, signaling increasing proportion of activity represents distressed selling as market stress intensifies and more holders are forced to realize losses.
+
+### Use Cases
+
+This metric provides normalized measurement of capitulation intensity by expressing loss realization as a proportion of total activity, enabling comparison across different volume environments. High loss percentages indicate panic-dominated markets where distressed selling overwhelms profit-taking, revealing most participants exit positions underwater rather than in profit. These conditions typically characterize major bear market bottoms when maximum pain forces even patient holders to capitulate, creating one-sided markets dominated by desperate selling. The percentage view proves superior to absolute amounts for identifying relative panic intensity, as similar absolute loss amounts have vastly different implications depending on whether they represent 20 percent or 80 percent of total activity. Tracking percentage trends reveals capitulation progression, with rising percentages confirming growing market stress where an increasing share of activity represents forced selling. Extreme loss percentages above 70 percent historically mark peak capitulation when nearly all activity represents distressed selling, often coinciding with cycle bottoms as final weak hands flush out. Conversely, low loss percentages confirm healthy profit-taking environments where most spending represents successful exits rather than panic. The metric also identifies market character through percentage levels, with bull markets showing low percentages from dominant profit-taking while bear markets show high percentages from dominant capitulation. Rising loss percentages during rallies warn of weak recoveries that fail to restore profitability and instead trigger more underwater selling.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/utxos-in-loss-percent', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `utxos-in-loss-percent?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      loss_percent: d.loss_percent,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

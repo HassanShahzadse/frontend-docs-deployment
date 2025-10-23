@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Net Unrealized Loss (NUL)',
+  description:
+    'Use the Net Unrealized Loss endpoint to track the aggregate unrealized losses held by Bitcoin holders, revealing the magnitude of underwater positions and potential capitulation risk.',
+}
+
+# Net Unrealized Loss (NUL)
+
+The **Net Unrealized Loss (NUL)** metric measures the aggregate unrealized losses across all Bitcoin held at current prices relative to their acquisition costs. {{ className: 'lead' }}
+
+This metric isolates only UTXOs currently in loss, revealing the magnitude of underwater positions and providing insight into potential selling pressure from distressed holders.
+
+---
+
+## Endpoint
+
+`GET /net-unrealized-loss`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Net Unrealized Loss to assess the magnitude of underwater positions and potential capitulation risk in the Bitcoin network.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Net Unrealized Loss data"}
+curl -G "https://api.blocklytics.net/api/public/v1/net-unrealized-loss" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "nul": -0.087
+  },
+  {
+    "date": "2025-01-06",
+    "nul": -0.134
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/net-unrealized-loss" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="nul" type="number">
+    The net unrealized loss as a ratio of market capitalization, calculated by
+    summing the dollar losses of all UTXOs currently underwater (held below
+    acquisition price) divided by total market cap. Always negative or zero.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Large negative NUL values** indicate substantial aggregate unrealized losses where a significant portion of holders are underwater on their positions, revealing widespread paper losses that create potential for capitulation selling or forced liquidation if conditions deteriorate further.
+
+**NUL approaching zero** suggests minimal unrealized losses where most holders maintain profitable positions, indicating strong market health with limited distressed supply and reduced capitulation risk, typically appearing during strong bull markets or recovery phases.
+
+**Deepening NUL (more negative)** reveals growing aggregate losses as prices decline below more holder cost bases, indicating deteriorating holder profitability that increases psychological pressure and potential for panic selling as more participants fall underwater on their investments.
+
+**Improving NUL (less negative)** signals shrinking aggregate losses as prices recover above holder cost bases, indicating improving holder profitability that reduces selling pressure and strengthens conviction as more participants return to profit, often marking recovery from bear market conditions.
+
+### Use Cases
+
+This metric provides critical insight into the financial health and psychological state of Bitcoin holders by isolating underwater positions. Extreme negative NUL values historically coincide with market bottoms and capitulation events when maximum pain forces distressed selling, making deeply negative readings contrarian buy signals when fear reaches extremes. The magnitude of NUL relative to historical ranges helps identify true capitulation versus routine corrections, with NUL approaching all-time lows indicating genuine distress that typically precedes significant bottoms. During bear markets, tracking NUL progression reveals whether conditions are worsening (deepening NUL) or stabilizing (steady NUL), with stabilization even at deep levels often preceding eventual recovery. The metric also identifies the potential supply of coins at risk of capitulation selling, as holders with larger unrealized losses face greater pressure to sell during further declines. Comparing NUL to price action distinguishes between price declines that create widespread losses (deepening NUL) versus corrections within bull markets where most holders remain profitable (minimal NUL). Combining NUL with realized losses (NRPL) reveals whether distressed holders are actually capitulating (high realized losses with deep NUL) or stubbornly holding despite pain (deep NUL with minimal realized losses), which has different implications for bottoming processes. Recovery trajectories also vary based on NUL depth, with rallies from extreme NUL levels typically facing less resistance as many holders simply seek to break even rather than take profits.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/net-unrealized-loss', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `net-unrealized-loss?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      nul: d.nul,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

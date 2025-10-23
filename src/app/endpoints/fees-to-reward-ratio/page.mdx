@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Fees to Reward Ratio',
+  description:
+    'Use the Fees to Reward Ratio endpoint to track the percentage of miner revenue from transaction fees versus block subsidies, revealing network sustainability progress.',
+}
+
+# Fees to Reward Ratio
+
+The **Fees to Reward Ratio** metric tracks the percentage of total miner revenue that comes from transaction fees versus block subsidies. {{ className: 'lead' }}
+
+This metric reveals the network's progress toward a sustainable fee-based security model, which becomes critical as block subsidies decline through halvings.
+
+---
+
+## Endpoint
+
+`GET /fees-to-reward-ratio`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the fees to reward ratio to assess the network's transition toward fee-based miner incentives and long-term sustainability.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Fees to Reward Ratio data"}
+curl -G "https://api.blocklytics.net/api/public/v1/fees-to-reward-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "fees_to_reward_ratio": 0.085
+  },
+  {
+    "date": "2025-01-06",
+    "fees_to_reward_ratio": 0.072
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/fees-to-reward-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="fees_to_reward_ratio" type="number">
+    The percentage of total miner revenue from transaction fees relative to
+    total block reward (fees plus subsidy). Range: 0 to 1, where 0.1 means 10%
+    of revenue is from fees.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising fee ratio** indicates the network is progressing toward a fee-based security model, with transaction fees comprising a larger share of miner revenue. This is essential for long-term sustainability as block subsidies halve approximately every four years.
+
+**Declining fee ratio** suggests the network remains heavily dependent on block subsidies for miner incentives, which may raise concerns about future security as subsidies continue decreasing over time.
+
+**High fee ratios during congestion** reveal periods when network usage generates substantial miner revenue independent of subsidies, demonstrating the viability of a fee-based model during peak demand.
+
+**Low fee ratios despite high activity** may indicate that while transaction volume is high, individual fees remain low, potentially raising questions about whether the network can sustain adequate security through fees alone in future epochs.
+
+### Use Cases
+
+This metric is critical for assessing long-term network sustainability and security economics. As block subsidies halve every four years, the network must increasingly rely on transaction fees to incentivize miners and maintain security. A healthy trend shows this ratio gradually increasing over time, demonstrating growing fee market maturity. Comparing fee ratios across different market cycles helps identify whether the network is developing sustainable revenue patterns or remains overly dependent on subsidy-driven economics. High fee ratios during bull markets combined with low ratios during bear markets may indicate fee market volatility that could threaten security during downturns. Tracking this metric around halving events reveals whether the network successfully transitions to higher fee dependency as designed. For long-term network viability, this ratio should trend upward toward higher percentages over decades.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/fees-to-reward-ratio', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `fees-to-reward-ratio?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      fees_to_reward_ratio: d.fees_to_reward_ratio,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

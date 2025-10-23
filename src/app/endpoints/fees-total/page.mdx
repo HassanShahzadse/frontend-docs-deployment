@@ -1,0 +1,150 @@
+export const metadata = {
+  title: 'Fees (Total)',
+  description:
+    'Use the Fees Total endpoint to track the total transaction fees paid to miners, revealing network activity levels and demand for block space.',
+}
+
+# Fees (Total)
+
+The **Fees Total** metric tracks the sum of all transaction fees paid to miners during a specified time window. {{ className: 'lead' }}
+
+This metric reveals network usage intensity and demand for block space. Rising fees indicate increased transaction activity and competition for confirmation, while declining fees suggest lower network congestion.
+
+---
+
+## Endpoint
+
+`GET /fees-total`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor total transaction fees to understand network activity levels, user demand, and miner revenue trends.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Fees Total data"}
+curl -G "https://api.blocklytics.net/api/public/v1/fees-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "fees_total": 15.42
+  },
+  {
+    "date": "2025-01-06",
+    "fees_total": 12.87
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/fees-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="fees_total" type="number">
+    The total sum of transaction fees paid to miners during the specified time
+    window, denominated in BTC.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising total fees** indicate increased network activity and higher demand for block space, often signaling periods of intense trading, NFT minting waves, or major market movements that drive transaction volume.
+
+**Declining total fees** suggest reduced network congestion and lower transaction activity, which may indicate quieter market periods, decreased user engagement, or improved layer-2 adoption reducing on-chain pressure.
+
+**Fee spikes** typically occur during major market events, popular token launches, network congestion from high-value transactions, or periods when users compete aggressively for fast confirmation times.
+
+**Sustained high fees** can indicate structural network demand growth, increased adoption driving consistent activity, or persistent congestion requiring scaling solutions.
+
+### Use Cases
+
+This metric is essential for understanding network health and miner economics. Total fees represent an increasingly important component of miner revenue, especially as block subsidies decrease over time through halvings. High fee periods often correlate with major price movements or significant on-chain events. Tracking fee trends helps predict miner behavior, as miners become more dependent on transaction fees for profitability. When combined with block reward data, you can calculate the percentage of miner revenue coming from fees versus block subsidies, revealing the network's progress toward a fee-based security model.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/fees-total', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `fees-total?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      fees_total: d.fees_total,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Miner Depositing Addresses',
+  description:
+    'Use the Miner Depositing Addresses endpoint to track the number of unique addresses depositing to miners, revealing payment and transaction activity patterns.',
+}
+
+# Miner Depositing Addresses
+
+The **Miner Depositing Addresses** metric tracks the number of unique addresses involved in inflow transactions to mining pools. {{ className: 'lead' }}
+
+This metric reveals the diversity and distribution of inflows to miners, helping identify changes in miner revenue sources and transaction patterns.
+
+---
+
+## Endpoint
+
+`GET /miner-depositing-addresses`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the number of addresses depositing to miners to understand transaction distribution and miner interaction patterns.
+
+<Properties>
+  <Property name="miner" type="string">
+    Mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner Depositing Addresses data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-depositing-addresses" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "miner_depositing_addresses": 245
+  },
+  {
+    "date": "2025-01-06",
+    "miner_depositing_addresses": 238
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-depositing-addresses" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=all_miner \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="miner_depositing_addresses" type="number">
+    The number of unique addresses sending transactions to the mining pool
+    during the specified time window.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising depositing addresses** indicate increasing interaction with the mining pool, which may reflect growing miner participation, more distributed hashrate, or increased transaction activity involving miner wallets.
+
+**Declining depositing addresses** suggest reduced interaction with the mining pool, potentially indicating consolidation among fewer participants or decreased transaction activity to miner addresses.
+
+**High address count relative to transaction volume** reveals distributed activity with many smaller participants interacting with the mining pool, suggesting a diverse ecosystem of individual miners or smaller operations.
+
+**Low address count relative to transaction volume** indicates concentrated activity where fewer addresses send larger amounts, possibly reflecting institutional mining operations or larger consolidation among participants.
+
+### Use Cases
+
+This metric helps assess the distribution and diversity of miner ecosystem participation. Rising address counts suggest growing participation in mining operations, indicating healthy distribution and potentially increasing decentralization. Comparing address counts across different mining pools reveals which operations attract more diverse participation versus concentrated institutional players. Sudden changes in depositing addresses can signal shifts in mining pool popularity, changes in payout policies, or migration of hashrate between pools. For analyzing miner behavior, combining this metric with inflow volume data reveals whether activity is driven by many small participants or few large ones, providing insights into mining industry structure and concentration trends.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-depositing-addresses', async (req, res) => {
+  try {
+    const miner = req.query.miner || 'all_miner'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-depositing-addresses?window=${window}&miner=${miner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      miner_depositing_addresses: d.miner_depositing_addresses,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

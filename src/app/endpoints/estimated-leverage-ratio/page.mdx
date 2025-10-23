@@ -1,0 +1,152 @@
+export const metadata = {
+  title: 'Estimated Leverage Ratio',
+  description:
+    'Learn how to use the Estimated Leverage Ratio endpoint to measure market sentiment and risk-taking behavior by comparing exchange open interest to BTC reserves.',
+}
+
+# Estimated Leverage Ratio
+
+The **Estimated Leverage Ratio (ELR)** measures how much leverage traders are using on derivatives exchanges. {{ className: 'lead' }}
+
+It is calculated by dividing the **open interest** of an exchange by its **BTC reserve**. A higher ratio indicates higher leverage — and therefore higher market risk and potential volatility. This indicator provides insights into traders’ aggressiveness and overall market sentiment.
+
+---
+
+## Endpoint
+
+`GET /estimated-leverage-ratio`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+This example retrieves the estimated leverage ratio across all supported exchanges for daily intervals. Adjust parameters to target a specific exchange or export in CSV format.
+
+<Properties>
+  <Property name="exchange" type="string">
+    The name of the derivatives exchange. Example: <code>binance</code>,{' '}
+    <code>bitmex</code>, <code>bybit</code>. Default: <code>all_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Estimated Leverage Ratio data"}
+curl -G "https://api.blocklytics.net/api/public/v1/estimated-leverage-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=binance \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "estimated_leverage_ratio": 0.213
+  },
+  {
+    "date": "2025-01-06",
+    "estimated_leverage_ratio": 0.219
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/estimated-leverage-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=bitmex \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+The **Estimated Leverage Ratio** provides a quantitative signal of traders’ risk exposure and potential market volatility:
+
+<Properties>
+  <Property name="estimated_leverage_ratio" type="number">
+    Ratio of an exchange’s open interest to its BTC reserves.
+  </Property>
+  <Property name="exchange" type="string">
+    Name of the derivatives exchange used for calculation.
+  </Property>
+</Properties>
+
+When leverage ratios rise, traders are taking on more risk, often leading to sharp market movements. Lower ratios suggest reduced speculative activity and lower volatility.
+
+> **Note:** Historical ELR data is not Point-In-Time (PIT) accurate and may change as exchange wallet data is updated and validated.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/estimated-leverage-ratio', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `estimated-leverage-ratio?window=${window}&exchange=${exchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      estimated_leverage_ratio: d.estimated_leverage_ratio,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

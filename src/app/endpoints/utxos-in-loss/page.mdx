@@ -1,0 +1,147 @@
+export const metadata = {
+  title: 'UTXOs in Loss',
+  description:
+    'Use the UTXOs in Loss endpoint to track the amount of Bitcoin in spent outputs that were sold at a loss, revealing capitulation intensity and holder conviction during market stress.',
+}
+
+# UTXOs in Loss
+
+The **UTXOs in Loss** metric measures the total amount of Bitcoin in UTXOs that were spent at prices lower than their acquisition cost, revealing realized loss intensity. {{ className: 'lead' }}
+
+This metric quantifies the scale of capitulation by identifying Bitcoin sold underwater, with high values indicating substantial panic selling and loss realization during market downturns.
+
+---
+
+## Endpoint
+
+`GET /utxos-in-loss`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor UTXOs in loss to assess capitulation intensity and identify periods of maximum holder pain when substantial losses are realized.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Currently only supports: <code>day</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting UTXOs in Loss data"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxos-in-loss" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "loss_amount": 12500
+  },
+  {
+    "date": "2025-01-06",
+    "loss_amount": 18900
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxos-in-loss" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="loss_amount" type="number">
+    The total amount of Bitcoin in spent UTXOs where the selling price was lower
+    than the acquisition price, measured in BTC, representing realized losses.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High loss amount** indicates substantial Bitcoin sold at a loss, revealing intense capitulation where significant volumes realize losses, typical during panic selling or major bear market bottoms when holders break conviction.
+
+**Low loss amount** demonstrates minimal loss realization, showing holders maintain conviction and avoid panic selling despite potential paper losses, typical during consolidation or early downturns before capitulation begins.
+
+**Rising loss amount** reveals increasing capitulation intensity, signaling growing numbers of holders are breaking conviction and selling underwater positions as market stress intensifies and losses deepen.
+
+**Declining loss amount** shows decreasing capitulation, indicating holders are regaining conviction and reducing panic selling as either prices recover or weak hands have been fully flushed out through prior capitulation.
+
+### Use Cases
+
+This metric provides direct measurement of realized loss intensity by quantifying the Bitcoin volume sold underwater, revealing capitulation severity and holder conviction during market stress. High loss amounts indicate markets experiencing substantial capitulation where significant volumes realize losses, suggesting either panic selling from weak hands or forced liquidations from leveraged positions. These capitulation events often mark major bottoms as the final weak holders flush out, creating opportunities for patient capital to accumulate at depressed prices. The metric identifies peak capitulation through loss amount spikes, with extreme readings historically coinciding with cycle bottoms when maximum pain forces underwater holders to sell regardless of loss magnitude. Tracking loss amounts over time reveals capitulation progression, with rising amounts confirming increasing stress and eventual spikes marking climax selling. Conversely, declining loss amounts after capitulation events confirm weak hands have been flushed and remaining holders demonstrate stronger conviction. Comparing loss amounts to total volume reveals what proportion of activity represents distressed selling versus profitable distribution, with high ratios indicating panic-dominated markets while low ratios suggest healthy profit-taking. The metric also identifies bear market phases, with early declines showing low loss amounts as holders maintain conviction, mid-cycle showing rising amounts as patience exhausts, and late stages showing massive spikes as final capitulation occurs. Rising loss amounts during price rallies warn of trap situations where bounces fail to provide relief and instead trigger more underwater selling.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/utxos-in-loss', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `utxos-in-loss?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      loss_amount: d.loss_amount,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Net Unrealized Profit/Loss (NUPL)',
+  description:
+    'Use the Net Unrealized Profit/Loss endpoint to track the net difference between market cap and realized cap, revealing overall holder profitability and market cycle phases.',
+}
+
+# Net Unrealized Profit/Loss (NUPL)
+
+The **Net Unrealized Profit/Loss (NUPL)** metric measures the difference between market capitalization and realized capitalization as a ratio. {{ className: 'lead' }}
+
+This metric reveals the aggregate net profit or loss position of all Bitcoin holders, providing a comprehensive view of market profitability and identifying major market cycle phases.
+
+---
+
+## Endpoint
+
+`GET /net-unrealized-pl`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Net Unrealized Profit/Loss to assess overall holder profitability and identify major market cycle phases.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Net Unrealized Profit/Loss data"}
+curl -G "https://api.blocklytics.net/api/public/v1/net-unrealized-pl" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "nupl": 0.523
+  },
+  {
+    "date": "2025-01-06",
+    "nupl": 0.478
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/net-unrealized-pl" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="nupl" type="number">
+    The ratio of (Market Cap - Realized Cap) / Market Cap, representing the net
+    unrealized profit or loss position of all Bitcoin holders. Positive values
+    indicate net profit, negative values indicate net loss.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**NUPL above 0.75** indicates extreme euphoria where the vast majority of holders maintain substantial unrealized gains, historically marking cycle tops and unsustainable greed phases that precede major corrections as profit-taking pressure becomes overwhelming.
+
+**NUPL between 0.5 and 0.75** represents optimism and belief phases where most holders are profitable but not at extreme levels, typically characterizing healthy bull markets with room for further appreciation before reaching dangerous euphoria territory.
+
+**NUPL between 0 and 0.5** indicates hope and early recovery phases where holders transition from net losses to modest profits, often appearing during early bull markets or consolidation periods where conviction rebuilds after previous downturns.
+
+**NUPL below 0** reveals capitulation and despair phases where holders collectively maintain net unrealized losses, historically marking bear market bottoms and extreme fear periods that create exceptional accumulation opportunities when market sentiment is most negative.
+
+### Use Cases
+
+This metric provides one of the most comprehensive frameworks for identifying market cycle phases and major turning points through a single normalized ratio. NUPL's historical track record in identifying cycle extremes makes it invaluable for long-term positioning and major allocation decisions. Readings above 0.75 have consistently marked cycle tops across Bitcoin's history, as they indicate unsustainable profit levels that inevitably attract profit-taking and reversals, making extremely high NUPL readings clear warning signals for reducing exposure. Conversely, negative NUPL values have reliably identified major bottoms and accumulation zones, as they indicate network-wide losses that eventually exhaust selling pressure and create mean reversion opportunities. The metric's normalized structure allows consistent interpretation across different market environments and price levels, unlike absolute price metrics that require contextual adjustment. NUPL also maps clearly to psychological market phases, with distinct ranges corresponding to despair, hope, optimism, euphoria cycles that help investors understand current positioning within larger trends. Tracking NUPL trends identifies cycle progression, with sustained rises indicating strengthening bull markets while sustained declines warn of deteriorating conditions. Comparing current NUPL to historical cycle patterns helps estimate remaining runway in bull markets or depth of bear markets, as cycles typically follow similar NUPL trajectories despite different absolute price levels. The metric proves particularly valuable for mechanical rebalancing strategies, where NUPL thresholds trigger systematic position adjustments without emotional interference. Combining NUPL with price momentum distinguishes between healthy bull market corrections (NUPL remains elevated) versus genuine reversals (NUPL plummets), helping investors avoid mistaking cyclical tops for temporary pullbacks.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/net-unrealized-pl', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `net-unrealized-pl?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      nupl: d.nupl,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

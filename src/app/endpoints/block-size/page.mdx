@@ -1,0 +1,140 @@
+export const metadata = {
+  title: 'Block Size (Mean)',
+  description:
+    'Learn how to use the Block Size (Mean) endpoint to monitor the average size of Bitcoin blocks in bytes, reflecting transaction activity and network demand.',
+}
+
+# Block Size (Mean)
+
+The **Block Size (Mean)** metric shows the average size of all Bitcoin blocks generated, measured in bytes. {{ className: 'lead' }}
+
+It helps evaluate how full the blocks are — larger blocks indicate higher on-chain transaction activity and demand, while smaller blocks suggest reduced network usage.
+
+---
+
+## Endpoint
+
+`GET /block-size`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+This example retrieves the mean block size for daily time windows. Adjust parameters to query specific ranges or output formats.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Block Size data"}
+curl -G "https://api.blocklytics.net/api/public/v1/block-size" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "block_size": 1024583
+  },
+  {
+    "date": "2025-01-06",
+    "block_size": 984312
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/block-size" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+The **Block Size (Mean)** reflects transaction volume and usage of block space:
+
+<Properties>
+  <Property name="block_size" type="number">
+    The average block size generated during the selected time window, in bytes.
+  </Property>
+</Properties>
+
+Larger average block sizes often occur during high network demand and fee spikes, while smaller ones indicate low activity or mempool clearance after congestion.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/block-size', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `block-size?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      block_size: d.block_size,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

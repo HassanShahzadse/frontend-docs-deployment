@@ -1,0 +1,150 @@
+export const metadata = {
+  title: 'Market Cap',
+  description:
+    'Use the Market Cap endpoint to track the total market capitalization of Bitcoin, revealing the aggregate dollar value of all coins in circulation.',
+}
+
+# Market Cap
+
+The **Market Cap** metric tracks the total market capitalization of Bitcoin, calculated by multiplying total supply by current USD price. {{ className: 'lead' }}
+
+This metric reveals the aggregate dollar value assigned to the entire Bitcoin network, providing a fundamental measure of market size and relative valuation across time periods.
+
+---
+
+## Endpoint
+
+`GET /market-cap`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor market capitalization to track overall network valuation growth and compare Bitcoin's size relative to other assets and markets.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Market Cap data"}
+curl -G "https://api.blocklytics.net/api/public/v1/market-cap" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "market_cap": 1850000000000
+  },
+  {
+    "date": "2025-01-06",
+    "market_cap": 1820000000000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/market-cap" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="market_cap" type="number">
+    The total market capitalization calculated as total circulating supply
+    multiplied by current USD price, measured in dollars.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising market cap** indicates increasing aggregate network valuation, reflecting either price appreciation, new supply entering circulation, or both. Strong market cap growth suggests expanding mainstream adoption and capital inflows.
+
+**Declining market cap** reveals contracting network valuation through price declines, though supply continues growing. Sharp market cap drops during bear markets indicate significant capital outflows and reduced investor confidence.
+
+**All-time high market cap** demonstrates peak network valuation and maximum capital investment, though this alone doesn't indicate overvaluation as the metric combines both price and supply dynamics.
+
+**Market cap comparison with other assets** provides context for Bitcoin's relative size, helping assess whether current valuation seems reasonable compared to gold, major companies, or entire stock market indices.
+
+### Use Cases
+
+This metric provides fundamental context for understanding Bitcoin's place in global financial markets. Comparing current market cap with historical peaks and troughs reveals how much capital has entered or exited the network across cycles. Market cap growth rates help assess whether adoption is accelerating or decelerating over time. For institutional investors, market cap determines position sizing and portfolio allocation decisions, as higher market caps generally correlate with lower volatility and better liquidity. Comparing Bitcoin's market cap with gold, major tech companies, or national currencies contextualizes its maturity and potential for future growth. However, market cap alone can be misleading as it treats all coins equally regardless of whether they're actively traded, lost, or held long-term, which is why metrics like realized cap provide complementary insights.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/market-cap', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `market-cap?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      market_cap: d.market_cap,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

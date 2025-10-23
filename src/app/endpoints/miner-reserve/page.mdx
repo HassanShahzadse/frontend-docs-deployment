@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Miner Reserve',
+  description:
+    'Use the Miner Reserve endpoint to track on-chain balances held by mining pools, revealing miner accumulation patterns and potential selling pressure.',
+}
+
+# Miner Reserve
+
+The **Miner Reserve** metric tracks the total on-chain balance held by mining pool wallets. {{ className: 'lead' }}
+
+This metric reveals how much Bitcoin miners are holding versus distributing, providing insights into miner sentiment, accumulation strategies, and potential future selling pressure from accumulated holdings.
+
+---
+
+## Endpoint
+
+`GET /miner-reserve`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor miner reserves to identify accumulation or distribution trends and assess potential future selling pressure.
+
+<Properties>
+  <Property name="miner" type="string">
+    Mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner Reserve data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-reserve" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "miner_reserve": 184523.45
+  },
+  {
+    "date": "2025-01-06",
+    "miner_reserve": 184768.92
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-reserve" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=all_miner \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="miner_reserve" type="number">
+    The total on-chain balance held in mining pool wallets at the specified
+    time, denominated in BTC.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising miner reserves** indicate net accumulation where miners are holding more than they distribute, suggesting bullish sentiment from network operators who expect price appreciation and choose to build holdings rather than immediately liquidate.
+
+**Declining miner reserves** reveal net distribution where miners are selling more than they accumulate from new production, indicating either bearish sentiment, profitability pressures requiring liquidation, or strategic profit-taking during favorable market conditions.
+
+**All-time high reserves** demonstrate maximum miner confidence and accumulation, with operators choosing to hold rather than sell despite potentially favorable selling opportunities, suggesting strong conviction in future price appreciation.
+
+**Sharp reserve drops** signal major distribution events where miners execute significant selling or treasury movements, potentially indicating capitulation, urgent liquidity needs, or strategic position exits that could pressure markets.
+
+### Use Cases
+
+This metric is fundamental for understanding miner sentiment and predicting future supply dynamics. Rising reserves indicate miners are net buyers of their own production, effectively removing supply from markets and demonstrating confidence from those with the deepest network knowledge. Declining reserves warn of accumulated supply entering distribution channels, with the potential magnitude of selling pressure proportional to reserve levels. Tracking reserves relative to mining rewards shows whether miners are accumulating new production or liquidating historical holdings. During bear markets, rising reserves often signal miner capitulation bottoms as operators who survived weak prices begin accumulating, while declining reserves may indicate distress selling. For supply analysis, high miner reserves represent potential future selling pressure or overhang, while low reserves suggest miners have already distributed holdings with less ammunition remaining for future selling.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-reserve', async (req, res) => {
+  try {
+    const miner = req.query.miner || 'all_miner'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-reserve?window=${window}&miner=${miner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      miner_reserve: d.miner_reserve,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

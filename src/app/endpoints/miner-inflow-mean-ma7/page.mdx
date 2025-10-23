@@ -1,0 +1,159 @@
+export const metadata = {
+  title: 'Miner Inflow (Mean, MA7)',
+  description:
+    'Use the Miner Inflow Mean MA7 endpoint to track the 7-day moving average of inflow transaction sizes, revealing smoothed revenue trends and patterns.',
+}
+
+# Miner Inflow (Mean, MA7)
+
+The **Miner Inflow Mean MA7** metric tracks the 7-day moving average of mean transaction values flowing into mining pool wallets. {{ className: 'lead' }}
+
+This metric smooths daily volatility to reveal underlying trends in miner revenue patterns, helping identify sustained changes in inflow characteristics and operational structures.
+
+---
+
+## Endpoint
+
+`GET /miner-inflow-mean-ma7`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the 7-day moving average to identify sustained trends in miner inflow patterns without daily noise.
+
+<Properties>
+  <Property name="miner" type="string">
+    Mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner Inflow Mean MA7 data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-inflow-mean-ma7" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "miner_inflow_mean_ma7": 6.72
+  },
+  {
+    "date": "2025-01-06",
+    "miner_inflow_mean_ma7": 6.68
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-inflow-mean-ma7" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=all_miner \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="miner_inflow_mean_ma7" type="number">
+    The 7-day moving average of mean transaction values flowing into mining pool
+    wallets, denominated in BTC. This smooths daily volatility to reveal
+    sustained trends.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising MA7** indicates a sustained trend toward larger average inflows over the past week, suggesting improving revenue conditions from higher fees, larger external payments, or structural changes in how miners receive funds.
+
+**Declining MA7** reveals a persistent trend toward smaller average inflows, potentially indicating lower fee revenue, more distributed payment patterns, or shifts in operational fund management reducing typical transaction sizes.
+
+**MA7 significantly above daily mean** suggests recent daily values have been below the weekly trend, indicating a temporary pullback from recent higher averages that may normalize upward.
+
+**MA7 significantly below daily mean** reveals recent daily values have exceeded the weekly trend, suggesting a temporary spike in average inflow sizes that may revert to the lower weekly average.
+
+### Use Cases
+
+This smoothed metric helps identify genuine trends versus temporary fluctuations in miner revenue patterns. Sustained rises in MA7 confirm improving miner economics through higher fees or better revenue capture, while sustained declines may signal deteriorating profitability conditions. Comparing daily mean with MA7 helps distinguish between one-off events like single large payments and structural changes in revenue composition. The MA7 is particularly useful during periods of volatile transaction fees, as it reveals whether elevated fees are temporary spikes or sustained increases affecting miner revenue. For long-term analysis, tracking MA7 trends across market cycles shows how miner revenue composition evolves with changing fee markets, network adoption, and operational maturity. Divergences between MA7 and expected block reward values help identify when non-mining inflows become significant contributors to total miner revenue.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-inflow-mean-ma7', async (req, res) => {
+  try {
+    const miner = req.query.miner || 'all_miner'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-inflow-mean-ma7?window=${window}&miner=${miner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      miner_inflow_mean_ma7: d.miner_inflow_mean_ma7,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

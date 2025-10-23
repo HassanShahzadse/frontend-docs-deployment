@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Sum Coin Dollar Age (SCDA)',
+  description:
+    'Use the Sum Coin Dollar Age endpoint to measure the total accumulated dollar-weighted age of all unspent Bitcoin, revealing economic holding commitment and capital patience.',
+}
+
+# Sum Coin Dollar Age (SCDA)
+
+The **Sum Coin Dollar Age (SCDA)** calculates the total accumulated age across all unspent Bitcoin weighted by dollar value at acquisition, measuring economic holding commitment. {{ className: 'lead' }}
+
+This metric reveals the aggregate dollar-weighted patience across the network, with rising SCDA indicating increasing capital commitment and declining SCDA signaling realization of accumulated economic value.
+
+---
+
+## Endpoint
+
+`GET /sum-coin-dollar-age`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Sum Coin Dollar Age to assess the aggregate economic holding commitment and identify periods when patient capital realizes accumulated value.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Sum Coin Dollar Age data"}
+curl -G "https://api.blocklytics.net/api/public/v1/sum-coin-dollar-age" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "scda": 234567000000000
+  },
+  {
+    "date": "2025-01-06",
+    "scda": 233456000000000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/sum-coin-dollar-age" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="scda" type="number">
+    The sum of all unspent Bitcoin multiplied by days unmoved and acquisition
+    price, measured in Dollar-days, representing the total economic commitment
+    accumulated through holding.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising SCDA** indicates increasing economic holding commitment as capital accumulates both time and value, revealing that the network holds not just coins but significant dollar-weighted patience as holders maintain positions acquired at various prices.
+
+**Declining SCDA** demonstrates destruction of economic age through spending, signaling realization of accumulated dollar value as holders move coins acquired at historical prices, often marking profit-taking when patient capital finally exits.
+
+**Accelerating SCDA growth** reveals intensifying economic accumulation where holders commit increasingly valuable capital for extended periods, typical during bear markets when fresh capital enters at depressed prices and demonstrates conviction through sustained holding.
+
+**SCDA destruction spikes** indicate major realization events where substantial dollar-weighted age disappears, revealing significant economic value exiting dormancy, often coinciding with profit-taking waves when holders liquidate positions acquired at much lower prices.
+
+### Use Cases
+
+This metric provides economic-weighted insight into holding commitment by valuing each coin's patience contribution at its acquisition price rather than current price. SCDA captures the dollar-denominated conviction demonstrated through holding, revealing how much economic value has remained patient rather than seeking liquidity. The dollar weighting emphasizes economically significant holdings, as coins acquired at high prices contribute more to SCDA than those acquired cheaply, properly reflecting the capital commitment involved. Rising SCDA indicates the network accumulates not just coin-days but dollar-weighted commitment, showing that holders maintain positions representing substantial original investment value. This provides a more economically meaningful measure than simple coin age, as it accounts for the actual capital at stake in each holding decision. During bear markets, SCDA growth reveals accumulation intensity in economic terms, showing whether new capital entering at depressed prices demonstrates conviction by holding despite underwater positions. During bull markets, SCDA behavior reveals whether accumulated economic value remains patient or realizes gains, with sharp SCDA declines indicating profit-taking from positions acquired at lower prices. The metric complements Coin Days Destroyed Dollar by measuring dollar-weighted age accumulation rather than destruction, providing the supply-side perspective on economic patience. High SCDA values indicate substantial economic capital has demonstrated conviction through extended holding, strengthening supply fundamentals through proven dollar-weighted commitment.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/sum-coin-dollar-age', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `sum-coin-dollar-age?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      scda: d.scda,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

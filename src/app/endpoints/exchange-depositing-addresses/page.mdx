@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Exchange Depositing Addresses',
+  description:
+    'Learn how to use the Exchange Depositing Addresses endpoint to monitor the number of Bitcoin addresses sending funds into exchange wallets — a key indicator of potential sell pressure.',
+}
+
+# Exchange Depositing Addresses
+
+The **Exchange Depositing Addresses** metric tracks the number of unique Bitcoin addresses depositing funds to exchange wallets. {{ className: 'lead' }}
+
+Rising depositing activity often signals increased selling pressure or profit realization by traders, while declining activity suggests accumulation or reduced trading intensity.
+
+---
+
+## Endpoint
+
+`GET /exchange-depositing-addresses`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+This example retrieves the number of addresses depositing Bitcoin to exchanges. Adjust parameters to specify an exchange, timeframe, or output format.
+
+<Properties>
+  <Property name="exchange" type="string">
+    The name of the exchange. Example: <code>binance</code>,{' '}
+    <code>coinbase</code>, <code>kraken</code>. Default:{' '}
+    <code>all_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Exchange Depositing Addresses data"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-depositing-addresses" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=binance \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "addresses_count_inflow": 15432
+  },
+  {
+    "date": "2025-01-06",
+    "addresses_count_inflow": 12890
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-depositing-addresses" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=coinbase \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+The **Exchange Depositing Addresses** metric helps identify the flow of Bitcoin into exchanges — a proxy for market sentiment and potential price movements:
+
+<Properties>
+  <Property name="addresses_count_inflow" type="number">
+    Number of unique Bitcoin addresses depositing funds to exchange wallets.
+  </Property>
+  <Property name="exchange" type="string">
+    Name of the exchange where deposits are tracked.
+  </Property>
+</Properties>
+
+High inflows typically indicate traders preparing to sell or rebalance portfolios. Low inflows can imply reduced selling pressure and accumulation behavior.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/exchange-depositing-addresses', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `exchange-depositing-addresses?window=${window}&exchange=${exchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      addresses_count_inflow: d.addresses_count_inflow,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

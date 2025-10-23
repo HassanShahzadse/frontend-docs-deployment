@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Average Supply-Adjusted CDD',
+  description:
+    'Learn how to use the Average Supply-Adjusted Coin Days Destroyed (aSA CDD) endpoint to assess long-term Bitcoin holder activity and whale movement patterns.',
+}
+
+# Average Supply-Adjusted CDD
+
+The **Average Supply-Adjusted Coin Days Destroyed (aSA CDD)** metric helps measure Bitcoin network activity by giving greater weight to long-held coins being moved. {{ className: 'lead' }}
+
+It builds on the concept of **Coin Days Destroyed (CDD)** — which multiplies each spent coin’s value by the number of days it remained dormant — and adjusts it for total supply to normalize over time.  
+By comparing **sa_cdd** to **average_sa_cdd**, analysts can infer when long-term holders (LTHs) or whales are actively moving funds.
+
+---
+
+## Endpoint
+
+`GET /average-sa-cdd`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+This example retrieves the average supply-adjusted CDD values for daily intervals. Adjust parameters to query specific ranges or export data in CSV format.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Average Supply-Adjusted CDD data"}
+curl -G "https://api.blocklytics.net/api/public/v1/average-sa-cdd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "average_sa_cdd": 0.000042
+  },
+  {
+    "date": "2025-01-06",
+    "average_sa_cdd": 0.000039
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/average-sa-cdd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=block \
+  -d from=510000 \
+  -d to=510500 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+The **Average Supply-Adjusted Coin Days Destroyed** metric reflects the behavior of experienced holders and whale activity:
+
+<Properties>
+  <Property name="cdd" type="number">
+    Coin Days Destroyed — sum of each spent coin’s value multiplied by the
+    number of days it was held.
+  </Property>
+  <Property name="sa_cdd" type="number">
+    Supply-adjusted CDD, normalized by total Bitcoin supply.
+  </Property>
+  <Property name="average_sa_cdd" type="number">
+    Lifetime average of supply-adjusted CDD since the genesis block.
+  </Property>
+  <Property name="binary_cdd" type="integer">
+    Binary signal: <code>1</code> if <code>sa_cdd</code> >{' '}
+    <code>average_sa_cdd</code>, else <code>0</code>.
+  </Property>
+</Properties>
+
+When **sa_cdd** exceeds **average_sa_cdd**, it signals increased long-term holder spending — typically associated with major market moves or profit-taking phases.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/average-sa-cdd', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `average-sa-cdd?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      average_sa_cdd: d.average_sa_cdd,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Miner Inflow (Mean)',
+  description:
+    'Use the Miner Inflow Mean endpoint to track the average transaction size flowing into mining pools, revealing revenue patterns and payout structures.',
+}
+
+# Miner Inflow (Mean)
+
+The **Miner Inflow Mean** metric tracks the average transaction value flowing into mining pool wallets. {{ className: 'lead' }}
+
+This metric reveals typical transaction sizes miners receive, helping distinguish between mining rewards, payment distributions, and other inflow sources based on transaction size patterns.
+
+---
+
+## Endpoint
+
+`GET /miner-inflow-mean`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor average inflow sizes to understand miner revenue patterns and payout distribution structures.
+
+<Properties>
+  <Property name="miner" type="string">
+    Mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner Inflow Mean data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-inflow-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "miner_inflow_mean": 6.87
+  },
+  {
+    "date": "2025-01-06",
+    "miner_inflow_mean": 6.54
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-inflow-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=all_miner \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="miner_inflow_mean" type="number">
+    The average value of transactions flowing into mining pool wallets during
+    the specified time window, denominated in BTC.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising mean inflow** indicates larger average transactions entering miner wallets, which may reflect block reward increases from fee spikes, larger external payments, or changes in payout structures favoring bigger batch transfers.
+
+**Declining mean inflow** suggests smaller average transactions, potentially indicating more distributed payment patterns, lower fees reducing overall reward sizes, or shifts toward more frequent smaller payouts.
+
+**Consistent mean values around block reward size** confirm that inflows primarily consist of mining rewards, with typical values reflecting the current block subsidy plus average transaction fees earned.
+
+**Mean values significantly different from block rewards** reveal substantial non-mining inflows, such as purchases from exchanges, returns from cold storage, or other operational fund movements beyond standard mining revenue.
+
+### Use Cases
+
+This metric helps distinguish between different types of miner inflows and understand revenue composition. Mean inflow values close to block reward amounts suggest mining rewards dominate, while significantly lower means indicate many small transactions from other sources. Tracking mean inflow changes helps identify when miners adjust payout policies or when external fund sources become more significant. Comparing mean inflow across mining pools reveals different operational structures, with some maintaining simpler direct reward collection and others showing more complex fund flows. Rising mean inflows during high-fee periods confirm miners are capturing elevated transaction fees effectively. For analyzing miner economics, sustained high mean inflows relative to historical averages indicate healthy revenue conditions, while declining means may signal profitability pressures.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-inflow-mean', async (req, res) => {
+  try {
+    const miner = req.query.miner || 'all_miner'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-inflow-mean?window=${window}&miner=${miner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      miner_inflow_mean: d.miner_inflow_mean,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

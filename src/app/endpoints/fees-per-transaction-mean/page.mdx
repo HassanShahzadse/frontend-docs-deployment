@@ -1,0 +1,150 @@
+export const metadata = {
+  title: 'Fees per Transaction (Mean)',
+  description:
+    'Use the Fees per Transaction Mean endpoint to track the average transaction fee paid by users, revealing network cost efficiency and user transaction behavior.',
+}
+
+# Fees per Transaction (Mean)
+
+The **Fees per Transaction Mean** metric tracks the average fee paid per transaction during a specified time window. {{ className: 'lead' }}
+
+This metric reveals what users actually pay to transact on the network, helping assess network affordability and identify periods of extreme congestion or efficiency.
+
+---
+
+## Endpoint
+
+`GET /fees-per-transaction-mean`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor average fees per transaction to understand user costs and network accessibility for different transaction types.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Fees per Transaction Mean data"}
+curl -G "https://api.blocklytics.net/api/public/v1/fees-per-transaction-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "fees_transaction_mean": 0.00045
+  },
+  {
+    "date": "2025-01-06",
+    "fees_transaction_mean": 0.00038
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/fees-per-transaction-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="fees_transaction_mean" type="number">
+    The average fee paid per transaction during the specified time window,
+    denominated in BTC.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising mean fees per transaction** indicate increasing network congestion where users must pay higher fees to compete for limited block space. This often occurs during market rallies or major on-chain events when transaction urgency increases.
+
+**Declining mean fees per transaction** suggest improved network efficiency or reduced congestion, making the network more accessible for smaller transactions and everyday use cases. This typically happens during quieter market periods or after scaling improvements.
+
+**Extremely high mean fees** can price out smaller users and push activity toward layer-2 solutions or alternative networks, potentially indicating a need for capacity upgrades or better fee estimation tools.
+
+**Stable low mean fees** indicate an efficient network where users can transact affordably, supporting broader adoption and use cases beyond high-value transfers.
+
+### Use Cases
+
+This metric is essential for understanding user experience and network accessibility. High mean fees per transaction can deter everyday users and push transactions off-chain to layer-2 solutions. Comparing this metric with total transaction count reveals whether high fees result from genuine congestion or from a small number of high-value transactions paying premium rates. When mean fees spike, it often signals optimal times to delay non-urgent transactions until congestion subsides. This metric also helps evaluate the effectiveness of fee estimation algorithms and whether users are overpaying due to poor wallet implementations. For businesses integrating blockchain payments, tracking mean fees helps predict operational costs and determine economical transaction batching strategies.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/fees-per-transaction-mean', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `fees-per-transaction-mean?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      fees_transaction_mean: d.fees_transaction_mean,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

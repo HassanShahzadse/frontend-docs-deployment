@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Supply in Profit',
+  description:
+    'Use the Supply in Profit endpoint to track the total amount of Bitcoin held above its acquisition price, revealing the scale of profitable positions and potential profit-taking pressure.',
+}
+
+# Supply in Profit
+
+The **Supply in Profit** metric measures the total amount of Bitcoin currently held above its acquisition price, revealing the scale of profitable positions. {{ className: 'lead' }}
+
+This metric quantifies the potential selling pressure from holders in profit, with high values indicating substantial supply could take profits and low values suggesting limited profitable supply available to sell.
+
+---
+
+## Endpoint
+
+`GET /supply-in-profit`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Supply in Profit to assess the scale of profitable positions and gauge potential profit-taking pressure from holders with gains.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Supply in Profit data"}
+curl -G "https://api.blocklytics.net/api/public/v1/supply-in-profit" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "profit_amount": 15670000
+  },
+  {
+    "date": "2025-01-06",
+    "profit_amount": 15340000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/supply-in-profit" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="profit_amount" type="number">
+    The total amount of Bitcoin held in UTXOs where the current price is above
+    the acquisition price, measured in BTC, representing the scale of profitable
+    positions.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High supply in profit** indicates substantial Bitcoin held above water, revealing widespread profitability that creates both psychological comfort and potential profit-taking pressure, typical during bull markets when most holders maintain gains.
+
+**Low supply in profit** demonstrates limited supply trades profitably, showing bear market conditions where few holders escape losses and minimal supply possesses the means and motivation to take profits.
+
+**Rising supply in profit** reveals growing profitable positions as prices appreciate above more holders' cost bases, signaling improving sentiment and building confidence as more participants enjoy gains rather than suffering losses.
+
+**Declining supply in profit** shows correction pushing profitable holders back underwater, indicating deteriorating conditions and growing pain as price weakness eliminates gains and forces previously comfortable holders into loss positions.
+
+### Use Cases
+
+This metric provides direct measurement of potential profit-taking pressure by quantifying the actual supply trading above cost basis. High supply in profit indicates maximum supply at risk of profit-taking, as these holders possess both means and potential motivation to realize gains. When most supply trades profitably, markets face elevated distribution risk from holders able to lock in returns, though actual selling depends on conviction and outlook. Historically, extreme supply in profit readings have preceded major corrections, as they indicate broad-based gains that eventually tempt profit-taking when valuations become stretched. The metric also reveals market health through profitability dynamics, with rising supply in profit indicating successful rallies that heal holder psychology by lifting positions above water. During bull markets, tracking supply in profit identifies distribution risk buildup, with peak readings often marking tops when nearly all supply maintains gains and temptation to realize returns peaks. The absolute amount of profitable supply contextualizes available selling pressure, as these holders can exit positions without forced loss realization. Comparing supply in profit to total supply reveals what percentage of holders enjoy gains, with high percentages indicating broad-based health while low percentages suggest concentrated profitability. The metric proves valuable for assessing rally sustainability, as strong advances should lift substantial supply to profit while weak bounces fail to rescue meaningful supply from underwater positions.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/supply-in-profit', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `supply-in-profit?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      profit_amount: d.profit_amount,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

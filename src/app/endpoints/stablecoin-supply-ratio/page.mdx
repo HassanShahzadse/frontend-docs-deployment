@@ -1,0 +1,152 @@
+export const metadata = {
+  title: 'Stablecoin Supply Ratio (SSR)',
+  description:
+    'Use the Stablecoin Supply Ratio endpoint to measure Bitcoin market cap relative to stablecoin supply, revealing potential buying power available and identifying market tops and bottoms.',
+}
+
+# Stablecoin Supply Ratio (SSR)
+
+The **Stablecoin Supply Ratio (SSR)** measures Bitcoin's market cap relative to the total supply of major stablecoins, revealing the potential buying power available in crypto markets. {{ className: 'lead' }}
+
+This metric identifies periods of abundant or scarce dry powder, with low ratios indicating substantial stablecoin reserves ready to purchase Bitcoin and high ratios suggesting limited available capital.
+
+---
+
+## Endpoint
+
+`GET /stablecoin-supply-ratio`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the Stablecoin Supply Ratio to assess available buying power and identify potential market turning points based on capital availability.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Stablecoin Supply Ratio data"}
+curl -G "https://api.blocklytics.net/api/public/v1/stablecoin-supply-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "stablecoin_supply_ratio": 8.5
+  },
+  {
+    "date": "2025-01-06",
+    "stablecoin_supply_ratio": 8.3
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/stablecoin-supply-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="stablecoin_supply_ratio" type="number">
+    The ratio of Bitcoin's market capitalization to total stablecoin supply,
+    representing how many times larger Bitcoin's market cap is compared to
+    available stablecoin buying power.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High SSR (above 15)** indicates Bitcoin market cap is significantly larger than stablecoin supply, revealing limited available buying power relative to market size and suggesting vulnerability to corrections if fresh capital does not enter markets.
+
+**Low SSR (below 8)** demonstrates substantial stablecoin reserves relative to Bitcoin's market cap, indicating abundant dry powder available to purchase Bitcoin and potential for sustained rallies as this capital deploys.
+
+**Declining SSR** reveals growing stablecoin supply faster than Bitcoin market cap appreciation, indicating fresh capital entering crypto markets in stable form that could fuel future rallies as this buying power eventually converts to Bitcoin.
+
+**Rising SSR** shows Bitcoin market cap outpacing stablecoin supply growth, suggesting existing capital is flowing from stablecoins to Bitcoin but warns of potential exhaustion if stablecoin reserves deplete without replenishment from external sources.
+
+### Use Cases
+
+This metric provides crucial insight into the available firepower that could purchase Bitcoin, serving as a measure of potential demand waiting on the sidelines. SSR historically identifies major market tops and bottoms through capital availability dynamics, with extreme highs often marking peaks when buying power exhausts relative to market size and extreme lows marking bottoms when abundant reserves await deployment. Low SSR periods represent high potential energy states where substantial purchasing power sits ready, often preceding strong rallies as this capital gradually converts to Bitcoin. The metric reveals whether rallies are sustainable based on capital availability, with declining SSR during uptrends confirming fresh money entering markets while rising SSR warns of capital depletion. Stablecoin supply represents the most liquid form of crypto dry powder, as holders maintain these positions specifically to preserve capital for opportunistic deployment rather than exiting crypto entirely. Tracking SSR trends identifies accumulation versus distribution regimes, with declining SSR during bear markets indicating smart money positioning in stablecoins for eventual redeployment while rising SSR during bull markets shows stablecoins converting to Bitcoin. The ratio also contextualizes market size relative to available capital, revealing when Bitcoin has grown so large that existing stablecoin reserves become insufficient to significantly impact prices. Extreme SSR readings identify imbalances requiring resolution, with very high ratios typically correcting through price declines or stablecoin supply growth while very low ratios resolve through capital deployment driving price appreciation.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/stablecoin-supply-ratio', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `stablecoin-supply-ratio?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      stablecoin_supply_ratio: d.stablecoin_supply_ratio,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

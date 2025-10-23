@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Thermo Cap',
+  description:
+    'Use the Thermo Cap endpoint to measure the cumulative security spend on Bitcoin mining, providing a fundamental floor valuation based on the energy invested in securing the network.',
+}
+
+# Thermo Cap
+
+The **Thermo Cap** measures the cumulative value of all block rewards at their issuance prices, representing the total capital invested in Bitcoin security through mining. {{ className: 'lead' }}
+
+This metric provides a fundamental floor valuation by quantifying the energy and capital spent securing the network, with market cap falling below Thermo Cap historically marking extreme undervaluation.
+
+---
+
+## Endpoint
+
+`GET /thermo-cap`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Thermo Cap to assess Bitcoin's fundamental floor valuation based on the cumulative security investment and identify extreme undervaluation conditions.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Thermo Cap data"}
+curl -G "https://api.blocklytics.net/api/public/v1/thermo-cap" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "thermo_cap": 456700000000
+  },
+  {
+    "date": "2025-01-06",
+    "thermo_cap": 456500000000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/thermo-cap" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="thermo_cap" type="number">
+    The cumulative sum of all block rewards valued at their issuance prices,
+    measured in USD, representing the total capital invested in securing the
+    Bitcoin network through mining.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Market cap above Thermo Cap** indicates Bitcoin trades above its cumulative security investment, showing the market values the network more than the total capital spent mining and securing it, typical during normal or bullish conditions.
+
+**Market cap near Thermo Cap** suggests Bitcoin approaches its fundamental security cost floor, revealing limited premium to cumulative mining investment and potential undervaluation as price nears the aggregate energy invested in the network.
+
+**Market cap below Thermo Cap** demonstrates extreme undervaluation where Bitcoin trades below its cumulative security spend, historically marking major bottoms when the network's value falls beneath the total capital invested in securing it.
+
+**Rising Thermo Cap** reveals ongoing mining investment as new blocks add to the cumulative security spend, naturally increasing over time as miners continue investing energy and capital to secure the network and earn rewards.
+
+### Use Cases
+
+This metric provides a fundamental floor valuation based on the energy and capital invested in Bitcoin's security, representing the "skin in the game" from miners. Thermo Cap quantifies the total value miners have received for securing the network since genesis, calculated by valuing each block reward at the Bitcoin price when it was mined. This cumulative security investment creates a thermodynamic floor, as prices consistently falling below this level would question Bitcoin's value proposition relative to the energy invested. Historically, market cap falling to or below Thermo Cap has marked extreme bear market bottoms, as these conditions indicate Bitcoin trades at or below the aggregate cost of securing it. The ratio of market cap to Thermo Cap reveals valuation relative to security investment, with high ratios indicating speculative premium while ratios near 1 suggest fundamental floor levels. Unlike Realized Cap which measures holder cost basis, Thermo Cap measures miner revenue, providing a different fundamental anchor based on production cost rather than holder acquisition cost. The metric grows monotonically as new blocks add to cumulative security spend, creating an ever-rising floor that reflects the growing investment in Bitcoin's infrastructure. Comparing current market cap to Thermo Cap contextualizes whether Bitcoin trades at premium, fair value, or discount to its cumulative security investment. The metric also reveals mining profitability periods, as sustained market cap significantly above Thermo Cap indicates miners have earned premiums beyond their immediate costs, while market cap near Thermo Cap suggests marginal profitability.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/thermo-cap', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `thermo-cap?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      thermo_cap: d.thermo_cap,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Miner Outflow (Mean)',
+  description:
+    'Use the Miner Outflow Mean endpoint to track the average transaction size leaving mining pools, revealing distribution patterns and selling behavior.',
+}
+
+# Miner Outflow (Mean)
+
+The **Miner Outflow Mean** metric tracks the average transaction value flowing out of mining pool wallets. {{ className: 'lead' }}
+
+This metric reveals typical distribution transaction sizes, helping distinguish between operational payments, exchange deposits, and cold storage movements based on transaction size patterns.
+
+---
+
+## Endpoint
+
+`GET /miner-outflow-mean`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor average outflow sizes to understand miner distribution patterns and identify changes in selling or operational behavior.
+
+<Properties>
+  <Property name="miner" type="string">
+    Mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner Outflow Mean data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-outflow-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "miner_outflow_mean": 8.42
+  },
+  {
+    "date": "2025-01-06",
+    "miner_outflow_mean": 7.89
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-outflow-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=all_miner \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="miner_outflow_mean" type="number">
+    The average value of transactions flowing out of mining pool wallets during
+    the specified time window, denominated in BTC.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising mean outflow** indicates larger average transactions leaving miner wallets, suggesting consolidation before major moves, preparation for significant exchange deposits, or shifts toward larger batch distributions for operational efficiency.
+
+**Declining mean outflow** reveals smaller average transactions, potentially indicating more frequent operational payments, distributed selling strategies to minimize market impact, or changes in payout structures favoring smaller incremental distributions.
+
+**High mean values** suggest miners are moving substantial amounts in single transactions, typically indicating strategic transfers to exchanges for selling, large cold storage movements, or major operational fund deployments.
+
+**Low mean values** indicate many small outflows, potentially reflecting regular operational expenses, frequent smaller exchange deposits to test market liquidity, or distributed payout patterns to individual miners in the pool.
+
+### Use Cases
+
+This metric helps predict the nature and scale of upcoming selling pressure from miners. Large mean outflows often precede significant exchange deposit events where miners prepare to sell accumulated holdings. Tracking mean outflow changes reveals shifts in miner strategy, with increasing sizes suggesting more aggressive or consolidated selling approaches. Comparing mean outflow with total outflow identifies whether distribution comes from many small transactions or few large ones, with the latter potentially indicating strategic profit-taking by sophisticated operations. Rising mean outflows during price rallies confirm miners are taking advantage of favorable conditions to distribute holdings in larger batches. For market impact assessment, high mean outflows warn of potentially larger single transactions hitting exchanges that could move prices, while low means suggest more gradual distributed selling with less market shock.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-outflow-mean', async (req, res) => {
+  try {
+    const miner = req.query.miner || 'all_miner'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-outflow-mean?window=${window}&miner=${miner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      miner_outflow_mean: d.miner_outflow_mean,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

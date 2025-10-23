@@ -1,0 +1,206 @@
+export const metadata = {
+  title: 'UTXO Count - Age Bands',
+  description:
+    'Use the UTXO Count - Age Bands endpoint to track the number of unspent outputs distributed across age cohorts, revealing holder fragmentation patterns and distinguishing active traders from dormant long-term holders.',
+}
+
+# UTXO Count - Age Bands
+
+The **UTXO Count - Age Bands** metric distributes the total number of UTXOs across age cohorts, revealing how output fragmentation varies by holder type. {{ className: 'lead' }}
+
+This metric identifies the count of discrete outputs held by different age groups, enabling analysis of whether short-term traders or long-term holders maintain more fragmented positions through UTXO-level granularity.
+
+---
+
+## Endpoint
+
+`GET /utxo-count-age-bands`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor UTXO count distribution across age bands to assess fragmentation patterns and identify differences in holding behavior between cohorts.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting UTXO Count - Age Bands data"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxo-count-age-bands" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "range_0d_1d": 1200000,
+    "range_1d_1w": 3400000,
+    "range_1w_1m": 5600000,
+    "range_1m_3m": 8900000,
+    "range_3m_6m": 7800000,
+    "range_6m_12m": 9200000,
+    "range_12m_18m": 6700000,
+    "range_18m_2y": 8100000,
+    "range_2y_3y": 7500000,
+    "range_3y_5y": 10200000,
+    "range_5y_7y": 6300000,
+    "range_7y_10y": 5400000,
+    "range_10y_inf": 8600000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxo-count-age-bands" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="range_0d_1d" type="number">
+    Number of UTXOs aged 0-1 days.
+  </Property>
+  <Property name="range_1d_1w" type="number">
+    Number of UTXOs aged 1 day to 1 week.
+  </Property>
+  <Property name="range_1w_1m" type="number">
+    Number of UTXOs aged 1 week to 1 month.
+  </Property>
+  <Property name="range_1m_3m" type="number">
+    Number of UTXOs aged 1-3 months.
+  </Property>
+  <Property name="range_3m_6m" type="number">
+    Number of UTXOs aged 3-6 months.
+  </Property>
+  <Property name="range_6m_12m" type="number">
+    Number of UTXOs aged 6-12 months.
+  </Property>
+  <Property name="range_12m_18m" type="number">
+    Number of UTXOs aged 12-18 months.
+  </Property>
+  <Property name="range_18m_2y" type="number">
+    Number of UTXOs aged 18 months to 2 years.
+  </Property>
+  <Property name="range_2y_3y" type="number">
+    Number of UTXOs aged 2-3 years.
+  </Property>
+  <Property name="range_3y_5y" type="number">
+    Number of UTXOs aged 3-5 years.
+  </Property>
+  <Property name="range_5y_7y" type="number">
+    Number of UTXOs aged 5-7 years.
+  </Property>
+  <Property name="range_7y_10y" type="number">
+    Number of UTXOs aged 7-10 years.
+  </Property>
+  <Property name="range_10y_inf" type="number">
+    Number of UTXOs aged over 10 years.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High young band UTXO counts** indicate substantial fragmentation in recently-moved outputs, revealing active trading creates many discrete outputs without consolidation, typical when numerous participants transact frequently.
+
+**High old band UTXO counts** demonstrate many discrete outputs remain dormant for years, showing long-term holders maintain fragmented positions rather than consolidating, suggesting diverse veteran holder base.
+
+**Rising young band UTXO counts** reveal increasing fragmentation from active transaction creation, signaling growing network usage produces new outputs faster than consolidation among active traders.
+
+**Declining old band UTXO counts** signal long-term holder consolidation or distribution, indicating veteran holders are merging fragmented positions or spending aged outputs that reset into young bands.
+
+### Use Cases
+
+This metric provides granular insight into how different holder cohorts maintain their positions through UTXO-level fragmentation analysis. High young band UTXO counts indicate active trading environments where numerous transactions create many discrete outputs, with participants frequently receiving payments and generating change without consolidating. These fragmented young positions suggest retail-dominated activity where many small holders transact without the sophistication to optimize UTXO sets. Conversely, high old band UTXO counts reveal long-term holders maintain many discrete outputs, suggesting these veterans acquired Bitcoin through numerous transactions over time without consolidating, indicating a diverse rather than concentrated veteran holder base. The metric identifies consolidation behavior through count changes, with declining UTXO counts in specific bands indicating holders are merging outputs, often during low-fee environments when consolidation becomes economical. Comparing UTXO counts to BTC amounts in each band reveals average output sizes, with high counts relative to BTC indicating many small outputs while low counts suggest fewer but larger outputs. This analysis identifies whether cohorts hold numerous small positions or consolidated large positions. Rising young band counts during bull markets confirm active trading and new participant influx creates fragmentation, while declining counts suggest consolidation dominates. The metric also reveals dust accumulation patterns, with disproportionately high UTXO counts in young bands relative to value suggesting many uneconomical small outputs from active trading.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/utxo-count-age-bands', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `utxo-count-age-bands?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      range_0d_1d: d.range_0d_1d,
+      range_1d_1w: d.range_1d_1w,
+      range_1w_1m: d.range_1w_1m,
+      range_1m_3m: d.range_1m_3m,
+      range_3m_6m: d.range_3m_6m,
+      range_6m_12m: d.range_6m_12m,
+      range_12m_18m: d.range_12m_18m,
+      range_18m_2y: d.range_18m_2y,
+      range_2y_3y: d.range_2y_3y,
+      range_3y_5y: d.range_3y_5y,
+      range_5y_7y: d.range_5y_7y,
+      range_7y_10y: d.range_7y_10y,
+      range_10y_inf: d.range_10y_inf,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

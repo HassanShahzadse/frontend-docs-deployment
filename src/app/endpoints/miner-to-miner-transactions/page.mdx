@@ -1,0 +1,165 @@
+export const metadata = {
+  title: 'Miner to Miner Transactions',
+  description:
+    'Use the Miner to Miner Transactions endpoint to track the number of transfer transactions between mining pools, revealing the frequency and structure of inter-pool operational relationships.',
+}
+
+# Miner to Miner Transactions
+
+The **Miner to Miner Transactions** metric tracks the total number of transactions transferring Bitcoin between mining pool wallets. {{ className: 'lead' }}
+
+This metric reveals the frequency and operational intensity of inter-pool relationships, distinguishing between consolidated bulk settlements and frequent operational transfers.
+
+---
+
+## Endpoint
+
+`GET /miner-to-miner-transactions`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the number of transactions between mining pools to understand the frequency and structure of inter-pool operational relationships.
+
+<Properties>
+  <Property name="from_miner" type="string">
+    Source mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="to_miner" type="string">
+    Destination mining pool name. Example: <code>f2pool</code>,{' '}
+    <code>antpool</code>, <code>foundryusa</code>. Default: <code>1thash</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner to Miner Transactions data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-to-miner-transactions" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_miner=f2pool \
+  -d to_miner=antpool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "transactions_count_flow": 47
+  },
+  {
+    "date": "2025-01-06",
+    "transactions_count_flow": 53
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-to-miner-transactions" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_miner=all_miner \
+  -d to_miner=1thash \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="transactions_count_flow" type="number">
+    The total number of transactions transferring Bitcoin from one specified
+    mining pool to another during the time period.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising transaction counts** indicate increasing frequency of inter-pool transfers, suggesting more active operational relationships, fragmented settlement patterns, or regular automated transfers between affiliated mining operations.
+
+**Declining transaction counts** suggest consolidation of inter-pool transfers into fewer transactions, potentially indicating operational efficiency improvements, reduced settlement frequency, or strategic shifts toward bulk treasury movements rather than frequent smaller transfers.
+
+**High transaction counts with moderate volumes** reveal fragmented inter-pool operations where transfers occur frequently in smaller amounts, often indicating regular payout distributions, automated settlement systems, or continuous operational transfers between related mining entities.
+
+**Low transaction counts with high volumes** indicate concentrated inter-pool transfers where significant volumes move in few transactions, typically suggesting strategic treasury consolidations, major settlements between pools, or efficient batch processing of inter-pool obligations.
+
+### Use Cases
+
+This metric provides crucial insight into the operational sophistication and relationship dynamics between mining pools. Transaction frequency patterns reveal how mining operations structure their inter-pool settlements, with high-frequency patterns indicating continuous operational integration while low-frequency patterns suggest periodic strategic movements. Comparing transaction counts to total flow volumes calculates average transaction sizes, revealing whether inter-pool relationships involve many small operational transfers or fewer large strategic movements. Tracking transaction counts between specific pool pairs helps identify the nature of relationships, with consistent high-frequency transfers often indicating affiliated operations with integrated treasury management, while sporadic low-frequency transfers suggest independent entities with occasional strategic interactions. During mining difficulty adjustments or operational changes, shifts in transaction count patterns reveal how mining pools adjust their settlement strategies and treasury management approaches. Rising transaction counts with stable volumes indicate fragmentation of transfers, possibly for operational flexibility or risk management, while declining counts with stable volumes suggest consolidation for efficiency. This metric also helps identify automated versus manual treasury management, as highly consistent transaction counts typically indicate automated systems while variable patterns suggest discretionary strategic decisions. Analyzing transaction count changes during profitability squeezes reveals operational stress responses, with some pools increasing transfer frequency to manage liquidity while others reduce activity to minimize costs.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-to-miner-transactions', async (req, res) => {
+  try {
+    const fromMiner = req.query.from_miner || 'all_miner'
+    const toMiner = req.query.to_miner || '1thash'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-to-miner-transactions?window=${window}&from_miner=${fromMiner}&to_miner=${toMiner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      transactions_count_flow: d.transactions_count_flow,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

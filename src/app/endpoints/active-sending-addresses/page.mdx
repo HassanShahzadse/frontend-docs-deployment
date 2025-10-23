@@ -1,0 +1,136 @@
+export const metadata = {
+  title: 'Active Sending Addresses',
+  description:
+    'Learn how to use the Active Sending Addresses endpoint to analyze Bitcoin network activity by tracking unique addresses that sent funds within a given time window.',
+}
+
+# Active Sending Addresses
+
+This guide explains how to use the **Active Sending Addresses** endpoint to measure the number of Bitcoin addresses that sent transactions within a specified time period. {{ className: 'lead' }}
+
+Tracking active senders provides insight into transaction initiators on the network — entities that move coins.  
+It’s a key metric for understanding user behavior, liquidity movement, and transaction distribution over time.
+
+---
+
+## Endpoint
+
+`GET /active-sending-addresses`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+This example retrieves the number of sending addresses for the daily window.  
+You can modify the parameters to request different time frames or export as CSV.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>. Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting daily sending addresses"}
+curl -G "https://api.blocklytics.net/api/public/v1/active-sending-addresses" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "sending_addresses": 60123
+  },
+  {
+    "date": "2025-01-06",
+    "sending_addresses": 58412
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/active-sending-addresses" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=hour \
+  -d from=20250101T000000 \
+  -d to=20250101T120000 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+The **Active Sending Addresses** metric measures the number of unique Bitcoin addresses that broadcasted one or more transactions during a given window.  
+A rising number indicates growing user activity or distribution of coins, while a decline can signal reduced movement or accumulation behavior.
+
+<Properties>
+  <Property name="sending_addresses" type="integer">
+    The total number of unique Bitcoin addresses that sent transactions within the selected time window.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get("/active-sending-addresses", async (req, res) => {
+  try {
+    const window = req.query.window || "day";
+    const from = req.query.from ? `&from=${req.query.from}` : "";
+    const to = req.query.to ? `&to=${req.query.to}` : "";
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : "";
+    const format = req.query.format ? `&format=${req.query.format}` : "";
+
+    const path = `active-sending-addresses?window=${window}${from}${to}${limit}${format}`;
+    const data = await blocklyticsFetch(path);
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: "Unexpected API format", data });
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      sending_addresses: d.sending_addresses,
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+```
+  </Col>
+</Row>

@@ -1,0 +1,166 @@
+export const metadata = {
+  title: 'Miner to Exchange Flow (Total)',
+  description:
+    'Use the Miner to Exchange Flow Total endpoint to track the total volume of Bitcoin transfers from mining pools to exchanges, revealing direct miner selling pressure and supply dynamics.',
+}
+
+# Miner to Exchange Flow (Total)
+
+The **Miner to Exchange Flow (Total)** metric tracks the total volume of Bitcoin transferred from mining pool wallets to exchange platforms. {{ className: 'lead' }}
+
+This metric provides the most direct measure of miner selling pressure, capturing the actual volume of newly mined or held Bitcoin that miners are moving to exchanges for potential liquidation.
+
+---
+
+## Endpoint
+
+`GET /miner-to-exchange-flow-total`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the total volume of transfers from mining pools to exchanges to assess direct miner selling pressure and supply dynamics.
+
+<Properties>
+  <Property name="from_miner" type="string">
+    Source mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="to_exchange" type="string">
+    Destination exchange name. Example: <code>binance</code>,{' '}
+    <code>coinbase</code>, <code>kraken</code>. Default:{' '}
+    <code>all_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner to Exchange Flow Total data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-to-exchange-flow-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_miner=f2pool \
+  -d to_exchange=binance \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "flow_total": 3247.56
+  },
+  {
+    "date": "2025-01-06",
+    "flow_total": 2891.23
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-to-exchange-flow-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_miner=all_miner \
+  -d to_exchange=all_exchange \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="flow_total" type="number">
+    The total volume of Bitcoin transferred from the specified mining pool to
+    the specified exchange during the time period, measured in BTC.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising total flows** indicate increasing miner selling pressure as more Bitcoin moves from mining pools directly to exchanges, suggesting miners are actively liquidating holdings, responding to profitability pressures, or capitalizing on favorable market conditions.
+
+**Declining total flows** suggest reduced miner selling pressure where fewer coins reach exchanges, potentially indicating miners are accumulating reserves, utilizing alternative liquidation channels like OTC markets, or experiencing improved profitability that reduces immediate selling needs.
+
+**Spike in total flows** often signals significant selling events such as miners responding to price rallies by taking profits, forced liquidation during profitability squeezes, or strategic treasury rebalancing where accumulated reserves are moved to exchanges for sale.
+
+**Sustained low flows** indicate minimal direct exchange selling where miners either hold reserves on-chain, utilize OTC desks for large transactions, or maintain strong operational cash flows that reduce dependence on immediate Bitcoin liquidation.
+
+### Use Cases
+
+This metric provides the most direct and actionable measure of miner supply pressure entering liquid markets. Rising miner-to-exchange flows represent fresh supply hitting order books and directly impact available liquidity, making this metric essential for understanding near-term selling pressure. Comparing flows across different mining pools reveals which operations are most actively selling and potentially facing profitability challenges or strategic repositioning. During bull markets, elevated flows typically indicate miners capitalizing on favorable prices to secure profits and strengthen balance sheets, while during bear markets, rising flows often signal distress selling or capitulation as operations struggle with reduced profitability. Tracking flows to specific exchanges reveals preferred liquidity venues and potential institutional relationships, with large consistent flows to particular platforms often indicating established trading arrangements or favorable terms. This metric combined with price action helps identify periods where miner selling successfully absorbs demand versus when markets can digest supply without significant impact. Comparing current flows to historical patterns relative to mining rewards and reserve levels reveals whether miners are distributing normal operational portions or liquidating accumulated reserves, which has different implications for sustained supply pressure. Analyzing the ratio of miner-to-exchange flows versus total miner outflows distinguishes between exchange-destined selling pressure and alternative distribution through OTC markets or other channels.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-to-exchange-flow-total', async (req, res) => {
+  try {
+    const fromMiner = req.query.from_miner || 'all_miner'
+    const toExchange = req.query.to_exchange || 'all_exchange'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-to-exchange-flow-total?window=${window}&from_miner=${fromMiner}&to_exchange=${toExchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      flow_total: d.flow_total,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

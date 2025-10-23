@@ -1,0 +1,178 @@
+export const metadata = {
+  title: 'Exchange Inflow – Spent Output Value Bands',
+  description:
+    'Learn how to use the Exchange Inflow – Spent Output Value Bands endpoint to analyze the BTC inflows to exchanges categorized by transaction value, helping distinguish whale vs retail activity.',
+}
+
+# Exchange Inflow – Spent Output Value Bands
+
+The **Exchange Inflow – Spent Output Value Bands** metric groups Bitcoin inflows into exchanges by transaction size, offering a clear breakdown of activity from retail and institutional (whale) participants. {{ className: 'lead' }}
+
+By analyzing which transaction size bands dominate inflows, you can infer whether inflows are primarily retail-driven (smaller transactions) or whale-driven (large transactions). This can be used as a sentiment indicator for market cycles.
+
+---
+
+## Endpoint
+
+`GET /exchange-inflow-value-bands`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Retrieve inflow value distribution data across different BTC transaction size ranges for a given exchange and timeframe.
+
+<Properties>
+  <Property name="exchange" type="string">
+    Exchange name. Example: <code>binance</code>, <code>coinbase</code>,{' '}
+    <code>kraken</code>. Default: <code>all_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Exchange Inflow Value Bands data"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-inflow-value-bands" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=binance \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "range_0_001": 12.4,
+    "range_001_01": 25.3,
+    "range_01_1": 40.1,
+    "range_1_10": 18.7,
+    "range_10_100": 6.9,
+    "range_100_1k": 2.4,
+    "range_1k_10k": 0.8,
+    "range_10k_inf": 0.2
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-inflow-value-bands" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=kraken \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+Each field represents BTC inflows grouped by transaction value range:
+
+<Properties>
+  <Property name="range_0_001" type="number">
+    Total BTC inflows from transactions smaller than 0.001 BTC.
+  </Property>
+  <Property name="range_001_01" type="number">
+    Total BTC inflows from transactions between 0.001 BTC and 0.01 BTC.
+  </Property>
+  <Property name="range_01_1" type="number">
+    Total BTC inflows from transactions between 0.01 BTC and 1 BTC.
+  </Property>
+  <Property name="range_1_10" type="number">
+    Total BTC inflows from transactions between 1 BTC and 10 BTC.
+  </Property>
+  <Property name="range_10_100" type="number">
+    Total BTC inflows from transactions between 10 BTC and 100 BTC.
+  </Property>
+  <Property name="range_100_1k" type="number">
+    Total BTC inflows from transactions between 100 BTC and 1,000 BTC.
+  </Property>
+  <Property name="range_1k_10k" type="number">
+    Total BTC inflows from transactions between 1,000 BTC and 10,000 BTC.
+  </Property>
+  <Property name="range_10k_inf" type="number">
+    Total BTC inflows from transactions above 10,000 BTC.
+  </Property>
+</Properties>
+
+Large transaction bands (e.g., **1k–10k BTC**) often represent **institutional or whale activity**, while smaller transaction bands reflect **retail participation**. Tracking these bands over time can highlight accumulation or distribution trends by different investor cohorts.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/exchange-inflow-value-bands', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `exchange-inflow-value-bands?window=${window}&exchange=${exchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      range_0_001: d.range_0_001,
+      range_001_01: d.range_001_01,
+      range_01_1: d.range_01_1,
+      range_1_10: d.range_1_10,
+      range_10_100: d.range_10_100,
+      range_100_1k: d.range_100_1k,
+      range_1k_10k: d.range_1k_10k,
+      range_10k_inf: d.range_10k_inf,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

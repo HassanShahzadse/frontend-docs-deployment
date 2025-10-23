@@ -1,0 +1,181 @@
+export const metadata = {
+  title: 'Spent Output Value Bands (%)',
+  description:
+    'Use the Spent Output Value Bands (%) endpoint to track the percentage distribution of spending activity across different UTXO size cohorts, revealing the relative composition of whale versus retail distribution.',
+}
+
+# Spent Output Value Bands (%)
+
+The **Spent Output Value Bands (%)** metric distributes spending activity across UTXO size cohorts as percentages, showing the relative composition of which holder wealth tiers are actively moving coins. {{ className: 'lead' }}
+
+This metric reveals the proportional contribution of each wealth segment to total spending, enabling analysis of whether whales or retail investors dominate market distribution activity.
+
+---
+
+## Endpoint
+
+`GET /spent-output-value-bands-percent`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the percentage distribution of spending across value bands to assess the relative composition of market participants by wealth tier.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Spent Output Value Bands (%) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/spent-output-value-bands-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "range_0_001_percent": 4.6,
+    "range_001_01_percent": 8.9,
+    "range_01_1_percent": 15.4,
+    "range_1_10_percent": 24.0,
+    "range_10_100_percent": 19.3,
+    "range_100_1k_percent": 13.2,
+    "range_1k_10k_percent": 8.9,
+    "range_10k_inf_percent": 5.7
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/spent-output-value-bands-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="range_0_001_percent" type="number">
+    Percentage of total spending from UTXOs valued 0-0.001 BTC.
+  </Property>
+  <Property name="range_001_01_percent" type="number">
+    Percentage of total spending from UTXOs valued 0.001-0.01 BTC.
+  </Property>
+  <Property name="range_01_1_percent" type="number">
+    Percentage of total spending from UTXOs valued 0.01-0.1 BTC.
+  </Property>
+  <Property name="range_1_10_percent" type="number">
+    Percentage of total spending from UTXOs valued 1-10 BTC.
+  </Property>
+  <Property name="range_10_100_percent" type="number">
+    Percentage of total spending from UTXOs valued 10-100 BTC.
+  </Property>
+  <Property name="range_100_1k_percent" type="number">
+    Percentage of total spending from UTXOs valued 100-1,000 BTC.
+  </Property>
+  <Property name="range_1k_10k_percent" type="number">
+    Percentage of total spending from UTXOs valued 1,000-10,000 BTC.
+  </Property>
+  <Property name="range_10k_inf_percent" type="number">
+    Percentage of total spending from UTXOs valued over 10,000 BTC.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High small UTXO percentages** indicate spending dominated by retail participants and small holders, revealing grassroots distribution or accumulation activity without significant whale involvement, typical during mature bull phases or retail capitulation.
+
+**High large UTXO percentages** demonstrate whales contributing disproportionately to spending, signaling major distribution events as concentrated capital makes outsized moves relative to retail activity, often marking cycle tops when smart money exits.
+
+**Rising large UTXO percentages during rallies** warn of increasing whale distribution where the relative contribution from large holders grows compared to retail activity, indicating smart money is becoming the dominant seller ahead of potential corrections.
+
+**Declining large UTXO percentages during bear markets** reveal whales withdrawing from markets while retail dominates trading through capitulation, indicating patient capital is holding while weak hands distribute at unfavorable prices.
+
+### Use Cases
+
+This metric provides normalized insight into the relative composition of market participants by wealth tier, removing the influence of total volume and focusing on proportional contributions. The percentage view enables identification of wealth-based participation shifts regardless of absolute volume changes, revealing whether the character of market activity is changing toward whale or retail dominance. High small UTXO band percentages indicate markets driven by retail participation without major whale activity, suggesting grassroots dynamics where numerous small decisions aggregate to drive price action. Conversely, elevated large UTXO band percentages signal whale-dominated environments where concentrated capital controls market dynamics, creating both efficiency through large block trades and risk through potential manipulation. During bull markets, tracking rising large band percentages identifies distribution intensity, with increasing proportions warning that whales are becoming dominant sellers relative to overall activity. The metric also reveals market cycle phases through characteristic distribution patterns, with early bull markets showing balanced percentages, mid-cycle showing retail dominance as FOMO peaks, and late-cycle showing whale spike as smart money exits. Comparing percentage distributions across cycles identifies whether current wealth concentration differs from historical norms, with unusual patterns potentially indicating structural changes in market composition or institutional adoption levels. The metric proves particularly valuable for filtering noise from absolute volume fluctuations, as sustained percentage shifts in large bands signal meaningful behavioral changes while small band fluctuations often reflect routine retail activity.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/spent-output-value-bands-percent', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `spent-output-value-bands-percent?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      range_0_001_percent: d.range_0_001_percent,
+      range_001_01_percent: d.range_001_01_percent,
+      range_01_1_percent: d.range_01_1_percent,
+      range_1_10_percent: d.range_1_10_percent,
+      range_10_100_percent: d.range_10_100_percent,
+      range_100_1k_percent: d.range_100_1k_percent,
+      range_1k_10k_percent: d.range_1k_10k_percent,
+      range_10k_inf_percent: d.range_10k_inf_percent,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

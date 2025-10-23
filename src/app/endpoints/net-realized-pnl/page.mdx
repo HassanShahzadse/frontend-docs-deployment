@@ -1,0 +1,152 @@
+export const metadata = {
+  title: 'Net Realized Profit and Loss (NRPL)',
+  description:
+    'Use the Net Realized Profit and Loss endpoint to track the aggregate profit or loss realized by all Bitcoin holders when spending coins, revealing market sentiment and holder behavior.',
+}
+
+# Net Realized Profit and Loss (NRPL)
+
+The **Net Realized Profit and Loss (NRPL)** metric measures the net magnitude of profit or loss realized by all Bitcoin holders when spending coins. {{ className: 'lead' }}
+
+This metric assesses realized gains and losses relative to the price when coins last moved, providing direct insight into whether market participants are collectively taking profits or realizing losses.
+
+---
+
+## Endpoint
+
+`GET /net-realized-pnl`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Net Realized Profit and Loss to understand the aggregate profit-taking or loss-realization behavior of Bitcoin holders.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Net Realized Profit and Loss data"}
+curl -G "https://api.blocklytics.net/api/public/v1/net-realized-pnl" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "nrpl": 4567890123
+  },
+  {
+    "date": "2025-01-06",
+    "nrpl": 3892345678
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/net-realized-pnl" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="nrpl" type="number">
+    The net realized profit or loss across all Bitcoin transactions, calculated
+    as the difference between the price when coins are spent and their previous
+    acquisition price, aggregated across all movements.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High positive NRPL** indicates significant aggregate profit-taking where holders are spending coins at substantially higher prices than their acquisition costs, suggesting confidence in gains and willingness to realize profits, typically occurring during bull markets or after significant price appreciation.
+
+**High negative NRPL** reveals substantial aggregate loss realization where holders are spending coins at prices below their acquisition costs, indicating capitulation, forced selling, or panic behavior, typically appearing during bear markets or sharp corrections when holders cut losses.
+
+**Rising positive NRPL** suggests accelerating profit-taking momentum as more holders realize larger gains, potentially indicating approaching exhaustion of bullish sentiment if sustained at extreme levels, as profit-taking can create supply pressure and signal that conviction is weakening.
+
+**Declining negative NRPL (moving toward zero)** indicates diminishing loss realization as holders become less willing to sell at a loss, often marking capitulation exhaustion and potential bottoming processes when weak hands have been flushed out and remaining holders demonstrate stronger conviction.
+
+### Use Cases
+
+This metric provides direct insight into the collective profit and loss behavior of all Bitcoin market participants, making it invaluable for gauging market psychology and identifying potential turning points. High positive NRPL during rallies reveals strong profit-taking activity that can precede corrections or consolidations, as realized gains represent coins changing hands and potential supply returning to markets. Extreme positive NRPL spikes often coincide with local tops when euphoria drives aggressive profit-taking at premium prices. Conversely, extreme negative NRPL typically appears during capitulation phases when fear forces holders to realize losses, often marking or approaching market bottoms as weak hands exit. The magnitude of NRPL relative to market capitalization helps contextualize significance, with large NRPL values relative to network size indicating more consequential profit-taking or loss realization events. Tracking NRPL trends identifies shifting market dynamics, as transitions from negative to positive NRPL signal recovery from distress to profit-taking phases, while reversals from positive to negative indicate deteriorating conditions. Comparing NRPL to price action distinguishes between healthy corrections within uptrends (moderate positive NRPL) versus exhaustion tops (extreme positive NRPL) or capitulation bottoms (extreme negative NRPL). This metric also reveals holder behavior differences across market cycles, with bull markets characterized by sustained positive NRPL as appreciation enables systematic profit-taking, while bear markets show persistent negative NRPL as declining prices force loss realization.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/net-realized-pnl', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `net-realized-pnl?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      nrpl: d.nrpl,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

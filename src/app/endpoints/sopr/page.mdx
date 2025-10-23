@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Spent Output Profit Ratio (SOPR)',
+  description:
+    'Use the SOPR endpoint to track whether Bitcoin holders are selling at a profit or loss, revealing market sentiment and identifying potential support and resistance levels.',
+}
+
+# Spent Output Profit Ratio (SOPR)
+
+The **Spent Output Profit Ratio (SOPR)** measures whether coins being spent are in profit or loss by comparing their value at spend time to creation time. {{ className: 'lead' }}
+
+This metric reveals aggregate profit-taking behavior across all market participants, providing powerful signals for identifying market tops, bottoms, and sentiment shifts through realized gains and losses.
+
+---
+
+## Endpoint
+
+`GET /sopr`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor SOPR to assess whether market participants are selling at a profit or loss, identifying key sentiment shifts and market turning points.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting SOPR data"}
+curl -G "https://api.blocklytics.net/api/public/v1/sopr" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "sopr": 1.034
+  },
+  {
+    "date": "2025-01-06",
+    "sopr": 0.987
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/sopr" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="sopr" type="number">
+    The ratio of the value of spent outputs at spend time to their value at
+    creation time. Values above 1 indicate profit-taking, while values below 1
+    indicate loss realization.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**SOPR above 1** indicates holders are selling at a profit on average, revealing that coins being spent were acquired at lower prices, signaling positive sentiment and potential supply pressure as profitable holders realize gains.
+
+**SOPR below 1** shows holders are selling at a loss on average, demonstrating capitulation or panic selling where participants exit positions underwater, often marking bottoms when the last weak hands surrender at unfavorable prices.
+
+**SOPR crossing above 1** signals market transitioning from loss to profit realization, indicating recovery and building momentum as holders regain confidence from positive returns rather than experiencing losses on their positions.
+
+**SOPR trending toward 1** reveals market approaching equilibrium where spent coins break even on average, often acting as support during bull markets (holding above 1) or resistance during bear markets (struggling to cross above 1).
+
+### Use Cases
+
+This metric provides one of the most powerful and intuitive signals in on-chain analysis by directly measuring whether market participants realize profits or losses when spending coins. SOPR values persistently below 1 during downtrends indicate capitulation as holders accept losses to exit positions, historically marking major bottoms when this loss realization reaches extremes and exhausts selling pressure. The psychological reluctance to realize losses creates strong support at SOPR equal to 1 during corrections, as holders resist selling underwater and prefer to wait for breakeven, making this level a key battleground. During bull markets, SOPR consistently above 1 confirms healthy profit-taking within an uptrend, while extreme spikes significantly above 1 warn of euphoric profit-taking that often precedes corrections. The metric proves particularly valuable during trend transitions, with SOPR crossing definitively above 1 after prolonged bear markets signaling recovery initiation as participants return to profitability. SOPR also reveals market character through its relationship to price action, with SOPR declining during rallies indicating distribution from underwater holders taking losses to exit while SOPR rising during corrections shows profitable holders defending positions. The 1.0 threshold acts as a psychological pivot that consistently influences behavior across cycles, with holders demonstrating reluctance to realize losses and eagerness to take profits creating predictable patterns. Combining SOPR with price analysis distinguishes between healthy corrections where SOPR holds above 1 versus dangerous breakdowns where SOPR plunges below 1 indicating widespread underwater positions.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/sopr', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `sopr?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      sopr: d.sopr,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

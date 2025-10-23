@@ -1,0 +1,166 @@
+export const metadata = {
+  title: 'Miner to Exchange Transactions',
+  description:
+    'Use the Miner to Exchange Transactions endpoint to track the number of transfer transactions from mining pools to exchanges, revealing the frequency and structure of miner selling operations.',
+}
+
+# Miner to Exchange Transactions
+
+The **Miner to Exchange Transactions** metric tracks the total number of transactions transferring Bitcoin from mining pool wallets to exchange platforms. {{ className: 'lead' }}
+
+This metric reveals the frequency and operational structure of miner-to-exchange flows, distinguishing between consolidated bulk transfers and fragmented distribution patterns.
+
+---
+
+## Endpoint
+
+`GET /miner-to-exchange-transactions`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the number of transactions from mining pools to exchanges to understand the frequency and structure of miner selling operations.
+
+<Properties>
+  <Property name="from_miner" type="string">
+    Source mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="to_exchange" type="string">
+    Destination exchange name. Example: <code>binance</code>,{' '}
+    <code>coinbase</code>, <code>kraken</code>. Default:{' '}
+    <code>all_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner to Exchange Transactions data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-to-exchange-transactions" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_miner=f2pool \
+  -d to_exchange=binance \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "transactions_count_flow": 127
+  },
+  {
+    "date": "2025-01-06",
+    "transactions_count_flow": 143
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-to-exchange-transactions" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_miner=all_miner \
+  -d to_exchange=all_exchange \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="transactions_count_flow" type="number">
+    The total number of transactions transferring Bitcoin from the specified
+    mining pool to the specified exchange during the time period.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising transaction counts** indicate increased frequency of miner-to-exchange transfers, suggesting more active selling operations, fragmented distribution strategies, or operational changes favoring multiple smaller deposits over consolidated batches.
+
+**Declining transaction counts** suggest miners are consolidating exchange transfers into fewer transactions, potentially indicating operational efficiency improvements, reduced selling frequency, or strategic shifts toward bulk deposits that minimize transaction overhead.
+
+**High transaction counts with moderate volumes** reveal fragmented distribution patterns where miners spread exchange deposits across many smaller transactions, often indicating incremental selling strategies, automated regular deposits, or efforts to minimize market impact through dispersed timing.
+
+**Low transaction counts with high volumes** indicate concentrated transfer operations where miners execute large deposits in few transactions, typically suggesting institutional-grade efficiency, direct exchange relationships with bulk transfer arrangements, or strategic timing of major liquidations.
+
+### Use Cases
+
+This metric provides crucial insight into the operational sophistication and selling strategies of mining operations in their exchange interactions. Transaction frequency patterns reveal how miners structure their exchange deposits, with high-frequency patterns indicating active continuous selling while low-frequency patterns suggest periodic consolidated operations. Comparing transaction counts to total flow volumes calculates average transaction sizes, revealing whether miners favor many small deposits or fewer large transfers. During bull markets, rising transaction counts often signal miners actively capitalizing on favorable conditions through increased exchange deposit frequency, while declining counts during bear markets may indicate reduced selling activity or strategic consolidation. Tracking transaction counts alongside mean flow sizes distinguishes between operational efficiency changes and volume shifts, where declining counts with stable means indicate consolidation while rising counts with stable means reveal expanded operations. This metric helps identify strategic shifts in miner behavior, such as transitions between automated regular selling programs with high transaction frequencies and manual strategic selling with concentrated transactions. Analyzing transaction count patterns by specific exchange destinations reveals preferred operational relationships and liquidity management approaches, with consistent high-frequency deposits to particular platforms often indicating established automated distribution systems. Comparing transaction counts across different mining pools reveals operational differences in treasury management, with some operations demonstrating sophisticated batch processing while others maintain frequent incremental approaches.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-to-exchange-transactions', async (req, res) => {
+  try {
+    const fromMiner = req.query.from_miner || 'all_miner'
+    const toExchange = req.query.to_exchange || 'all_exchange'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-to-exchange-transactions?window=${window}&from_miner=${fromMiner}&to_exchange=${toExchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      transactions_count_flow: d.transactions_count_flow,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

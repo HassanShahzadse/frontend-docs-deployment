@@ -1,0 +1,150 @@
+export const metadata = {
+  title: 'Fees per Transaction USD (Mean)',
+  description:
+    'Use the Fees per Transaction Mean USD endpoint to track the average transaction fee in dollar terms, revealing the real cost users pay to transact on the network.',
+}
+
+# Fees per Transaction USD (Mean)
+
+The **Fees per Transaction Mean USD** metric tracks the average fee paid per transaction during a specified time window, denominated in US dollars. {{ className: 'lead' }}
+
+This metric reveals the real dollar cost users pay to transact, making it easier to assess network affordability and compare transaction costs across different time periods and price environments.
+
+---
+
+## Endpoint
+
+`GET /fees-per-transaction-mean-usd`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor average transaction fees in USD to understand the real dollar cost users pay and assess network accessibility.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Fees per Transaction Mean USD data"}
+curl -G "https://api.blocklytics.net/api/public/v1/fees-per-transaction-mean-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "fees_transaction_mean_usd": 45.23
+  },
+  {
+    "date": "2025-01-06",
+    "fees_transaction_mean_usd": 38.76
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/fees-per-transaction-mean-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="fees_transaction_mean_usd" type="number">
+    The average fee paid per transaction during the specified time window,
+    denominated in US dollars.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising USD fees per transaction** indicate increasing real costs for users, which can result from either network congestion or rising token prices amplifying the dollar value of fees. High dollar fees may deter adoption and push activity to alternative networks or layer-2 solutions.
+
+**Declining USD fees per transaction** suggest improving affordability for users, making the network more accessible for everyday transactions and smaller value transfers. This typically encourages broader adoption and more diverse use cases.
+
+**Extremely high USD fees** can effectively price out smaller users and everyday transactions, limiting the network to high-value transfers only. This scenario often accelerates development and adoption of scaling solutions.
+
+**Stable low USD fees** indicate an accessible network where users can transact affordably regardless of token price volatility, supporting mass adoption and enabling use cases like micropayments and regular commerce.
+
+### Use Cases
+
+This metric is critical for understanding network accessibility in real economic terms. Users and businesses evaluate transaction costs in dollars, not token units, making USD-denominated fees the most relevant measure of affordability. High mean USD fees often trigger migration to layer-2 solutions or competing networks with lower costs. Wallet developers and exchanges use this metric to set appropriate fee recommendations that balance confirmation speed with user cost sensitivity. Comparing USD fees across different market cycles helps identify whether the network maintains consistent affordability or becomes prohibitively expensive during bull markets. For payment processors and businesses, this metric determines the minimum viable transaction size where fees don't consume an unreasonable percentage of transaction value.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/fees-per-transaction-mean-usd', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `fees-per-transaction-mean-usd?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      fees_transaction_mean_usd: d.fees_transaction_mean_usd,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

@@ -1,0 +1,159 @@
+export const metadata = {
+  title: 'Miner Outflow (Mean, MA7)',
+  description:
+    'Use the Miner Outflow Mean MA7 endpoint to track the 7-day moving average of outflow transaction sizes, revealing smoothed distribution trends.',
+}
+
+# Miner Outflow (Mean, MA7)
+
+The **Miner Outflow Mean MA7** metric tracks the 7-day moving average of mean transaction values flowing out of mining pool wallets. {{ className: 'lead' }}
+
+This metric smooths daily volatility to reveal underlying trends in miner distribution patterns, helping identify sustained changes in selling behavior and operational strategies.
+
+---
+
+## Endpoint
+
+`GET /miner-outflow-mean-ma7`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the 7-day moving average to identify sustained trends in miner outflow patterns without daily noise.
+
+<Properties>
+  <Property name="miner" type="string">
+    Mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner Outflow Mean MA7 data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-outflow-mean-ma7" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "miner_outflow_mean_ma7": 8.15
+  },
+  {
+    "date": "2025-01-06",
+    "miner_outflow_mean_ma7": 8.02
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-outflow-mean-ma7" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=all_miner \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="miner_outflow_mean_ma7" type="number">
+    The 7-day moving average of mean transaction values flowing out of mining
+    pool wallets, denominated in BTC. This smooths daily volatility to reveal
+    sustained trends.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising MA7** indicates a sustained trend toward larger average outflows over the past week, suggesting miners are increasingly consolidating distributions into bigger transactions, potentially preparing for major selling events or strategic position changes.
+
+**Declining MA7** reveals a persistent trend toward smaller average outflows, potentially indicating more cautious distribution strategies, increased operational payment frequency, or shifts toward gradual selling to minimize market impact.
+
+**MA7 significantly above daily mean** suggests recent daily values have been below the weekly trend, indicating temporary reduction in outflow sizes that may normalize back toward the higher weekly average.
+
+**MA7 significantly below daily mean** reveals recent daily values have exceeded the weekly trend, suggesting temporary spike in outflow sizes that may revert to the lower weekly average.
+
+### Use Cases
+
+This smoothed metric helps identify genuine trends versus temporary fluctuations in miner distribution behavior. Sustained rises in MA7 confirm miners are shifting toward larger batch distributions, often indicating preparation for more aggressive selling or major strategic moves. The MA7 filters out one-off large transactions, revealing whether increased outflow sizes represent structural changes in miner behavior or isolated events. Comparing daily mean with MA7 helps distinguish between temporary operational anomalies and sustained strategic shifts in distribution patterns. Rising MA7 during bull markets suggests miners are increasingly confident in taking larger profits through bigger transactions, while declining MA7 despite favorable prices may indicate miners prefer gradual distribution to avoid market impact. For predicting selling pressure, sustained high MA7 combined with rising total outflow provides strong signals of impending major miner distribution that could pressure prices.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-outflow-mean-ma7', async (req, res) => {
+  try {
+    const miner = req.query.miner || 'all_miner'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-outflow-mean-ma7?window=${window}&miner=${miner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      miner_outflow_mean_ma7: d.miner_outflow_mean_ma7,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

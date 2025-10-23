@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Short Term Holder SOPR (STH-SOPR)',
+  description:
+    'Use the Short Term Holder SOPR endpoint to track the profit-taking behavior of recent Bitcoin buyers, revealing short-term market sentiment and identifying local tops and bottoms.',
+}
+
+# Short Term Holder SOPR (STH-SOPR)
+
+The **Short Term Holder SOPR (STH-SOPR)** measures the profit ratio of Bitcoin holders who acquired their coins within the past 155 days. {{ className: 'lead' }}
+
+This metric reveals whether recent buyers are selling at a profit or loss, providing sensitive signals for identifying local market tops and bottoms through short-term holder behavior.
+
+---
+
+## Endpoint
+
+`GET /sth-sopr`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Short Term Holder SOPR to assess the profit-taking behavior of recent buyers and identify local market turning points.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Short Term Holder SOPR data"}
+curl -G "https://api.blocklytics.net/api/public/v1/sth-sopr" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "sth_sopr": 1.045
+  },
+  {
+    "date": "2025-01-06",
+    "sth_sopr": 0.987
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/sth-sopr" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="sth_sopr" type="number">
+    The ratio of the value of spent outputs to their value at creation for coins
+    held less than 155 days, where values above 1 indicate profit-taking and
+    below 1 indicate loss realization.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**STH-SOPR above 1** indicates short-term holders are selling at a profit, revealing that recent buyers maintain gains and possess the means and motivation to take profits, creating potential supply pressure as newer participants realize returns.
+
+**STH-SOPR below 1** shows short-term holders are selling at a loss, demonstrating capitulation or panic selling by recent buyers who entered at higher prices, often marking local bottoms when weak hands are flushed out.
+
+**STH-SOPR crossing above 1 during rallies** signals short-term holders transitioning from underwater to profitable positions, indicating recovery and building momentum as recent buyers gain confidence from positive returns rather than suffering losses.
+
+**STH-SOPR dropping below 1 during corrections** reveals short-term holders moving into loss positions, warning of deteriorating sentiment and potential further weakness as recent buyers experience pain and may capitulate to avoid larger losses.
+
+### Use Cases
+
+This metric provides highly responsive signals for identifying local market turning points by focusing on the most price-sensitive cohort. Short-term holders, defined as those holding less than 155 days, represent the weak hands most likely to panic sell during corrections or take quick profits during rallies, making their behavior predictive of near-term price action. STH-SOPR dropping below 1 during downtrends indicates capitulation as recent buyers realize losses, often marking local bottoms when the last weak hands exit at unfavorable prices. Conversely, STH-SOPR spiking significantly above 1 during rallies suggests profit-taking euphoria where recent buyers aggressively lock in gains, often preceding local tops as this supply pressure overwhelms demand. The metric proves particularly valuable for identifying healthy corrections versus dangerous breakdowns, with STH-SOPR remaining above 1 during pullbacks indicating strong hands maintaining control while drops below 1 warn of genuine distress. During bull markets, watching STH-SOPR for extreme readings above 1.1-1.2 helps identify overheated conditions where recent buyers hold excessive profits tempting aggressive selling. The 155-day threshold separates short-term from long-term holders based on historical analysis showing behavioral shifts around this timeframe, with shorter-term holders exhibiting more reactive trading patterns. Combining STH-SOPR with price action distinguishes between profit-taking in uptrends (healthy) versus loss realization in downtrends (capitulation), providing context for interpreting the metric's implications.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/sth-sopr', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `sth-sopr?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      sth_sopr: d.sth_sopr,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

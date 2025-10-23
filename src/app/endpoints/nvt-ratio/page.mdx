@@ -1,0 +1,148 @@
+export const metadata = {
+  title: 'NVT Ratio',
+  description:
+    'Use the NVT Ratio endpoint to assess Bitcoin network valuation relative to transaction volume, identifying periods when price appears overvalued or undervalued based on economic activity.',
+}
+
+# NVT Ratio
+
+The **NVT (Network Value to Transaction) Ratio** measures Bitcoin's network value (market capitalization) relative to the daily transaction volume transferred on the network. {{ className: 'lead' }}
+
+This metric provides a valuation framework analogous to the P/E ratio in traditional markets, assessing whether Bitcoin's price is justified by its underlying economic activity and transaction throughput.
+
+---
+
+## Endpoint
+
+`GET /nvt-ratio`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the NVT Ratio to assess whether Bitcoin's market valuation aligns with its transaction volume and economic activity.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Currently only supports: <code>day</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting NVT Ratio data"}
+curl -G "https://api.blocklytics.net/api/public/v1/nvt-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "nvt": 87.34
+  },
+  {
+    "date": "2025-01-06",
+    "nvt": 92.18
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/nvt-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="nvt" type="number">
+    The ratio of Bitcoin's network value (market capitalization) to the total
+    daily transaction volume, representing valuation relative to economic
+    activity.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High NVT values** indicate the network is potentially overvalued where market capitalization significantly exceeds transaction volume, suggesting price has grown faster than economic utility and the market may be experiencing speculative excess or reduced fundamental support.
+
+**Low NVT values** suggest the network is potentially undervalued where transaction volume is high relative to market capitalization, indicating robust economic activity that supports higher valuations and often presenting value opportunities when fundamentals outpace price.
+
+**Rising NVT** reveals market valuation growing faster than transaction activity, indicating price appreciation is outpacing economic usage and potentially signaling speculative phases where valuations become disconnected from underlying transactional utility.
+
+**Declining NVT** indicates transaction volume growing faster than market valuation, suggesting improving fundamental economic activity that hasn't been fully reflected in price and often appearing during accumulation phases when network utility expands while prices remain suppressed.
+
+### Use Cases
+
+This metric provides a fundamental valuation framework analogous to traditional financial ratios like P/E, making Bitcoin's valuation accessible through familiar analytical lenses. The theory posits that network value should correlate with transaction throughput, as higher economic activity indicates greater utility and justifies higher valuations. Historically high NVT readings have coincided with market tops and speculative peaks, as price runs ahead of fundamental transaction growth and becomes unsustainable without corresponding economic activity increases. Conversely, historically low NVT readings often appear at market bottoms when price has declined but transaction volume remains robust, indicating value opportunities where economic fundamentals support higher valuations. Comparing current NVT to historical ranges helps identify extremes, with readings in the top percentiles suggesting overvaluation risk while readings in the bottom percentiles indicate potential undervaluation. During bull markets, watching for NVT expansion warns of growing disconnect between price and economic utility, while during bear markets, contracting NVT signals improving fundamental positioning relative to valuation. The metric proves particularly valuable for fundamental analysts seeking to assess whether current prices reflect underlying economic activity or represent deviations from fair value. Combining NVT with other on-chain metrics distinguishes between healthy bull markets supported by transaction growth (stable or improving NVT) versus purely speculative runs (rapidly expanding NVT). The ratio also helps identify market cycle phases, as NVT typically follows cyclical patterns with extreme highs marking euphoric tops when speculation dominates and extreme lows marking capitulation bottoms when economic activity persists despite price depression.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/nvt-ratio', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `nvt-ratio?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      nvt: d.nvt,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

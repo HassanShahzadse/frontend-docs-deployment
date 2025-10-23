@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Transaction Count (Mean)',
+  description:
+    'Use the Transaction Count (Mean) endpoint to track the average number of transactions per block, revealing network throughput consistency and block space utilization patterns.',
+}
+
+# Transaction Count (Mean)
+
+The **Transaction Count (Mean)** measures the average number of transactions per block, revealing network throughput consistency and block space usage patterns. {{ className: 'lead' }}
+
+This metric identifies whether blocks are consistently full or underutilized, with high means indicating sustained demand for block space and low means suggesting available capacity.
+
+---
+
+## Endpoint
+
+`GET /transaction-count-mean`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor mean transaction count to assess typical block fullness and identify periods of sustained high or low network demand.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Transaction Count (Mean) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/transaction-count-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "transactions_count_mean": 3456
+  },
+  {
+    "date": "2025-01-06",
+    "transactions_count_mean": 3234
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/transaction-count-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="transactions_count_mean" type="number">
+    The average number of transactions per block, representing typical block
+    throughput and revealing how consistently blocks utilize available space.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High mean transaction count** indicates blocks consistently process many transactions, revealing sustained high demand for block space where network usage remains elevated across consecutive blocks.
+
+**Low mean transaction count** demonstrates blocks contain few transactions on average, showing underutilized block space where network demand remains modest and capacity exceeds usage.
+
+**Rising mean transaction count** reveals growing average block fullness, signaling increasing network usage and demand as typical blocks accommodate more transactions over time.
+
+**Declining mean transaction count** shows decreasing average block fullness, indicating reduced network usage where typical blocks contain fewer transactions, suggesting diminished demand or user activity.
+
+### Use Cases
+
+This metric provides insight into typical block space utilization by averaging transaction counts across blocks, revealing whether the network consistently operates near capacity or maintains spare throughput. High mean transaction counts indicate sustained network demand where blocks regularly fill with transactions, suggesting healthy usage and potential fee pressure as users compete for limited space. These elevated means often characterize bull markets or periods of high network activity when participants actively transact. Conversely, low mean transaction counts indicate available block space exceeds demand, suggesting the network could process more transactions without congestion, typical during bear markets or quiet periods. The mean proves valuable for identifying usage trends, with rising means indicating growing network adoption and activity while declining means suggest reduced engagement. Comparing mean to maximum possible transactions per block reveals capacity utilization, with means approaching theoretical limits indicating consistent congestion while low means suggest underutilization. The metric also contextualizes fee markets, as high mean transaction counts create sustained competition for block space that supports elevated fees, while low means indicate abundant capacity that suppresses fees. Tracking mean transaction count growth over longer timeframes reveals network adoption trajectories, with steadily increasing means suggesting growing usage and ecosystem health.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/transaction-count-mean', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `transaction-count-mean?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      transactions_count_mean: d.transactions_count_mean,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

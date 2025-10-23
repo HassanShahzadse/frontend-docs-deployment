@@ -1,0 +1,142 @@
+export const metadata = {
+  title: 'Adjusted SOPR (aSOPR)',
+  description:
+    'Learn how to use the Adjusted Spent Output Profit Ratio (aSOPR) endpoint to evaluate overall Bitcoin market profitability by comparing spent and created output values over time.',
+}
+
+# Adjusted SOPR (aSOPR)
+
+The **Adjusted Spent Output Profit Ratio (aSOPR)** measures the profitability of spent transaction outputs on the Bitcoin network. {{ className: 'lead' }}  
+It compares the USD value of outputs when they are spent to when they were created, showing whether coins were moved at a profit or loss.
+
+The adjusted version excludes transactions with lifetimes shorter than one hour, filtering out noise from rapid trading and self-transfers, giving a clearer view of broader market sentiment.
+
+---
+
+## Endpoint
+
+`GET /adjusted-sopr`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+This example fetches the adjusted SOPR metric for daily intervals. You can modify parameters to query different time frames or export in CSV format.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Adjusted SOPR data"}
+curl -G "https://api.blocklytics.net/api/public/v1/adjusted-sopr" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "a_sopr": 1.02
+  },
+  {
+    "date": "2025-01-06",
+    "a_sopr": 0.98
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/adjusted-sopr" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=block \
+  -d from=510000 \
+  -d to=510500 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+The **aSOPR** is a ratio calculated as the USD value of spent outputs at the time of spending divided by the USD value of those same outputs at creation.
+
+A value greater than `1` indicates that coins were sold at a profit, while a value below `1` shows they were sold at a loss.  
+This adjusted metric provides a smoother signal by excluding short-term noise, helping identify macro profit-taking or capitulation periods.
+
+<Properties>
+  <Property name="a_sopr" type="number">
+    Adjusted Spent Output Profit Ratio. Values above `1` indicate profit; values
+    below `1` indicate loss.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/adjusted-sopr', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `adjusted-sopr?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      a_sopr: d.a_sopr,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

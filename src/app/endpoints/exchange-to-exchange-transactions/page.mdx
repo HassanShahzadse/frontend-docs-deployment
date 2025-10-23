@@ -1,0 +1,165 @@
+export const metadata = {
+  title: 'Exchange to Exchange Transactions',
+  description:
+    'Use the Exchange to Exchange Transactions endpoint to track the number of transactions between exchanges, revealing inter-exchange activity patterns and arbitrage frequency.',
+}
+
+# Exchange to Exchange Transactions
+
+The **Exchange to Exchange Transactions** metric tracks the number of transactions occurring between exchanges. {{ className: 'lead' }}
+
+This metric reveals the frequency of inter-exchange transfers, helping identify active arbitrage corridors, automated trading bot activity, and the distribution of transfer sizes between platforms.
+
+---
+
+## Endpoint
+
+`GET /exchange-to-exchange-transactions`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor transaction frequency between exchanges to identify arbitrage activity patterns and automated trading operations.
+
+<Properties>
+  <Property name="from_exchange" type="string">
+    Source exchange name. Example: <code>binance</code>, <code>coinbase</code>,{' '}
+    <code>kraken</code>. Default: <code>all_exchange</code>.
+  </Property>
+  <Property name="to_exchange" type="string">
+    Destination exchange name. Example: <code>coinbase</code>,{' '}
+    <code>kraken</code>, <code>gemini</code>. Must be different from{' '}
+    <code>from_exchange</code>. Default: <code>spot_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Exchange to Exchange Transactions data"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-to-exchange-transactions" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_exchange=binance \
+  -d to_exchange=coinbase \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "transactions_count_flow": 342
+  },
+  {
+    "date": "2025-01-06",
+    "transactions_count_flow": 289
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-to-exchange-transactions" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_exchange=kraken \
+  -d to_exchange=gemini \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="transactions_count_flow" type="integer">
+    The number of transactions flowing from the source exchange to the
+    destination exchange during the specified time window.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising transaction count** indicates increased inter-exchange activity, often signaling active arbitrage opportunities, automated bot operations, or heightened price discrepancies between platforms driving frequent transfers.
+
+**Declining transaction count** suggests reduced inter-exchange movement, which may indicate aligned pricing across platforms, reduced arbitrage opportunities, or decreased automated trading activity.
+
+**High count with low total volume** (from Flow Total metric) reveals many small transactions, typically indicating retail arbitrage activity or distributed automated trading strategies across multiple smaller positions.
+
+**Low count with high total volume** suggests fewer but larger institutional transfers, indicating whale movements or major rebalancing operations between platforms.
+
+### Use Cases
+
+This metric is crucial for distinguishing between retail and institutional inter-exchange activity. When combined with Flow Total and Flow Mean metrics, you can identify whether arbitrage is dominated by many small traders or few large players. Sudden increases in transaction count often precede or follow significant price movements on either platform. Monitoring hourly transaction patterns can reveal optimal arbitrage windows and identify automated bot activity schedules.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/exchange-to-exchange-transactions', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const fromExchange = req.query.from_exchange || 'all_exchange'
+    const toExchange = req.query.to_exchange || 'spot_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `exchange-to-exchange-transactions?window=${window}&from_exchange=${fromExchange}&to_exchange=${toExchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      transactions_count_flow: d.transactions_count_flow,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

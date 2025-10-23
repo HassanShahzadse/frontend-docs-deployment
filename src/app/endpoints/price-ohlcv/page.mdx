@@ -1,0 +1,194 @@
+export const metadata = {
+  title: 'Price & Volume (OHLCV)',
+  description:
+    'Use the Price & Volume OHLCV endpoint to access comprehensive Bitcoin price and trading volume data across spot and perpetual markets with open, high, low, close, and volume metrics.',
+}
+
+# Price & Volume (OHLCV)
+
+The **Price & Volume (OHLCV)** endpoint provides comprehensive Bitcoin price and trading volume data including open, high, low, close prices and volume. {{ className: 'lead' }}
+
+This metric delivers standard financial market data across multiple exchanges and markets, enabling technical analysis, trading strategies, and market monitoring through industry-standard OHLCV format.
+
+---
+
+## Endpoint
+
+`GET /price-ohlcv`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Access Bitcoin price and volume data across spot and perpetual markets with flexible filtering by exchange, market type, and trading pair.
+
+<Properties>
+  <Property name="market" type="string">
+    Market type. Supported values: <code>spot</code>, <code>perpetual</code>.
+    Default: <code>spot</code>.
+  </Property>
+  <Property name="exchange" type="string">
+    Exchange name. Example: <code>binance</code>, <code>coinbase_advanced</code>
+    , <code>kraken</code>. Default: <code>all_exchange</code>.
+  </Property>
+  <Property name="symbol" type="string">
+    Trading pair symbol. Example: <code>btc_usd</code>, <code>btc_usdt</code>.
+    Default: <code>btc_usd</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>min</code>, <code>hour</code>,{' '}
+    <code>day</code>. Default: <code>day</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Price & Volume OHLCV data"}
+curl -G "https://api.blocklytics.net/api/public/v1/price-ohlcv" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d market=spot \
+  -d exchange=binance \
+  -d symbol=btc_usdt \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "open": 94250.5,
+    "high": 96840.75,
+    "low": 93180.25,
+    "close": 95670.8,
+    "volume": 28945.67
+  },
+  {
+    "date": "2025-01-06",
+    "open": 92830.2,
+    "high": 94890.6,
+    "low": 91540.3,
+    "close": 94250.5,
+    "volume": 31247.89
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/price-ohlcv" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d market=spot \
+  -d exchange=all_exchange \
+  -d symbol=btc_usd \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="open" type="number">
+    The opening price at the beginning of the time window, measured in USD or
+    USDT.
+  </Property>
+  <Property name="high" type="number">
+    The highest price reached during the time window, measured in USD or USDT.
+  </Property>
+  <Property name="low" type="number">
+    The lowest price reached during the time window, measured in USD or USDT.
+  </Property>
+  <Property name="close" type="number">
+    The closing price at the end of the time window, measured in USD or USDT.
+  </Property>
+  <Property name="volume" type="number">
+    The total trading volume during the time window. Unit varies by exchange
+    (BTC, USD, or USDT).
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising prices (close > open)** indicate bullish periods where buying pressure exceeds selling pressure, with the magnitude of the increase revealing momentum strength and the high-low range showing volatility and intraday trading dynamics.
+
+**Declining prices (close < open)** suggest bearish periods where selling pressure dominates, with larger declines indicating stronger bearish momentum and wider ranges revealing increased volatility or potential capitulation selling.
+
+**High volume with price increases** confirms strong bullish conviction as substantial participation supports upward moves, indicating sustainable rallies backed by genuine demand rather than low-liquidity price manipulation.
+
+**High volume with price decreases** reveals aggressive selling pressure or capitulation where substantial participation drives declines, often marking climactic selling events that can precede bottoms when exhaustion occurs.
+
+### Use Cases
+
+This endpoint provides the foundational data for virtually all technical analysis and trading strategies. OHLCV data enables construction of candlestick charts, the most widely used visualization for price action analysis across all financial markets. The open-close relationship reveals the direction and magnitude of price movement within each period, while high-low ranges quantify volatility and identify support-resistance levels. Technical indicators like moving averages, RSI, MACD, and Bollinger Bands all derive from OHLCV data, making this endpoint essential for systematic trading approaches. Volume data provides crucial confirmation for price movements, with increasing volume validating trends while declining volume warns of weakening momentum. The ability to query multiple exchanges enables price comparison and arbitrage opportunity identification, while cross-market analysis between spot and perpetual markets reveals funding dynamics and basis spreads. Minute-level data supports high-frequency trading strategies and precise entry-exit timing, while daily data serves longer-term position trading and investment analysis. Historical OHLCV data enables backtesting of trading strategies across different market conditions, validating approaches before live implementation. The standardized format ensures compatibility with popular charting libraries and trading platforms, facilitating seamless integration into existing workflows.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/price-ohlcv', async (req, res) => {
+  try {
+    const market = req.query.market || 'spot'
+    const exchange = req.query.exchange || 'all_exchange'
+    const symbol = req.query.symbol || 'btc_usd'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `price-ohlcv?window=${window}&market=${market}&exchange=${exchange}&symbol=${symbol}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      open: d.open,
+      high: d.high,
+      low: d.low,
+      close: d.close,
+      volume: d.volume,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

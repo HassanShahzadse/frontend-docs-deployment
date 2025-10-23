@@ -1,0 +1,181 @@
+export const metadata = {
+  title: 'Realized Cap - UTXO Value Bands (%)',
+  description:
+    'Use the Realized Cap UTXO Value Bands endpoint to track the distribution of realized capital across different UTXO size cohorts, revealing whether whales or retail investors control network value.',
+}
+
+# Realized Cap - UTXO Value Bands (%)
+
+The **Realized Cap UTXO Value Bands** metric distributes realized capitalization across UTXO size cohorts, showing what percentage of network value is held by different holder sizes. {{ className: 'lead' }}
+
+This metric reveals the concentration of Bitcoin's capital base by holder wealth, distinguishing between retail, institutional, and whale-level capital distribution through realized value weighting.
+
+---
+
+## Endpoint
+
+`GET /realized-cap-utxo-value-bands`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor realized cap distribution across value bands to understand wealth concentration and identify shifts between retail and whale dominance.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Realized Cap UTXO Value Bands data"}
+curl -G "https://api.blocklytics.net/api/public/v1/realized-cap-utxo-value-bands" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "range_0_1_percent": 0.3,
+    "range_1_10_percent": 2.1,
+    "range_10_100_percent": 8.7,
+    "range_100_1k_percent": 15.4,
+    "range_1k_10k_percent": 22.8,
+    "range_10k_100k_percent": 28.5,
+    "range_100k_1M_percent": 16.2,
+    "range_1M_inf_percent": 6.0
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/realized-cap-utxo-value-bands" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="range_0_1_percent" type="number">
+    Percentage of realized cap in UTXOs valued $0-$1.
+  </Property>
+  <Property name="range_1_10_percent" type="number">
+    Percentage of realized cap in UTXOs valued $1-$10.
+  </Property>
+  <Property name="range_10_100_percent" type="number">
+    Percentage of realized cap in UTXOs valued $10-$100.
+  </Property>
+  <Property name="range_100_1k_percent" type="number">
+    Percentage of realized cap in UTXOs valued $100-$1,000.
+  </Property>
+  <Property name="range_1k_10k_percent" type="number">
+    Percentage of realized cap in UTXOs valued $1,000-$10,000.
+  </Property>
+  <Property name="range_10k_100k_percent" type="number">
+    Percentage of realized cap in UTXOs valued $10,000-$100,000.
+  </Property>
+  <Property name="range_100k_1M_percent" type="number">
+    Percentage of realized cap in UTXOs valued $100,000-$1,000,000.
+  </Property>
+  <Property name="range_1M_inf_percent" type="number">
+    Percentage of realized cap in UTXOs valued over $1,000,000.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High small UTXO percentages (0-1k)** indicate retail dominance where numerous small holders control significant realized capital, suggesting broad-based participation and decentralized wealth distribution, typical during retail-driven bull markets or early adoption phases.
+
+**High large UTXO percentages (100k+)** reveal whale dominance where concentrated capital controls significant network value, indicating institutional participation or wealth concentration, typical during institutional accumulation or when large holders consolidate positions.
+
+**Shift from large to small UTXOs** signals distribution from whales to retail as large holders break positions into smaller pieces for sale or distribution, often marking market tops when institutional players reduce exposure while retail enthusiasm peaks.
+
+**Shift from small to large UTXOs** indicates accumulation by whales as retail holders sell or consolidate into larger positions, often appearing during bear markets when weak hands distribute to strong hands and institutional buyers acquire at depressed prices.
+
+### Use Cases
+
+This metric provides crucial insight into the wealth concentration and participant composition of Bitcoin's holder base by examining realized value distribution rather than simple coin counts. Unlike standard UTXO distribution that treats all coins equally, realized cap weighting emphasizes economically significant holdings by valuing coins at their acquisition prices, revealing which cohorts control the most valuable positions. High concentrations in small UTXOs indicate broad retail participation controlling significant capital, suggesting resilient distributed ownership that can absorb volatility through numerous independent decisions. Conversely, high concentrations in large UTXOs reveal whale control where fewer entities command substantial value, creating both stability through strong-hand holdings and risk through concentrated decision-making power. Tracking band transitions identifies capital rotation patterns, with coins moving from large to small UTXOs signaling distribution phases when whales reduce positions, while movement from small to large UTXOs indicates consolidation and accumulation. During bull markets, watching for accelerating shifts from large to small bands warns of whale distribution to retail enthusiasm, often preceding tops as smart money exits. During bear markets, formation of new large UTXO positions signals accumulation success as institutional or whale capital enters at depressed prices. The metric also reveals market cycle phases through characteristic distribution patterns, with healthy bull markets showing balanced distribution across bands versus euphoric tops showing extreme retail concentration and capitulation bottoms showing extreme whale concentration.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/realized-cap-utxo-value-bands', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `realized-cap-utxo-value-bands?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      range_0_1_percent: d.range_0_1_percent,
+      range_1_10_percent: d.range_1_10_percent,
+      range_10_100_percent: d.range_10_100_percent,
+      range_100_1k_percent: d.range_100_1k_percent,
+      range_1k_10k_percent: d.range_1k_10k_percent,
+      range_10k_100k_percent: d.range_10k_100k_percent,
+      range_100k_1M_percent: d.range_100k_1M_percent,
+      range_1M_inf_percent: d.range_1M_inf_percent,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

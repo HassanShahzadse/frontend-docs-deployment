@@ -1,0 +1,150 @@
+export const metadata = {
+  title: 'Fees per Block (Mean)',
+  description:
+    'Use the Fees per Block Mean endpoint to track the average transaction fees collected per block, revealing network congestion levels and per-block miner revenue.',
+}
+
+# Fees per Block (Mean)
+
+The **Fees per Block Mean** metric tracks the average transaction fees collected per block during a specified time window. {{ className: 'lead' }}
+
+This metric reveals block-level network congestion and helps normalize fee analysis across different time periods, showing how much fee revenue miners earn per block on average.
+
+---
+
+## Endpoint
+
+`GET /fees-per-block-mean`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor average fees per block to understand network congestion intensity and per-block miner economics.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Fees per Block Mean data"}
+curl -G "https://api.blocklytics.net/api/public/v1/fees-per-block-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "fees_block_mean": 0.12456
+  },
+  {
+    "date": "2025-01-06",
+    "fees_block_mean": 0.10892
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/fees-per-block-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="fees_block_mean" type="number">
+    The average transaction fees collected per block during the specified time
+    window, denominated in BTC.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising mean fees per block** indicate increasing network congestion and competition for block space, as users pay higher fees to ensure their transactions are included in blocks quickly. This often occurs during market rallies or major on-chain events.
+
+**Declining mean fees per block** suggest reduced network congestion and lower competition for block space, which typically indicates quieter market periods, improved layer-2 adoption, or decreased transaction urgency.
+
+**Sudden spikes** reveal periods of extreme congestion where users compete aggressively for inclusion, often during major market movements, popular token launches, or network stress tests.
+
+**Consistent elevation** indicates sustained high demand for block space, suggesting either strong network adoption or structural congestion requiring scaling solutions.
+
+### Use Cases
+
+This metric normalizes fee analysis by showing average per-block revenue regardless of how many blocks were mined in a period. Unlike total fees which can vary with block production rate, mean fees per block provide a clearer picture of actual congestion levels. High mean fees per block indicate that each block is maximally valuable to miners, improving per-block profitability. This metric helps identify optimal times for submitting transactions, as lower mean fees suggest better opportunities for cheaper confirmations. When combined with block time data, you can assess whether fee variations result from congestion or block production irregularities. Comparing mean fees across different epochs helps evaluate the network's transition toward a fee-based security model as block subsidies decline.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/fees-per-block-mean', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `fees-per-block-mean?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      fees_block_mean: d.fees_block_mean,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

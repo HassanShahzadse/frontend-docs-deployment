@@ -1,0 +1,206 @@
+export const metadata = {
+  title: 'Spent Output Age Bands (%)',
+  description:
+    'Use the Spent Output Age Bands (%) endpoint to track the percentage distribution of spending activity across different holder age cohorts, revealing the relative composition of market participants.',
+}
+
+# Spent Output Age Bands (%)
+
+The **Spent Output Age Bands (%)** metric distributes spending activity across age cohorts as percentages, showing the relative composition of which holder types are actively moving coins. {{ className: 'lead' }}
+
+This metric reveals the proportional contribution of each holder cohort to total spending, enabling analysis of whether short-term traders or long-term holders dominate market activity.
+
+---
+
+## Endpoint
+
+`GET /spent-output-age-bands-percent`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the percentage distribution of spending across age bands to assess the relative composition of market participants and identify regime shifts.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Spent Output Age Bands (%) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/spent-output-age-bands-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "range_0d_1d_percent": 14.2,
+    "range_1d_1w_percent": 22.8,
+    "range_1w_1m_percent": 18.3,
+    "range_1m_3m_percent": 15.2,
+    "range_3m_6m_percent": 8.7,
+    "range_6m_12m_percent": 6.5,
+    "range_12m_18m_percent": 4.4,
+    "range_18m_2y_percent": 3.3,
+    "range_2y_3y_percent": 2.7,
+    "range_3y_5y_percent": 2.2,
+    "range_5y_7y_percent": 1.2,
+    "range_7y_10y_percent": 0.9,
+    "range_10y_inf_percent": 0.4
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/spent-output-age-bands-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="range_0d_1d_percent" type="number">
+    Percentage of total spending from UTXOs aged 0-1 days.
+  </Property>
+  <Property name="range_1d_1w_percent" type="number">
+    Percentage of total spending from UTXOs aged 1 day to 1 week.
+  </Property>
+  <Property name="range_1w_1m_percent" type="number">
+    Percentage of total spending from UTXOs aged 1 week to 1 month.
+  </Property>
+  <Property name="range_1m_3m_percent" type="number">
+    Percentage of total spending from UTXOs aged 1-3 months.
+  </Property>
+  <Property name="range_3m_6m_percent" type="number">
+    Percentage of total spending from UTXOs aged 3-6 months.
+  </Property>
+  <Property name="range_6m_12m_percent" type="number">
+    Percentage of total spending from UTXOs aged 6-12 months.
+  </Property>
+  <Property name="range_12m_18m_percent" type="number">
+    Percentage of total spending from UTXOs aged 12-18 months.
+  </Property>
+  <Property name="range_18m_2y_percent" type="number">
+    Percentage of total spending from UTXOs aged 18 months to 2 years.
+  </Property>
+  <Property name="range_2y_3y_percent" type="number">
+    Percentage of total spending from UTXOs aged 2-3 years.
+  </Property>
+  <Property name="range_3y_5y_percent" type="number">
+    Percentage of total spending from UTXOs aged 3-5 years.
+  </Property>
+  <Property name="range_5y_7y_percent" type="number">
+    Percentage of total spending from UTXOs aged 5-7 years.
+  </Property>
+  <Property name="range_7y_10y_percent" type="number">
+    Percentage of total spending from UTXOs aged 7-10 years.
+  </Property>
+  <Property name="range_10y_inf_percent" type="number">
+    Percentage of total spending from UTXOs aged over 10 years.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High short-term percentages** indicate spending dominated by recent holders and active traders, revealing short-term speculation driving market activity without significant long-term holder participation, typical during choppy or range-bound periods.
+
+**High long-term percentages** demonstrate veteran holders contributing disproportionately to spending, signaling major distribution events as patient capital accumulated over years enters circulation, often marking cycle tops when smart money exits.
+
+**Rising long-term percentages during rallies** warn of increasing distribution from experienced holders, indicating the relative contribution from veteran sellers is growing compared to short-term trading activity, often preceding corrections.
+
+**Declining long-term percentages during bear markets** reveal veteran holders withdrawing from markets, indicating commitment to holding through downturns while short-term participants dominate trading activity through capitulation and repositioning.
+
+### Use Cases
+
+This metric provides normalized insight into the relative composition of market participants by removing the influence of total spending volume and focusing on proportional contributions. The percentage view enables identification of participant regime shifts regardless of absolute volume changes, revealing whether the character of market activity is changing even when total spending remains stable. High short-term band percentages indicate markets dominated by active speculation without conviction, as the bulk of coins moving represent rapid position changes rather than committed capital redistributing. Conversely, elevated long-term band percentages signal fundamental redistribution events where patient holders accumulated over cycles decide to exit, carrying more significance than routine short-term trading. During bull markets, tracking the rising percentage from long-term bands identifies distribution intensity, with increasing proportions warning that veteran holders are becoming the dominant sellers. The metric also reveals market cycle phases through characteristic distribution patterns, with early bull markets showing balanced percentages, mid-cycle showing short-term dominance, and late-cycle showing long-term spike. Comparing percentage distributions across cycles identifies whether current holder behavior differs from historical norms, with unusual patterns potentially indicating regime changes in holder conviction or market structure. The metric proves particularly valuable for filtering noise from short-term volatility, as sustained percentage shifts in long-term bands signal meaningful behavioral changes while short-term percentage fluctuations often reflect transient trading patterns.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/spent-output-age-bands-percent', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `spent-output-age-bands-percent?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      range_0d_1d_percent: d.range_0d_1d_percent,
+      range_1d_1w_percent: d.range_1d_1w_percent,
+      range_1w_1m_percent: d.range_1w_1m_percent,
+      range_1m_3m_percent: d.range_1m_3m_percent,
+      range_3m_6m_percent: d.range_3m_6m_percent,
+      range_6m_12m_percent: d.range_6m_12m_percent,
+      range_12m_18m_percent: d.range_12m_18m_percent,
+      range_18m_2y_percent: d.range_18m_2y_percent,
+      range_2y_3y_percent: d.range_2y_3y_percent,
+      range_3y_5y_percent: d.range_3y_5y_percent,
+      range_5y_7y_percent: d.range_5y_7y_percent,
+      range_7y_10y_percent: d.range_7y_10y_percent,
+      range_10y_inf_percent: d.range_10y_inf_percent,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

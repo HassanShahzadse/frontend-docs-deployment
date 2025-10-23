@@ -1,0 +1,148 @@
+export const metadata = {
+  title: 'NVM Ratio',
+  description:
+    "Use the NVM Ratio endpoint to assess Bitcoin network valuation through Metcalfe's Law, comparing market capitalization to network activity for identifying overvalued or undervalued conditions.",
+}
+
+# NVM Ratio
+
+The **NVM (Network Value to Metcalfe) Ratio** measures Bitcoin's market capitalization relative to the square of daily active addresses, based on Metcalfe's Law. {{ className: 'lead' }}
+
+This metric provides a valuation framework by comparing network value to fundamental network activity, identifying periods when Bitcoin appears overvalued or undervalued relative to its user base growth.
+
+---
+
+## Endpoint
+
+`GET /nvm-ratio`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the NVM Ratio to assess whether Bitcoin's market valuation aligns with its fundamental network activity and user adoption.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Currently only supports: <code>day</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting NVM Ratio data"}
+curl -G "https://api.blocklytics.net/api/public/v1/nvm-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "nvm": 0.0000342
+  },
+  {
+    "date": "2025-01-06",
+    "nvm": 0.0000387
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/nvm-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="nvm" type="number">
+    The ratio of Bitcoin's market capitalization to the square of daily active
+    addresses, representing network valuation relative to fundamental activity
+    based on Metcalfe's Law.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High NVM values** indicate the network is potentially overvalued where market capitalization has grown faster than network activity, suggesting price appreciation has outpaced fundamental user growth and the market may be extended or experiencing speculative excess.
+
+**Low NVM values** suggest the network is potentially undervalued where market capitalization lags behind network activity growth, indicating robust fundamental adoption that hasn't been fully reflected in price and presenting potential value opportunities.
+
+**Rising NVM** reveals market valuation growing faster than network activity, suggesting price appreciation is outpacing fundamental user adoption and potentially indicating speculative phases where valuations become disconnected from underlying network usage.
+
+**Declining NVM** indicates network activity growing faster than market valuation, suggesting improving fundamental strength that hasn't been fully recognized by price and often appearing during accumulation phases when user adoption accelerates while prices remain suppressed.
+
+### Use Cases
+
+This metric provides a fundamental valuation framework based on network theory rather than purely speculative price movements. Metcalfe's Law posits that network value grows proportionally to the square of its users, making the relationship between market cap and active addresses² a theoretically grounded valuation measure. Historically high NVM readings have coincided with market tops and speculative peaks, as price runs ahead of fundamental network growth and becomes unsustainable. Conversely, historically low NVM readings often appear at market bottoms when price has fallen but network activity remains resilient or even grows, indicating value opportunities where fundamentals support higher valuations. Comparing current NVM to historical ranges helps identify extremes, with readings in the top decile suggesting overvaluation risk while readings in the bottom decile indicate potential undervaluation. During bull markets, watching for NVM expansion warns of growing disconnect between price and fundamentals, while during bear markets, contracting NVM signals improving fundamental positioning. The metric proves particularly valuable for long-term investors seeking to assess whether current prices reflect underlying network strength or represent deviation from fundamental value. Combining NVM with other on-chain metrics distinguishes between healthy bull markets supported by user growth (stable or improving NVM) versus purely speculative runs (rapidly expanding NVM). The ratio also helps identify market cycle phases, as NVM typically follows cyclical patterns with extreme highs marking euphoric tops and extreme lows marking capitulation bottoms.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/nvm-ratio', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `nvm-ratio?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      nvm: d.nvm,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

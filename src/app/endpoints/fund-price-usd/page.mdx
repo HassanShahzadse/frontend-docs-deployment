@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Fund Price (USD)',
+  description:
+    'Use the Fund Price USD endpoint to track the market price of investment fund shares, revealing regulated market sentiment toward digital assets.',
+}
+
+# Fund Price (USD)
+
+The **Fund Price USD** metric tracks the market price of investment fund shares in US dollars. {{ className: 'lead' }}
+
+This metric reveals how traditional finance investors value indirect digital asset exposure through regulated stock market products, providing insights into mainstream market sentiment and demand.
+
+---
+
+## Endpoint
+
+`GET /fund-price-usd`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor fund share prices to understand traditional market sentiment and track the performance of regulated digital asset investment products.
+
+<Properties>
+  <Property name="symbol" type="string">
+    Stock symbol (ticker) for the fund. Example: <code>gbtc</code> (Grayscale
+    Bitcoin Trust), <code>ethe</code> (Grayscale Ethereum Trust). Note:{' '}
+    <code>all_symbol</code> is not supported for this endpoint.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Currently only supports <code>day</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. If not
+    specified, returns data from earliest time.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. If not
+    specified, returns data to latest time.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Fund Price USD data"}
+curl -G "https://api.blocklytics.net/api/public/v1/fund-price-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d symbol=gbtc \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "price_usd_adj_close": 52.35
+  },
+  {
+    "date": "2025-01-06",
+    "price_usd_adj_close": 50.82
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/fund-price-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d symbol=gbtc \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="price_usd_adj_close" type="number">
+    The adjusted closing price in USD at the end of the trading window. This
+    price is adjusted for stock splits, dividends, and other corporate actions
+    to provide accurate historical comparisons.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising fund prices** indicate increasing demand from traditional finance investors for regulated digital asset exposure, reflecting bullish sentiment in stock markets even if direct cryptocurrency prices may diverge.
+
+**Declining fund prices** suggest weakening demand or selling pressure from regulated market participants, potentially signaling risk-off sentiment among traditional investors despite underlying asset performance.
+
+**Price divergence from NAV** reveals the premium or discount at which the fund trades, with significant gaps indicating sentiment extremes, liquidity issues, or arbitrage opportunities between the fund and underlying assets.
+
+**High volatility** in fund prices often reflects uncertainty among traditional market participants, regulatory concerns, or periods when stock market investors reassess digital asset valuations independent of spot market dynamics.
+
+### Use Cases
+
+This metric provides critical insights into how traditional finance values digital asset exposure through familiar stock market instruments. For investors choosing between direct cryptocurrency purchases and fund shares, comparing fund prices with underlying asset values reveals whether premiums or discounts make one approach more attractive. Fund price movements can lead or lag spot cryptocurrency prices, offering predictive signals about cross-market sentiment flows. High fund prices relative to NAV indicate excess demand from traditional investors lacking direct crypto access, while low prices suggest these investors can acquire exposure below fair value. Tracking multiple fund prices simultaneously reveals which products maintain strongest demand and best track underlying assets. For market makers and arbitrageurs, fund prices create opportunities when they diverge significantly from NAV, allowing profitable trades between stock and cryptocurrency markets.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/fund-price-usd', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const symbol = req.query.symbol || 'gbtc'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `fund-price-usd?window=${window}&symbol=${symbol}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      price_usd_adj_close: d.price_usd_adj_close,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

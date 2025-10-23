@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Miner Outflow (Total)',
+  description:
+    'Use the Miner Outflow Total endpoint to track the total volume of BTC leaving mining pools, revealing overall miner distribution and selling pressure.',
+}
+
+# Miner Outflow (Total)
+
+The **Miner Outflow Total** metric tracks the total volume of BTC flowing out of mining pool wallets. {{ className: 'lead' }}
+
+This metric reveals overall miner distribution levels including exchange deposits, operational payments, and cold storage movements, providing the most direct measure of potential selling pressure from miners.
+
+---
+
+## Endpoint
+
+`GET /miner-outflow-total`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor total outflow to assess overall miner selling pressure and identify periods of elevated distribution activity.
+
+<Properties>
+  <Property name="miner" type="string">
+    Mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner Outflow Total data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-outflow-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "miner_outflow_total": 3092.65
+  },
+  {
+    "date": "2025-01-06",
+    "miner_outflow_total": 2526.95
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-outflow-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=all_miner \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="miner_outflow_total" type="number">
+    The total volume of BTC flowing out of mining pool wallets during the
+    specified time window, including all destinations.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising total outflow** indicates increasing miner distribution activity, suggesting miners are moving more holdings toward exchanges for selling, operational payments, or other destinations. This often signals potential selling pressure entering markets.
+
+**Declining total outflow** reveals reduced miner distribution, potentially indicating accumulation behavior where miners hold newly mined coins rather than immediately liquidating, suggesting bullish sentiment from network operators.
+
+**Total outflow significantly exceeding mining rewards** indicates miners are distributing not just newly mined coins but also previously accumulated holdings, signaling major position exits or urgent liquidity needs that could substantially pressure prices.
+
+**Total outflow matching or below mining rewards** suggests miners are only distributing current production or less, indicating either accumulation of new rewards or healthy balance sheets that don't require immediate liquidation for operational costs.
+
+### Use Cases
+
+This metric provides the most direct measure of miner selling pressure and is fundamental for predicting supply entering markets. High total outflows warn of substantial miner distribution that could pressure prices, especially when exceeding expected mining production. Comparing total outflow with mining rewards reveals whether miners are net accumulating or distributing historical holdings. Rising outflows during bull markets often indicate strategic profit-taking as miners capitalize on favorable prices, while elevated outflows during bear markets may signal distress selling or capitulation. For market analysis, tracking outflow alongside exchange reserves shows whether miner distribution directly translates to exchange supply increases. Sustained high outflows relative to rewards indicate miners are liquidating accumulated positions, potentially signaling bearish medium-term outlook from those closest to network economics.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-outflow-total', async (req, res) => {
+  try {
+    const miner = req.query.miner || 'all_miner'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-outflow-total?window=${window}&miner=${miner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      miner_outflow_total: d.miner_outflow_total,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

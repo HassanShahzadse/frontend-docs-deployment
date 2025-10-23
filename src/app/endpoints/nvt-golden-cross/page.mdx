@@ -1,0 +1,147 @@
+export const metadata = {
+  title: 'NVT Golden Cross',
+  description:
+    'Use the NVT Golden Cross endpoint to identify local market tops and bottoms through momentum-adjusted network valuation analysis, signaling increased downside risk or significant upside potential.',
+}
+
+# NVT Golden Cross
+
+The **NVT Golden Cross** is a modified version of the Network Value to Transactions ratio that identifies local tops and bottoms through momentum analysis. {{ className: 'lead' }}
+
+This metric compares short-term and long-term NVT trends to generate actionable signals for identifying overbought conditions with downside risk or oversold conditions with upside potential.
+
+---
+
+## Endpoint
+
+`GET /nvt-golden-cross`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the NVT Golden Cross to identify local market tops and bottoms based on network valuation momentum shifts.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Currently only supports: <code>day</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting NVT Golden Cross data"}
+curl -G "https://api.blocklytics.net/api/public/v1/nvt-golden-cross" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "nvt_golden_cross": 1.87
+  },
+  {
+    "date": "2025-01-06",
+    "nvt_golden_cross": 2.34
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/nvt-golden-cross" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="nvt_golden_cross" type="number">
+    The difference between short-term and long-term NVT moving averages,
+    normalized to identify momentum shifts in network valuation.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Values above 2.2** indicate elevated downside risk where short-term network valuation significantly exceeds long-term trends, suggesting the market is overbought relative to transaction activity and historically coinciding with local tops or correction points.
+
+**Values below -1.6** signal substantial upside potential where short-term network valuation falls significantly below long-term trends, indicating the market is oversold relative to transaction activity and historically preceding significant rallies or trend reversals.
+
+**Values between -1.6 and 2.2** represent neutral territory where network valuation momentum remains within normal ranges, suggesting neither extreme overbought nor oversold conditions and typically indicating continuation of existing trends without imminent reversal signals.
+
+**Crossing above 2.2** provides a tactical sell signal as network valuation momentum reaches extreme levels that have historically preceded corrections, warning of increased probability for price consolidation or decline as valuations become stretched relative to transaction fundamentals.
+
+### Use Cases
+
+This metric provides actionable timing signals for identifying local market extremes based on network valuation momentum rather than absolute price levels. The NVT Golden Cross improves upon standard NVT by incorporating momentum analysis through moving average comparisons, making it more responsive to short-term changes while filtering noise through long-term trend context. Values above 2.2 have historically marked local tops with remarkable consistency, as they indicate market valuations racing ahead of transaction activity at unsustainable rates, making this threshold useful for taking profits or reducing exposure during bull markets. Conversely, readings below -1.6 have consistently identified local bottoms and accumulation opportunities, as they signal market valuations lagging behind recovering transaction activity, often preceding strong rallies. The metric proves particularly valuable for swing traders and tactical allocators seeking to optimize entry and exit points within larger trends, as it identifies shorter-term extremes rather than multi-year cycle tops and bottoms. Combining NVT Golden Cross signals with price action helps distinguish between false signals and genuine reversals, with signals accompanied by momentum divergence or volume patterns proving more reliable. During bull markets, watching for crosses above 2.2 helps identify healthy correction opportunities for reentry rather than waiting for major reversals, while during bear markets, crosses below -1.6 signal potential rally opportunities even within longer-term downtrends. The momentum-based approach also makes this metric responsive to rapid market changes, providing earlier warnings than absolute valuation metrics that may lag during volatile periods.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/nvt-golden-cross', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `nvt-golden-cross?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      nvt_golden_cross: d.nvt_golden_cross,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

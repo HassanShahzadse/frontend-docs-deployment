@@ -1,0 +1,150 @@
+export const metadata = {
+  title: 'Exchange Netflow (Total)',
+  description:
+    'Learn how to use the Exchange Netflow (Total) endpoint to measure the difference between BTC inflows and outflows from exchanges, indicating net accumulation or distribution behavior.',
+}
+
+# Exchange Netflow (Total)
+
+The **Exchange Netflow (Total)** metric measures the net amount of Bitcoin entering or leaving exchange wallets — calculated as inflow minus outflow. {{ className: 'lead' }}
+
+A positive netflow suggests BTC is moving **into** exchanges (potentially indicating sell pressure), while a negative netflow suggests BTC is **leaving** exchanges (potentially accumulation or HODLing behavior).
+
+---
+
+## Endpoint
+
+`GET /exchange-netflow-total`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Retrieve net BTC flows to and from exchanges for a specific exchange and time window.
+
+<Properties>
+  <Property name="exchange" type="string">
+    Exchange name. Example: <code>binance</code>, <code>coinbase</code>,{' '}
+    <code>kraken</code>. Default: <code>all_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Exchange Netflow (Total) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-netflow-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=binance \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "netflow_total": -1423.57
+  },
+  {
+    "date": "2025-01-06",
+    "netflow_total": 1832.22
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-netflow-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=kraken \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="netflow_total" type="number">
+    Net BTC flow to exchanges = inflow − outflow. Positive values indicate BTC
+    entering exchanges; negative values indicate BTC leaving exchanges.
+  </Property>
+</Properties>
+
+### Interpretation
+
+- **Positive Netflow** → More BTC entering exchanges → potential **sell-side pressure**.
+- **Negative Netflow** → More BTC leaving exchanges → potential **accumulation** or **HODL** behavior.
+
+Tracking netflow across major exchanges (e.g., Binance, Coinbase, Kraken) can provide a high-level overview of market sentiment and liquidity shifts.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/exchange-netflow-total', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `exchange-netflow-total?window=${window}&exchange=${exchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      netflow_total: d.netflow_total,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

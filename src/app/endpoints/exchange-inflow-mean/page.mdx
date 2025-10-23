@@ -1,0 +1,157 @@
+export const metadata = {
+  title: 'Exchange Inflow (Mean)',
+  description:
+    'Learn how to use the Exchange Inflow (Mean) endpoint to measure the average Bitcoin inflow per transaction into exchange wallets — an indicator of exchange activity and market sentiment.',
+}
+
+# Exchange Inflow (Mean)
+
+The **Exchange Inflow (Mean)** metric represents the average transaction value of Bitcoin flowing into exchange wallets during a given period. {{ className: 'lead' }}
+
+This value helps assess how much BTC, on average, users are depositing to exchanges — often interpreted as a sign of potential sell pressure or increased market activity.
+
+---
+
+## Endpoint
+
+`GET /exchange-inflow-mean`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Retrieve the mean BTC inflow per exchange, per time window. You can adjust parameters to filter by exchange, time range, or output format.
+
+<Properties>
+  <Property name="exchange" type="string">
+    The name of the exchange. Example: <code>binance</code>,{' '}
+    <code>coinbase</code>, <code>kraken</code>. Default:{' '}
+    <code>all_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Exchange Inflow (Mean) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-inflow-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=binance \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "inflow_mean": 2.43
+  },
+  {
+    "date": "2025-01-06",
+    "inflow_mean": 1.95
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-inflow-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=kraken \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+The **Exchange Inflow (Mean)** metric is useful for understanding the behavior of depositors:
+
+<Properties>
+  <Property name="inflow_total" type="number">
+    Total BTC deposited to exchange wallets during the selected window.
+  </Property>
+  <Property name="inflow_top10" type="number">
+    Total BTC deposited by the 10 largest inflow transactions.
+  </Property>
+  <Property name="inflow_mean" type="number">
+    Average BTC value per deposit transaction.
+  </Property>
+  <Property name="inflow_mean_ma7" type="number">
+    7-day moving average of the mean inflow, smoothing volatility.
+  </Property>
+</Properties>
+
+Higher inflow mean values often indicate larger transactions, typically from whales or institutions moving BTC to exchanges, while lower values suggest retail-driven activity.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/exchange-inflow-mean', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `exchange-inflow-mean?window=${window}&exchange=${exchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      inflow_mean: d.inflow_mean,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

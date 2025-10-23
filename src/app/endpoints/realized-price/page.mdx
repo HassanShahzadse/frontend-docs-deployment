@@ -1,0 +1,150 @@
+export const metadata = {
+  title: 'Realized Price',
+  description:
+    'Use the Realized Price endpoint to track the average acquisition price of all Bitcoin holders, revealing the aggregate cost basis and on-chain support/resistance levels.',
+}
+
+# Realized Price
+
+The **Realized Price** metric calculates the average price paid for all Bitcoin in existence by dividing Realized Cap by total supply. {{ className: 'lead' }}
+
+This metric reveals the aggregate cost basis of all holders, providing a fundamental support level that represents the average price at which current supply was last acquired on-chain.
+
+---
+
+## Endpoint
+
+`GET /realized-price`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Realized Price to understand the average acquisition cost of all Bitcoin holders and identify key support and resistance levels.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Realized Price data"}
+curl -G "https://api.blocklytics.net/api/public/v1/realized-price" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "realized_price": 34567.89
+  },
+  {
+    "date": "2025-01-06",
+    "realized_price": 34392.45
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/realized-price" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="realized_price" type="number">
+    The average price paid for all Bitcoin in existence, calculated as Realized
+    Cap divided by total supply, measured in USD.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Price above Realized Price** indicates the market trades above aggregate cost basis where holders collectively maintain unrealized profits, suggesting healthy market conditions with reduced panic selling risk as most participants hold gains rather than losses.
+
+**Price below Realized Price** reveals the market trades below aggregate cost basis where holders collectively maintain unrealized losses, historically marking bear market bottoms and accumulation zones as prices fall below what most holders paid.
+
+**Rising Realized Price** demonstrates increasing average acquisition costs as coins change hands at higher prices, indicating genuine capital inflows that strengthen the fundamental support level and reduce the likelihood of retracing to previous lows.
+
+**Realized Price as support** functions as a psychological and economic floor during corrections, as breaching this level forces the average holder into loss position, creating strong resistance to further declines as holders become increasingly unwilling to sell below their cost basis.
+
+### Use Cases
+
+This metric provides one of the most important fundamental valuation anchors in Bitcoin analysis by revealing the average price the entire holder base paid for their coins. Realized Price effectively represents the aggregate break-even level for all holders, making it a powerful psychological support during downtrends as falling below this level puts the average holder underwater. Historically, Bitcoin price has consistently gravitated toward Realized Price during bear markets, with major bottoms occurring at or near this level when price touches or briefly breaches the aggregate cost basis. The metric provides more stable support/resistance than technical chart levels because it reflects actual economic activity rather than arbitrary price patterns. During bull markets, the ratio of Price to Realized Price (similar to MVRV) reveals overvaluation magnitude, with extreme ratios indicating speculative excess as price races far ahead of the average acquisition cost. Rising Realized Price during bull markets confirms genuine capital inflows rather than merely speculative price appreciation, as it shows the cost basis increasing through actual coin turnover at higher prices. The metric also helps identify cycle phases, with price significantly above Realized Price characterizing bull markets, convergence marking transitions, and price at or below Realized Price defining bear market bottoms. Comparing current Realized Price to previous cycle peaks reveals whether new capital has entered at scale, as Realized Price only rises substantially when significant volume trades at elevated levels. The metric's gradual movements make it unsuitable for short-term trading but invaluable for long-term positioning and accumulation strategies based on fundamental valuation floors.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/realized-price', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `realized-price?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      realized_price: d.realized_price,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

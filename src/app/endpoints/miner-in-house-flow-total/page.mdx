@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Miner In-House Flow (Total)',
+  description:
+    'Use the Miner In-House Flow Total endpoint to track the total volume of internal transfers within miner wallets, revealing treasury management activity levels.',
+}
+
+# Miner In-House Flow (Total)
+
+The **Miner In-House Flow Total** metric tracks the total volume of transactions moving between wallets controlled by the same mining pool. {{ className: 'lead' }}
+
+This metric reveals the overall scale of internal treasury management activity, providing insights into how actively miners reorganize and optimize their holdings.
+
+---
+
+## Endpoint
+
+`GET /miner-in-house-flow-total`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor total in-house flow to assess the scale of miner treasury reorganization and internal fund management activity.
+
+<Properties>
+  <Property name="miner" type="string">
+    Mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner In-House Flow Total data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-in-house-flow-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "miner_in_house_flow_total": 8542.35
+  },
+  {
+    "date": "2025-01-06",
+    "miner_in_house_flow_total": 7123.47
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-in-house-flow-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=all_miner \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="miner_in_house_flow_total" type="number">
+    The total volume of transactions moving between wallets controlled by the
+    same mining pool during the specified time window, denominated in BTC.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising total in-house flow** indicates increasing internal treasury activity, suggesting miners are actively reorganizing holdings, consolidating funds, or preparing for significant operational changes or external transfers.
+
+**Declining total in-house flow** reveals reduced internal movement, potentially indicating stable treasury management with fewer reorganizations, or shifts toward simpler wallet structures with less frequent internal optimization.
+
+**Sudden spikes in total flow** often signal major treasury consolidation events where miners gather scattered holdings into fewer wallets, typically preceding exchange deposits, cold storage moves, or other significant external transfers.
+
+**Sustained high total flow** suggests continuous active treasury management with frequent internal optimization, indicating sophisticated operations that regularly reorganize holdings for efficiency, security, or strategic purposes.
+
+### Use Cases
+
+This metric provides crucial early warning signals for potential miner selling pressure. Large total in-house flows often precede exchange deposits by several hours or days, as miners first consolidate scattered mining rewards into larger positions before external transfers. Tracking total flow alongside exchange inflows helps predict when consolidated funds will leave miner wallets for markets. Rising total in-house flow during price rallies may indicate miners preparing to take profits by first gathering holdings internally. Comparing total in-house activity across mining pools reveals which operations employ more active treasury management versus passive holding strategies. Sudden increases in total flow can signal operational changes like switching cold storage providers, upgrading security infrastructure, or preparing for large liquidity events. For market analysis, sustained high in-house flow indicates miners remain actively engaged in portfolio optimization rather than passive holding, suggesting professional treasury management practices.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-in-house-flow-total', async (req, res) => {
+  try {
+    const miner = req.query.miner || 'all_miner'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-in-house-flow-total?window=${window}&miner=${miner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      miner_in_house_flow_total: d.miner_in_house_flow_total,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

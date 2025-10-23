@@ -1,0 +1,157 @@
+export const metadata = {
+  title: 'Exchange Withdrawing Transactions',
+  description:
+    'Use the Exchange Withdrawing Transactions endpoint to track the number of withdrawal transactions from exchanges, revealing transaction volume patterns and user activity.',
+}
+
+# Exchange Withdrawing Transactions
+
+The **Exchange Withdrawing Transactions** metric tracks the total number of outflow transactions from exchanges. {{ className: 'lead' }}
+
+This metric provides insights into withdrawal transaction volume, helping identify periods of heightened activity, batch processing patterns, and overall exchange operational health.
+
+---
+
+## Endpoint
+
+`GET /exchange-withdrawing-transactions`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the volume of withdrawal transactions to understand exchange activity patterns and detect anomalies in operational behavior.
+
+<Properties>
+  <Property name="exchange" type="string">
+    Exchange name. Example: <code>binance</code>, <code>coinbase</code>,{' '}
+    <code>kraken</code>. Default: <code>all_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Exchange Withdrawing Transactions data"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-withdrawing-transactions" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=binance \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "transactions_count_outflow": 8542
+  },
+  {
+    "date": "2025-01-06",
+    "transactions_count_outflow": 7891
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-withdrawing-transactions" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=kraken \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="transactions_count_outflow" type="integer">
+    The total number of withdrawal transactions from the exchange during the
+    specified time window.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising transaction count** indicates increased withdrawal activity and may signal heightened user concern, market volatility responses, or normal operational scaling.
+
+**Declining transaction count** suggests reduced withdrawal activity, which could indicate stable market conditions or users keeping funds on exchange for trading.
+
+**Sudden spikes** may reveal potential panic withdrawals, security concerns, or batch processing events.
+
+**Regular patterns** help identify exchange operational schedules, such as scheduled batch withdrawal processing times.
+
+### Use Cases
+
+High transaction count with low address count (from the Withdrawing Addresses endpoint) suggests batch processing or few large withdrawals. Sudden drops may indicate technical issues or withdrawal suspensions. Spikes often correlate with negative news or market uncertainty, making this useful for sentiment analysis.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/exchange-withdrawing-transactions', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `exchange-withdrawing-transactions?window=${window}&exchange=${exchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      transactions_count_outflow: d.transactions_count_outflow,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

@@ -1,0 +1,181 @@
+export const metadata = {
+  title: 'Spent Output Value Bands',
+  description:
+    'Use the Spent Output Value Bands endpoint to track spending activity across different UTXO size cohorts, revealing whether whales or retail investors are actively distributing.',
+}
+
+# Spent Output Value Bands
+
+The **Spent Output Value Bands** metric distributes spending activity across UTXO size cohorts, showing the volume of Bitcoin spent by different holder wealth tiers. {{ className: 'lead' }}
+
+This metric reveals which holder size segments are actively moving coins, distinguishing between retail selling activity and whale distribution through value-segmented spending analysis.
+
+---
+
+## Endpoint
+
+`GET /spent-output-value-bands`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor spending activity across value bands to identify whether whales or retail investors are driving distribution and assess market dynamics.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Spent Output Value Bands data"}
+curl -G "https://api.blocklytics.net/api/public/v1/spent-output-value-bands" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "range_0_001": 23400,
+    "range_001_01": 45600,
+    "range_01_1": 78900,
+    "range_1_10": 123000,
+    "range_10_100": 98700,
+    "range_100_1k": 67800,
+    "range_1k_10k": 45600,
+    "range_10k_inf": 23400
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/spent-output-value-bands" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="range_0_001" type="number">
+    Volume of Bitcoin spent from UTXOs valued 0-0.001 BTC.
+  </Property>
+  <Property name="range_001_01" type="number">
+    Volume of Bitcoin spent from UTXOs valued 0.001-0.01 BTC.
+  </Property>
+  <Property name="range_01_1" type="number">
+    Volume of Bitcoin spent from UTXOs valued 0.01-0.1 BTC.
+  </Property>
+  <Property name="range_1_10" type="number">
+    Volume of Bitcoin spent from UTXOs valued 1-10 BTC.
+  </Property>
+  <Property name="range_10_100" type="number">
+    Volume of Bitcoin spent from UTXOs valued 10-100 BTC.
+  </Property>
+  <Property name="range_100_1k" type="number">
+    Volume of Bitcoin spent from UTXOs valued 100-1,000 BTC.
+  </Property>
+  <Property name="range_1k_10k" type="number">
+    Volume of Bitcoin spent from UTXOs valued 1,000-10,000 BTC.
+  </Property>
+  <Property name="range_10k_inf" type="number">
+    Volume of Bitcoin spent from UTXOs valued over 10,000 BTC.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High small UTXO spending** indicates active retail participation and distribution, revealing numerous small holders moving coins, typical during panic selling when retail capitulates or during accumulation when retail purchases from stronger hands.
+
+**High large UTXO spending** demonstrates whale and institutional activity, signaling major capital movements from concentrated holders, often marking distribution events during tops when large players exit or accumulation during bottoms when they enter.
+
+**Rising large UTXO spending during rallies** warns of whale distribution as significant holders break large positions into smaller pieces for sale or move substantial capital to exchanges, often preceding corrections when this supply hits markets.
+
+**Declining large UTXO spending during bear markets** indicates whales maintaining positions and reducing activity, suggesting patient capital is committed to holding through downturns rather than panic selling with retail participants.
+
+### Use Cases
+
+This metric provides essential insight into which wealth tiers are actively participating in markets, revealing the character and quality of selling pressure. High spending from small UTXO bands indicates retail-driven activity where numerous small holders move coins without major whale participation, suggesting grassroots distribution or accumulation typical of mature bull or bear phases. Conversely, elevated spending from large UTXO bands reveals whale-driven dynamics where concentrated capital makes major moves that can significantly impact markets regardless of broader retail behavior. During bull markets, tracking large UTXO spending intensity identifies institutional distribution phases, with accelerating whale activity often marking tops as smart money exits to retail enthusiasm. The metric also reveals distribution quality, with healthy bull markets showing balanced spending across size bands while unsustainable tops show extreme whale spending to retail. During bear markets, monitoring large UTXO spending identifies whether whales are capitulating alongside retail or maintaining conviction, with declining whale spending suggesting strong hands while elevated spending warns of institutional distress. Comparing spending patterns across cycles reveals whether current market structure differs from historical norms, with unusual whale activity potentially indicating regime changes in institutional behavior. The metric enables identification of whale accumulation during crashes, with elevated large UTXO spending during extreme fear often representing smart money entering while retail panics. Sudden spikes in very large bands signal major holder decisions with market-moving potential given the concentrated capital involved.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/spent-output-value-bands', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `spent-output-value-bands?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      range_0_001: d.range_0_001,
+      range_001_01: d.range_001_01,
+      range_01_1: d.range_01_1,
+      range_1_10: d.range_1_10,
+      range_10_100: d.range_10_100,
+      range_100_1k: d.range_100_1k,
+      range_1k_10k: d.range_1k_10k,
+      range_10k_inf: d.range_10k_inf,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

@@ -1,0 +1,144 @@
+export const metadata = {
+  title: 'Average Dormancy',
+  description:
+    'Learn how to use the Average Dormancy endpoint to assess Bitcoin holder activity by measuring the average number of days destroyed per coin transacted.',
+}
+
+# Average Dormancy
+
+The **Average Dormancy** metric measures the average number of days destroyed per coin transacted on the Bitcoin network. {{ className: 'lead' }}  
+It provides insight into the age of coins being moved — whether long-term holders are spending their coins or if activity is concentrated among newer coins.
+
+A related metric, **Supply-Adjusted Average Dormancy (sa_average_dormancy)**, normalizes dormancy by total supply, offering a more stable long-term signal as new coins are mined.
+
+---
+
+## Endpoint
+
+`GET /average-dormancy`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+This example retrieves Average Dormancy values for daily intervals. Adjust parameters to query specific block ranges or export in CSV format.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Average Dormancy data"}
+curl -G "https://api.blocklytics.net/api/public/v1/average-dormancy" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "average_dormancy": 5.23
+  },
+  {
+    "date": "2025-01-06",
+    "average_dormancy": 4.91
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/average-dormancy" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=block \
+  -d from=510000 \
+  -d to=510500 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+**Average Dormancy** reflects the behavior of Bitcoin holders by quantifying how long coins remain dormant before being transacted.
+
+Higher dormancy values suggest that older coins are moving — often seen near market tops when long-term holders take profits.  
+Lower dormancy indicates that newly acquired coins dominate activity, typical in early bull markets or accumulation phases.
+
+<Properties>
+  <Property name="average_dormancy" type="number">
+    Average number of days destroyed per coin transacted.
+  </Property>
+  <Property name="sa_average_dormancy" type="number">
+    Supply-adjusted average dormancy, normalized by total Bitcoin supply.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/average-dormancy', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `average-dormancy?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      average_dormancy: d.average_dormancy,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

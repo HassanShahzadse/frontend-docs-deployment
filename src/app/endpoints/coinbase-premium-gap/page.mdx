@@ -1,0 +1,141 @@
+export const metadata = {
+  title: 'Coinbase Premium Gap',
+  description:
+    'Learn how to use the Coinbase Premium Gap endpoint to compare Bitcoin prices between Coinbase and Binance, identifying spot buying pressure from U.S. institutions.',
+}
+
+# Coinbase Premium Gap
+
+The **Coinbase Premium Gap** measures the price difference between Bitcoin’s USD price on Coinbase and its USDT price on Binance. {{ className: 'lead' }}
+
+A positive premium indicates stronger buying activity on Coinbase — often a signal of U.S.-based institutional demand. Conversely, a negative premium suggests weaker U.S. spot buying or increased offshore selling pressure.
+
+---
+
+## Endpoint
+
+`GET /coinbase-premium-gap`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+This example retrieves daily Coinbase Premium Gap values. Adjust parameters to query specific time frames or export results as CSV.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>min</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code> format.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code> format.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Coinbase Premium Gap data"}
+curl -G "https://api.blocklytics.net/api/public/v1/coinbase-premium-gap" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "coinbase_premium_gap": 95.23
+  },
+  {
+    "date": "2025-01-06",
+    "coinbase_premium_gap": -45.81
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/coinbase-premium-gap" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+**Coinbase Premium Gap** helps reveal where Bitcoin demand is strongest:
+
+<Properties>
+  <Property name="coinbase_premium_gap" type="number">
+    Price gap (USD) between Coinbase (BTC/USD) and Binance (BTC/USDT).
+  </Property>
+  <Property name="coinbase_premium_index" type="number">
+    Percent difference between the two exchange prices.
+  </Property>
+</Properties>
+
+A **positive gap** implies buying pressure on Coinbase — commonly linked to U.S. institutional inflows. A **negative gap** may suggest Asian-led selling or reduced U.S. demand.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/coinbase-premium-gap', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `coinbase-premium-gap?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      coinbase_premium_gap: d.coinbase_premium_gap,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

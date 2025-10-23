@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Miner In-House Transactions',
+  description:
+    'Use the Miner In-House Transactions endpoint to track the frequency of internal transfers within miner wallets, revealing treasury management patterns.',
+}
+
+# Miner In-House Transactions
+
+The **Miner In-House Transactions** metric tracks the number of transactions moving between wallets controlled by the same mining pool. {{ className: 'lead' }}
+
+This metric reveals the frequency of internal treasury movements, helping distinguish between active fund management with many small reorganizations versus consolidated strategies with fewer large transfers.
+
+---
+
+## Endpoint
+
+`GET /miner-in-house-transactions`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor transaction frequency to understand miner treasury management intensity and operational patterns.
+
+<Properties>
+  <Property name="miner" type="string">
+    Mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner In-House Transactions data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-in-house-transactions" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "miner_in_house_transactions": 427
+  },
+  {
+    "date": "2025-01-06",
+    "miner_in_house_transactions": 389
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-in-house-transactions" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=all_miner \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="miner_in_house_transactions" type="integer">
+    The number of transactions moving between wallets controlled by the same
+    mining pool during the specified time window.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising transaction count** indicates increasing frequency of internal wallet movements, suggesting more active treasury management with frequent fund reorganizations, possibly reflecting automated processes or dynamic operational strategies.
+
+**Declining transaction count** reveals reduced internal movement frequency, potentially indicating consolidation toward simpler wallet structures, less active treasury optimization, or shifts in operational cash flow management.
+
+**High transaction count relative to total flow** suggests many small internal transfers rather than few large ones, indicating distributed treasury management with frequent micro-optimizations or automated rebalancing processes.
+
+**Low transaction count relative to total flow** reveals fewer but larger internal movements, suggesting consolidated treasury strategies where miners batch operations and minimize transaction overhead for efficiency.
+
+### Use Cases
+
+This metric completes the picture when combined with In-House Flow Total and Mean. High transaction counts with moderate total flow indicate many small treasury adjustments, while low counts with high total flow reveal concentrated consolidation events. Sudden spikes in transaction frequency often precede major operational changes, as miners reorganize holdings before external transfers or strategic moves. Comparing transaction patterns across mining pools reveals operational sophistication, with some employing automated frequent optimization and others using manual batch processes. Regular daily patterns in transaction counts can identify automated treasury management systems versus manual interventions. For predicting miner behavior, unusually high transaction counts combined with rising total flow strongly suggest preparation for significant external movements, as miners consolidate scattered holdings through multiple internal steps before final external transfers.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-in-house-transactions', async (req, res) => {
+  try {
+    const miner = req.query.miner || 'all_miner'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-in-house-transactions?window=${window}&miner=${miner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      miner_in_house_transactions: d.miner_in_house_transactions,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

@@ -1,0 +1,148 @@
+export const metadata = {
+  title: 'UTXOs in Profit (%)',
+  description:
+    'Use the UTXOs in Profit (%) endpoint to track the percentage of spent Bitcoin that was sold at a profit, revealing the relative intensity of distribution versus capitulation activity.',
+}
+
+# UTXOs in Profit (%)
+
+The **UTXOs in Profit (%)** metric measures the percentage of spent Bitcoin volume that realized profits, revealing the relative intensity of distribution. {{ className: 'lead' }}
+
+This metric identifies the proportion of activity representing successful profit-taking versus distressed selling, with high percentages indicating healthy distribution-dominated markets and low percentages suggesting capitulation dominance.
+
+---
+
+## Endpoint
+
+`GET /utxos-in-profit-percent`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor UTXOs in profit percentage to assess whether market activity is dominated by profit-taking or capitulation behavior.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Currently only supports: <code>day</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting UTXOs in Profit (%) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxos-in-profit-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "profit_percent": 0.77
+  },
+  {
+    "date": "2025-01-06",
+    "profit_percent": 0.65
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxos-in-profit-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="profit_percent" type="number">
+    The percentage of total spent Bitcoin volume that was sold at a profit,
+    ranging from 0 to 1, representing the proportion of activity driven by
+    profit-taking versus capitulation.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High profit percentage (above 0.70)** indicates activity dominated by profit-taking, revealing most spending represents successful exits by profitable holders, typical during bull markets when widespread gains enable healthy distribution.
+
+**Low profit percentage (below 0.40)** demonstrates activity dominated by capitulation, showing most spending represents distressed selling from underwater holders, typical during bear markets when losses are widespread.
+
+**Profit percentage near 0.50** suggests balanced activity between profit-taking and capitulation, indicating markets where neither profitable distributors nor distressed sellers clearly dominate spending behavior.
+
+**Rising profit percentage** reveals growing profit-taking dominance, signaling increasing proportion of activity represents successful exits as more holders achieve profitability and choose to realize gains.
+
+### Use Cases
+
+This metric provides normalized measurement of distribution intensity by expressing profit realization as a proportion of total activity, enabling comparison across different volume environments. High profit percentages indicate healthy distribution-dominated markets where successful profit-taking overwhelms distressed selling, revealing most participants exit positions profitably rather than underwater. These conditions typically characterize bull markets and rally phases when widespread profitability creates natural selling pressure from winners rather than forced capitulation from losers. The percentage view proves superior to absolute amounts for identifying relative distribution health, as similar absolute profit amounts have vastly different implications depending on whether they represent 30 percent or 90 percent of total activity. Tracking percentage trends reveals market character evolution, with rising percentages confirming improving conditions where an increasing share of activity represents successful exits. Extreme profit percentages above 80 percent indicate euphoric environments when nearly all activity represents profit-taking, often marking tops when universal profitability triggers complacency and excessive distribution. Conversely, low profit percentages confirm distressed markets where most spending represents forced selling rather than voluntary profit-taking. The metric also identifies cycle phases through percentage levels, with bull markets showing high percentages from dominant distribution while bear markets show low percentages from dominant capitulation. Declining profit percentages during rallies warn of weakening recovery quality where price gains fail to restore widespread profitability.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/utxos-in-profit-percent', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `utxos-in-profit-percent?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      profit_percent: d.profit_percent,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

@@ -1,0 +1,150 @@
+export const metadata = {
+  title: 'Binary CDD',
+  description:
+    'Learn how to use the Binary Coin Days Destroyed (Binary CDD) endpoint to identify whether current supply-adjusted activity exceeds long-term average levels, signaling potential whale movement.',
+}
+
+# Binary CDD
+
+The **Binary Coin Days Destroyed (Binary CDD)** metric provides a simplified on-chain signal that identifies whether long-term holders (LTHs) are currently more active than average. {{ className: 'lead' }}
+
+It builds on **Supply-Adjusted Coin Days Destroyed (sa_cdd)** and **Average Supply-Adjusted CDD (average_sa_cdd)**. When **sa_cdd** exceeds **average_sa_cdd**, the binary signal is set to `1` — indicating elevated spending from long-term holders, often preceding significant price actions.
+
+---
+
+## Endpoint
+
+`GET /binary-cdd`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+This example retrieves binary CDD values on a daily basis. Adjust parameters to query specific time ranges or output formats.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Binary CDD data"}
+curl -G "https://api.blocklytics.net/api/public/v1/binary-cdd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "binary_cdd": 1
+  },
+  {
+    "date": "2025-01-06",
+    "binary_cdd": 0
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/binary-cdd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=block \
+  -d from=510000 \
+  -d to=510500 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+**Binary CDD** serves as a binary interpretation of long-term holder activity, highlighting when **sa_cdd** exceeds the lifetime **average_sa_cdd**:
+
+<Properties>
+  <Property name="cdd" type="number">
+    Coin Days Destroyed — product of a spent coin’s value and the number of days
+    it was held.
+  </Property>
+  <Property name="sa_cdd" type="number">
+    Supply-adjusted CDD, normalized by total Bitcoin supply.
+  </Property>
+  <Property name="average_sa_cdd" type="number">
+    Historical average of supply-adjusted CDD since the genesis block.
+  </Property>
+  <Property name="binary_cdd" type="integer">
+    Signal output: <code>1</code> if <code>sa_cdd</code> &gt;{' '}
+    <code>average_sa_cdd</code>, otherwise <code>0</code>.
+  </Property>
+</Properties>
+
+Periods with **binary_cdd = 1** suggest increased long-term holder movement, often aligning with significant on-chain or market events.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/binary-cdd', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `binary-cdd?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      binary_cdd: d.binary_cdd,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

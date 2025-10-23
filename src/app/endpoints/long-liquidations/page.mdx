@@ -1,0 +1,165 @@
+export const metadata = {
+  title: 'Long Liquidations',
+  description:
+    'Use the Long Liquidations endpoint to track forced closures of long positions, revealing overleveraged bullish bets and potential capitulation events.',
+}
+
+# Long Liquidations
+
+The **Long Liquidations** metric tracks the sum of forced market orders closing leveraged long positions due to price volatility. {{ className: 'lead' }}
+
+This metric reveals the scale of overleveraged bullish positions being forcibly closed, indicating downward price pressure and potential capitulation events in derivatives markets.
+
+---
+
+## Endpoint
+
+`GET /long-liquidations`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor long liquidations to identify overleveraged bullish positions, cascade events, and potential market bottoms.
+
+<Properties>
+  <Property name="exchange" type="string">
+    Derivative exchange name. Example: <code>binance</code>, <code>bitmex</code>
+    , <code>bybit</code>, <code>deribit</code>. Default:{' '}
+    <code>all_exchange</code>.
+  </Property>
+  <Property name="symbol" type="string">
+    Trading pair symbol. Example: <code>btc_usd</code>, <code>btc_usdt</code>.
+    Default: <code>all_symbol</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>min</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. If not
+    specified, returns data from earliest time.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. If not
+    specified, returns data to latest time.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Long Liquidations data"}
+curl -G "https://api.blocklytics.net/api/public/v1/long-liquidations" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=binance \
+  -d symbol=btc_usdt \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "long_liquidations": 542.35
+  },
+  {
+    "date": "2025-01-06",
+    "long_liquidations": 123.47
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/long-liquidations" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=all_exchange \
+  -d symbol=all_symbol \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="long_liquidations" type="number">
+    The total amount of leveraged long positions forcibly closed due to
+    insufficient margin, typically denominated in the base asset (e.g., BTC).
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High long liquidations** indicate significant overleveraged bullish positions being forced to close, creating cascading sell pressure as margin calls trigger automatic market sells. This often occurs during sharp price drops and accelerates downward momentum.
+
+**Spike in long liquidations** reveals a liquidation cascade event where falling prices trigger stop-losses and margin calls, forcing even more longs to close in a self-reinforcing downward spiral that can mark temporary or major market bottoms.
+
+**Sustained elevated long liquidations** suggest persistent overleveraging by bullish traders who keep opening new long positions during downtrends, getting repeatedly liquidated as prices continue falling. This pattern often precedes capitulation.
+
+**Low long liquidations during uptrends** indicate healthy price appreciation driven by spot buying rather than excessive leverage, suggesting more sustainable rallies with less liquidation risk.
+
+### Use Cases
+
+This metric is critical for identifying overleveraged market conditions and potential reversal points. Massive long liquidation spikes often mark local or major bottoms as the last overleveraged bulls are flushed out, creating opportunity for contrarian entries. Comparing long liquidations with short liquidations reveals which side is more overleveraged and vulnerable. High long liquidations during moderate price drops signal excessive leverage that amplifies downward moves through forced selling. For risk management, rising long liquidations warn of cascade potential where additional selling could trigger more liquidations in a domino effect. Tracking liquidations across exchanges identifies where leverage is concentrated and which platforms pose systemic risks. Historical analysis shows extreme long liquidation events frequently precede sharp recoveries as selling pressure exhausts and buyers step in at cleared-out levels.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/long-liquidations', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const symbol = req.query.symbol || 'all_symbol'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `long-liquidations?window=${window}&exchange=${exchange}&symbol=${symbol}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      long_liquidations: d.long_liquidations,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

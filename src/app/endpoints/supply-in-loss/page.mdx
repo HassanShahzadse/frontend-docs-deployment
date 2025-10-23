@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Supply in Loss',
+  description:
+    'Use the Supply in Loss endpoint to track the total amount of Bitcoin held at a loss, revealing market pain levels and identifying capitulation opportunities.',
+}
+
+# Supply in Loss
+
+The **Supply in Loss** metric measures the total amount of Bitcoin currently held below its acquisition price, revealing the scale of underwater positions. {{ className: 'lead' }}
+
+This metric quantifies market pain and capitulation risk by showing how much supply trades at a loss, with high values indicating widespread holder distress and potential selling pressure from underwater participants.
+
+---
+
+## Endpoint
+
+`GET /supply-in-loss`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Supply in Loss to assess the scale of underwater positions and identify periods of maximum pain signaling potential capitulation bottoms.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Supply in Loss data"}
+curl -G "https://api.blocklytics.net/api/public/v1/supply-in-loss" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "loss_amount": 4567890
+  },
+  {
+    "date": "2025-01-06",
+    "loss_amount": 4890000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/supply-in-loss" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="loss_amount" type="number">
+    The total amount of Bitcoin held in UTXOs where the current price is below
+    the acquisition price, measured in BTC, representing the scale of underwater
+    positions.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High supply in loss** indicates substantial Bitcoin held underwater, revealing widespread pain as most holders face unrealized losses, historically marking bear market bottoms and maximum capitulation opportunities when fear peaks.
+
+**Low supply in loss** demonstrates most supply trades in profit, showing healthy market conditions where holders maintain gains and possess psychological comfort, typical during bull markets when appreciation lifts most positions above water.
+
+**Rising supply in loss** reveals growing underwater positions as prices decline below more holders' acquisition costs, signaling deteriorating sentiment and increasing capitulation risk as more participants move into loss positions.
+
+**Declining supply in loss** shows recovery lifting underwater holders back to profit, indicating healing market conditions and building confidence as previously distressed holders regain positive returns and psychological relief.
+
+### Use Cases
+
+This metric provides direct measurement of holder pain by quantifying the actual supply trading below cost basis, revealing capitulation risk and bottom formation dynamics. High supply in loss indicates maximum pain conditions where the majority of holders suffer unrealized losses, creating psychological pressure to capitulate that often precedes major bottoms. When most supply trades underwater, weak hands face intense pressure to exit and stop the bleeding, while strong hands find opportunity to accumulate from distressed sellers. Historically, extreme supply in loss readings have marked major cycle bottoms, as they indicate maximum pessimism when prices have fallen below most participants' entry points. The metric also reveals market resilience through recovery dynamics, with declining supply in loss indicating successful healing as prices appreciate and lift underwater holders back to profit. During bear markets, tracking supply in loss identifies capitulation intensity, with peak readings often marking final surrender events before bottoms form. The absolute amount of underwater supply contextualizes selling pressure potential, as these holders face the greatest temptation to capitulate and realize losses. Comparing supply in loss to total supply reveals what percentage of holders face pain, with high percentages indicating widespread distress while low percentages suggest broad-based profitability. The metric proves particularly valuable for contrarian accumulation strategies, as extreme supply in loss readings historically precede recoveries when maximum pain forces final capitulation.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/supply-in-loss', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `supply-in-loss?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      loss_amount: d.loss_amount,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

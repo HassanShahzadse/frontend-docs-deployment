@@ -1,0 +1,178 @@
+export const metadata = {
+  title: 'Exchange Inflow – Spent Output Value Bands (%)',
+  description:
+    'Learn how to use the Exchange Inflow – Spent Output Value Bands (%) endpoint to view the percentage distribution of BTC inflows to exchanges categorized by transaction size, providing insight into retail vs whale dominance over time.',
+}
+
+# Exchange Inflow – Spent Output Value Bands (%)
+
+The **Exchange Inflow – Spent Output Value Bands (%)** metric displays the _relative percentage distribution_ of Bitcoin inflows categorized by transaction value ranges. {{ className: 'lead' }}
+
+This view highlights the proportion of inflows attributed to different investor groups — for example, whether whales or retail investors are dominating exchange deposits during a given period.
+
+---
+
+## Endpoint
+
+`GET /exchange-inflow-value-bands-percent`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Retrieve the **percentage distribution** of BTC inflows by transaction value bands for a given exchange and timeframe.
+
+<Properties>
+  <Property name="exchange" type="string">
+    Exchange name. Example: <code>binance</code>, <code>coinbase</code>,{' '}
+    <code>kraken</code>. Default: <code>all_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Exchange Inflow Value Bands (%) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-inflow-value-bands-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=binance \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "range_0_001_percent": 8.3,
+    "range_001_01_percent": 19.2,
+    "range_01_1_percent": 37.5,
+    "range_1_10_percent": 21.8,
+    "range_10_100_percent": 8.4,
+    "range_100_1k_percent": 3.4,
+    "range_1k_10k_percent": 1.0,
+    "range_10k_inf_percent": 0.4
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-inflow-value-bands-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=kraken \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+Each field represents the **percentage share** of BTC inflows grouped by transaction value range:
+
+<Properties>
+  <Property name="range_0_001_percent" type="number">
+    % of BTC inflows from transactions smaller than 0.001 BTC.
+  </Property>
+  <Property name="range_001_01_percent" type="number">
+    % of BTC inflows from transactions between 0.001 BTC and 0.01 BTC.
+  </Property>
+  <Property name="range_01_1_percent" type="number">
+    % of BTC inflows from transactions between 0.01 BTC and 1 BTC.
+  </Property>
+  <Property name="range_1_10_percent" type="number">
+    % of BTC inflows from transactions between 1 BTC and 10 BTC.
+  </Property>
+  <Property name="range_10_100_percent" type="number">
+    % of BTC inflows from transactions between 10 BTC and 100 BTC.
+  </Property>
+  <Property name="range_100_1k_percent" type="number">
+    % of BTC inflows from transactions between 100 BTC and 1,000 BTC.
+  </Property>
+  <Property name="range_1k_10k_percent" type="number">
+    % of BTC inflows from transactions between 1,000 BTC and 10,000 BTC.
+  </Property>
+  <Property name="range_10k_inf_percent" type="number">
+    % of BTC inflows from transactions above 10,000 BTC.
+  </Property>
+</Properties>
+
+Higher values in larger bands (e.g., **1k–10k BTC**) typically suggest **whale-driven market activity**, while a dominance of smaller bands (e.g., **0.001–1 BTC**) indicates **retail participation**. This ratio can serve as a useful sentiment indicator for tracking shifts in market power dynamics.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/exchange-inflow-value-bands-percent', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `exchange-inflow-value-bands-percent?window=${window}&exchange=${exchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      range_0_001_percent: d.range_0_001_percent,
+      range_001_01_percent: d.range_001_01_percent,
+      range_01_1_percent: d.range_01_1_percent,
+      range_1_10_percent: d.range_1_10_percent,
+      range_10_100_percent: d.range_10_100_percent,
+      range_100_1k_percent: d.range_100_1k_percent,
+      range_1k_10k_percent: d.range_1k_10k_percent,
+      range_10k_inf_percent: d.range_10k_inf_percent,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

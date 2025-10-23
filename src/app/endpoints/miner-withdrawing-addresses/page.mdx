@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Miner Withdrawing Addresses',
+  description:
+    'Use the Miner Withdrawing Addresses endpoint to track the number of unique addresses receiving outflows from mining pools, revealing distribution patterns and miner selling behavior.',
+}
+
+# Miner Withdrawing Addresses
+
+The **Miner Withdrawing Addresses** metric tracks the number of unique addresses involved in outflow transactions from mining pool wallets. {{ className: 'lead' }}
+
+This metric reveals distribution patterns and network activity, showing how broadly miners are dispersing their holdings and indicating the scale of selling or treasury management operations.
+
+---
+
+## Endpoint
+
+`GET /miner-withdrawing-addresses`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the number of unique addresses receiving outflows from mining pools to assess distribution patterns and the scope of miner selling activity.
+
+<Properties>
+  <Property name="miner" type="string">
+    Mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner Withdrawing Addresses data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-withdrawing-addresses" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "addresses_count_outflow": 1247
+  },
+  {
+    "date": "2025-01-06",
+    "addresses_count_outflow": 1189
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-withdrawing-addresses" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=all_miner \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="addresses_count_outflow" type="number">
+    The number of unique addresses receiving outflow transactions from mining
+    pool wallets during the specified time period.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising address counts** indicate miners are distributing coins to more unique destinations, suggesting increased selling activity, broader distribution strategies, or heightened over-the-counter trading operations spreading across multiple counterparties.
+
+**Declining address counts** suggest miners are consolidating outflows to fewer destinations, potentially indicating reduced selling pressure, treasury consolidation moves, or concentration of distribution through fewer channels like exchanges or OTC desks.
+
+**Spike in withdrawing addresses** often signals significant distribution events such as large-scale selling operations, preparation for major liquidity events, or strategic treasury rebalancing where miners spread holdings across multiple addresses for operational or security reasons.
+
+**Sustained low address counts** indicate minimal distribution activity where miners primarily hold reserves or execute highly concentrated transfers to few destinations, suggesting either accumulation periods or efficient direct-to-exchange selling through limited channels.
+
+### Use Cases
+
+This metric provides essential insight into the structure and scale of miner distribution operations beyond simple volume analysis. High withdrawing address counts combined with large outflow volumes indicate broad-based selling pressure dispersed across the network, while low address counts with equivalent volumes suggest concentrated institutional transactions. Tracking address count trends helps distinguish between routine treasury management involving many small operational transfers versus strategic distribution events targeting specific counterparties. During bull markets, rising withdrawing address counts typically signal miners capitalizing on favorable prices through expanded selling operations, while declining counts during bear markets may indicate miners reducing activity and preserving reserves. Comparing address count patterns across different mining pools reveals operational differences, with some pools favoring concentrated exchange deposits while others utilize distributed OTC networks. This metric also helps identify potential capitulation events where sudden spikes in withdrawing addresses accompany large outflow volumes, suggesting distressed or urgent liquidation across multiple channels.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-withdrawing-addresses', async (req, res) => {
+  try {
+    const miner = req.query.miner || 'all_miner'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-withdrawing-addresses?window=${window}&miner=${miner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      addresses_count_outflow: d.addresses_count_outflow,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

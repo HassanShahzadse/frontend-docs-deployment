@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Miner Netflow (Total)',
+  description:
+    'Use the Miner Netflow Total endpoint to track net BTC flows in/out of mining pools, revealing miner accumulation or distribution behavior.',
+}
+
+# Miner Netflow (Total)
+
+The **Miner Netflow Total** metric tracks the difference between inflows and outflows for mining pool wallets. {{ className: 'lead' }}
+
+This metric reveals whether miners are net accumulating or distributing their holdings, providing crucial insights into miner sentiment and potential selling pressure or accumulation phases.
+
+---
+
+## Endpoint
+
+`GET /miner-netflow-total`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor netflow to identify when miners accumulate holdings versus when they distribute to exchanges or other destinations.
+
+<Properties>
+  <Property name="miner" type="string">
+    Mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner Netflow Total data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-netflow-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "miner_netflow_total": -245.87
+  },
+  {
+    "date": "2025-01-06",
+    "miner_netflow_total": 128.43
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-netflow-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=all_miner \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="miner_netflow_total" type="number">
+    The net flow calculated as total inflows minus total outflows. Positive
+    values indicate net accumulation, negative values indicate net distribution.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Positive netflow (accumulation)** indicates miners are holding more than they're selling, suggesting bullish sentiment from those closest to network operations who expect prices to appreciate and choose to accumulate mined coins rather than immediately liquidate.
+
+**Negative netflow (distribution)** reveals miners are selling more than they're accumulating, indicating bearish sentiment, profitability pressures requiring liquidation for operational costs, or strategic profit-taking during favorable price conditions.
+
+**Large negative netflows** signal significant miner selling pressure entering the market, which can weigh on prices as substantial supply hits exchanges or other distribution channels, potentially indicating miner capitulation or urgent liquidity needs.
+
+**Sustained positive netflows** demonstrate miner confidence and accumulation behavior, reducing readily available supply as newly mined coins are held rather than immediately sold, creating bullish supply dynamics.
+
+### Use Cases
+
+This metric is essential for predicting potential selling pressure or accumulation trends from miners, who are sophisticated market participants with direct economic exposure to network operations. Negative netflows warn of incoming supply as miners move holdings toward distribution channels, while positive netflows suggest supply reduction as miners hold. Tracking netflow trends across market cycles reveals miner behavior patterns, with accumulation typically occurring during bear markets when miners believe prices are low, and distribution during bull markets when they take profits. Comparing netflow with price movements identifies periods when miner behavior diverges from market trends, potentially signaling reversals. For example, miners accumulating during rallies suggests strong conviction, while distribution during dips may indicate distress. This metric helps time market entries and exits by following smart money behavior of those most invested in network success.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-netflow-total', async (req, res) => {
+  try {
+    const miner = req.query.miner || 'all_miner'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-netflow-total?window=${window}&miner=${miner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      miner_netflow_total: d.miner_netflow_total,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

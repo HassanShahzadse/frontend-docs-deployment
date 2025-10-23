@@ -1,0 +1,152 @@
+export const metadata = {
+  title: 'Velocity',
+  description:
+    'Use the Velocity endpoint to track how frequently Bitcoin circulates through the economy, revealing whether supply is actively transacting or remaining dormant in holder positions.',
+}
+
+# Velocity
+
+The **Velocity** metric measures how many times the Bitcoin supply circulates through the economy annually, revealing the activity level of holdings. {{ className: 'lead' }}
+
+This metric quantifies economic activity intensity by comparing annual transaction volume to total supply, with high velocity indicating active trading and low velocity suggesting widespread holding behavior.
+
+---
+
+## Endpoint
+
+`GET /velocity`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor velocity to assess whether Bitcoin functions as an active medium of exchange or primarily as a store of value held dormant.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Velocity data"}
+curl -G "https://api.blocklytics.net/api/public/v1/velocity" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "velocity_supply_total": 3.45
+  },
+  {
+    "date": "2025-01-06",
+    "velocity_supply_total": 3.42
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/velocity" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="velocity_supply_total" type="number">
+    The number of times the total Bitcoin supply circulates annually, calculated
+    by dividing trailing 1-year transaction volume by current supply,
+    representing economic activity intensity.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High velocity** indicates Bitcoin circulates rapidly through the economy, revealing active trading and frequent transactions where supply changes hands multiple times annually, suggesting medium-of-exchange behavior dominates.
+
+**Low velocity** demonstrates Bitcoin remains relatively dormant, showing holders maintain positions without frequent transactions, indicating store-of-value behavior dominates as supply circulates slowly through fewer hands.
+
+**Declining velocity** reveals increasing holding behavior, signaling participants are transitioning from active trading to patient accumulation as supply circulates less frequently, strengthening store-of-value characteristics.
+
+**Rising velocity** shows increasing transaction activity, indicating participants are moving from holding to active trading as supply circulates more rapidly, suggesting speculative or utilization behavior strengthens.
+
+### Use Cases
+
+This metric provides fundamental insight into Bitcoin's economic function by measuring how actively supply circulates through the economy. Velocity reveals whether Bitcoin primarily serves as a medium of exchange with frequent transactions or as a store of value held dormant in long-term positions. High velocity indicates active trading environments where supply changes hands frequently, suggesting speculative behavior or payments usage dominates economic activity. These conditions reveal markets where participants actively transact rather than hold, with each unit of supply facilitating multiple economic interactions annually. Conversely, low velocity indicates holding-dominated environments where supply remains largely dormant in accumulation positions, suggesting participants view Bitcoin as a store of value rather than a transactional medium. Declining velocity trends confirm strengthening store-of-value characteristics as increasing proportions of supply move into patient hands who transact infrequently. This behavior aligns with sound money adoption where scarce assets are held rather than spent, reducing circulating supply and potentially supporting price appreciation through scarcity. The metric contextualizes network activity within supply constraints, revealing whether similar transaction volumes represent high or low activity relative to total supply. Comparing velocity across cycles identifies behavioral shifts, with declining long-term velocity suggesting maturation from speculative trading toward serious wealth storage. Rising velocity during rallies can indicate either healthy utilization growth or unsustainable speculation depending on context. The metric also relates to monetary theory, as traditional currencies show high velocity from constant circulation while stores of value like gold show low velocity from holding behavior.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/velocity', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `velocity?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      velocity_supply_total: d.velocity_supply_total,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

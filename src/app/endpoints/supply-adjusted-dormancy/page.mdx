@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Supply Adjusted Dormancy',
+  description:
+    'Use the Supply Adjusted Dormancy endpoint to measure the average age of coins being spent, normalized by total supply, revealing holder behavior and identifying market cycle transitions.',
+}
+
+# Supply Adjusted Dormancy
+
+The **Supply Adjusted Dormancy** measures the average age of coins being spent, normalized by Bitcoin's total supply to account for network maturation. {{ className: 'lead' }}
+
+This metric reveals whether old or young coins dominate spending activity, with high values indicating veteran holder distribution and low values suggesting recent holder activity, providing supply-normalized cycle signals.
+
+---
+
+## Endpoint
+
+`GET /supply-adjusted-dormancy`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Supply Adjusted Dormancy to identify whether long-term holders are distributing and assess market cycle phases through holder behavior.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Supply Adjusted Dormancy data"}
+curl -G "https://api.blocklytics.net/api/public/v1/supply-adjusted-dormancy" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "sa_average_dormancy": 0.0045
+  },
+  {
+    "date": "2025-01-06",
+    "sa_average_dormancy": 0.0038
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/supply-adjusted-dormancy" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="sa_average_dormancy" type="number">
+    The average number of days destroyed per coin transacted, normalized by
+    total Bitcoin supply, measuring the relative age of coins being spent
+    adjusted for network maturation.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High supply adjusted dormancy** indicates old coins dominate spending activity, revealing long-term holder distribution where veteran capital accumulated years ago finally moves, often marking market tops when patient holders take profits at elevated prices.
+
+**Low supply adjusted dormancy** demonstrates young coins dominate spending, showing recent holders and traders drive activity without significant long-term holder participation, typical during accumulation phases or consolidation when veterans remain dormant.
+
+**Rising supply adjusted dormancy** signals increasing age of coins being spent, warning of growing long-term holder distribution as progressively older coins enter circulation, often preceding corrections when veteran supply overwhelms demand.
+
+**Declining supply adjusted dormancy** reveals decreasing age of spent coins, indicating long-term holders withdraw from markets while recent holders dominate activity, typical during bear markets when veterans hold while weak hands capitulate.
+
+### Use Cases
+
+This metric provides supply-normalized insight into the age profile of spending activity, enabling comparison across Bitcoin's history despite growing supply over time. The supply adjustment corrects for the natural tendency of dormancy to increase as the network matures and more old coins exist, isolating behavioral changes from structural supply growth. High dormancy readings indicate coins being spent are significantly older than average, revealing veteran holder distribution at scale as patient capital breaks its holding commitment. These distribution events carry more market significance than young coin spending, as they represent tested conviction finally capitulating or taking profits after surviving volatility. During bull markets, spikes in supply adjusted dormancy warn of major distribution waves from long-term holders, often marking cycle peaks when smart money exits positions accumulated at much lower prices. The metric also identifies accumulation phases through persistently low dormancy, indicating young coins dominate activity while veterans remain dormant, typical during bear markets when new buyers enter and old holders refuse to capitulate. Comparing dormancy across cycles reveals whether current long-term holder behavior differs from historical patterns, with extreme readings suggesting unusual veteran activity. The supply normalization enables apples-to-apples comparison between early Bitcoin years and present day, removing the confounding effect of supply growth on raw dormancy calculations.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/supply-adjusted-dormancy', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `supply-adjusted-dormancy?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      sa_average_dormancy: d.sa_average_dormancy,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

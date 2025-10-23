@@ -1,0 +1,166 @@
+export const metadata = {
+  title: 'Miner to Exchange Flow (Mean)',
+  description:
+    'Use the Miner to Exchange Flow Mean endpoint to track the average transaction size of Bitcoin transfers from mining pools to exchanges, revealing miner selling patterns and distribution strategies.',
+}
+
+# Miner to Exchange Flow (Mean)
+
+The **Miner to Exchange Flow (Mean)** metric tracks the average size of Bitcoin transfers from mining pool wallets to exchange platforms. {{ className: 'lead' }}
+
+This metric reveals the typical transaction scale in miner-to-exchange flows, distinguishing between large institutional-style transfers and smaller retail-oriented distributions.
+
+---
+
+## Endpoint
+
+`GET /miner-to-exchange-flow-mean`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the average size of transfers from mining pools to exchanges to understand miner selling strategies and transaction patterns.
+
+<Properties>
+  <Property name="from_miner" type="string">
+    Source mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="to_exchange" type="string">
+    Destination exchange name. Example: <code>binance</code>,{' '}
+    <code>coinbase</code>, <code>kraken</code>. Default:{' '}
+    <code>all_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner to Exchange Flow Mean data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-to-exchange-flow-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_miner=f2pool \
+  -d to_exchange=binance \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "flow_mean": 15.43
+  },
+  {
+    "date": "2025-01-06",
+    "flow_mean": 18.92
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-to-exchange-flow-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_miner=all_miner \
+  -d to_exchange=all_exchange \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="flow_mean" type="number">
+    The average size of Bitcoin transfers from the specified mining pool to the
+    specified exchange during the time period, measured in BTC.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising mean transaction sizes** indicate miners are executing larger individual transfers to exchanges, suggesting consolidated selling operations, improved operational efficiency through batch processing, or institutional-scale distributions that minimize transaction overhead.
+
+**Declining mean transaction sizes** suggest miners are fragmenting distributions into smaller transfers, potentially indicating more frequent selling activity, risk management through incremental liquidation, or operational changes favoring smaller regular disbursements over large batches.
+
+**High mean sizes with low transaction counts** reveal concentrated distribution patterns where miners execute fewer but significantly larger transfers, typically indicating institutional selling strategies, direct exchange relationships with preferential terms, or strategic timing of major liquidations.
+
+**Low mean sizes with high transaction counts** indicate dispersed distribution operations where miners spread selling across many smaller transactions, often suggesting retail-oriented strategies, automated regular selling programs, or efforts to minimize market impact through incremental distributions.
+
+### Use Cases
+
+This metric provides critical insight into the operational sophistication and selling strategies of mining operations in their exchange interactions. Mean transaction sizes reveal whether miners favor efficient consolidated transfers or dispersed incremental approaches, with larger means typically indicating institutional-grade operations while smaller means suggest retail-oriented or automated distribution strategies. Comparing mean flow sizes across different mining pools reveals operational differences in treasury management, with some pools demonstrating consistent large-batch efficiency while others maintain frequent smaller transfers. During bull markets, rising mean sizes often signal miners capitalizing on favorable conditions through accelerated large-scale selling, while declining means during bear markets may indicate cautious incremental liquidation to test market depth. Tracking mean sizes alongside total flows distinguishes between stable operational patterns and strategic shifts, where increasing means with stable totals indicate consolidation into fewer transactions, while stable means with rising totals reveal proportional scaling of operations. This metric also helps identify potential supply pressure patterns, as sudden increases in mean transaction sizes can signal preparation for major selling events or strategic repositioning of large treasury holdings. Analyzing mean flows by specific exchange destinations reveals preferred liquidity venues and potential institutional relationships, with consistently high means to specific exchanges often indicating established trading partnerships or preferential arrangements.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-to-exchange-flow-mean', async (req, res) => {
+  try {
+    const fromMiner = req.query.from_miner || 'all_miner'
+    const toExchange = req.query.to_exchange || 'all_exchange'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-to-exchange-flow-mean?window=${window}&from_miner=${fromMiner}&to_exchange=${toExchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      flow_mean: d.flow_mean,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

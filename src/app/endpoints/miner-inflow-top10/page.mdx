@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Miner Inflow (Top10)',
+  description:
+    'Use the Miner Inflow Top10 endpoint to track the sum of the 10 largest inflow transactions, revealing concentration of large payments and whale activity.',
+}
+
+# Miner Inflow (Top10)
+
+The **Miner Inflow Top10** metric tracks the combined value of the 10 largest transactions flowing into mining pool wallets. {{ className: 'lead' }}
+
+This metric reveals the concentration of large inflows, helping identify whale activity, major operational fund movements, and the distribution of revenue sources to miners.
+
+---
+
+## Endpoint
+
+`GET /miner-inflow-top10`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor top 10 inflows to identify large payment concentrations and whale interactions with mining operations.
+
+<Properties>
+  <Property name="miner" type="string">
+    Mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner Inflow Top10 data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-inflow-top10" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "miner_inflow_top10": 452.35
+  },
+  {
+    "date": "2025-01-06",
+    "miner_inflow_top10": 389.78
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-inflow-top10" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=all_miner \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="miner_inflow_top10" type="number">
+    The sum of the 10 largest inflow transactions to the mining pool during the
+    specified time window, denominated in BTC.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High top10 relative to total inflow** indicates that a large portion of miner revenue comes from concentrated large transactions, suggesting reliance on whale participants, major external payments, or large-scale operational fund movements.
+
+**Low top10 relative to total inflow** reveals more distributed revenue sources with many smaller transactions contributing, indicating diverse participation or more granular payout structures from distributed mining operations.
+
+**Rising top10 values** suggest increasing concentration of large inflows, potentially indicating growing whale activity, larger mining reward captures from high-fee blocks, or increasing operational fund consolidations from external sources.
+
+**Sudden spikes in top10** often reveal exceptional events like extremely high-fee blocks, major external payments to miners, or large fund returns from exchanges or cold storage facilities.
+
+### Use Cases
+
+This metric helps assess revenue concentration and identify unusual large payment activity to miners. Comparing top10 with total inflow reveals what percentage of miner revenue comes from the largest transactions versus distributed sources. High concentration percentages suggest vulnerability to changes in whale behavior or major participants, while low percentages indicate more resilient distributed revenue. Sudden increases in top10 values can signal major operational events like large exchange returns, significant cold storage movements, or capture of extraordinarily profitable blocks during fee spikes. For competitive analysis, comparing top10 ratios across mining pools reveals which operations attract or depend on larger concentrated payments versus those with more distributed revenue streams. This metric also helps identify when miners receive unusually large payments that may precede significant market events or operational changes.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-inflow-top10', async (req, res) => {
+  try {
+    const miner = req.query.miner || 'all_miner'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-inflow-top10?window=${window}&miner=${miner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      miner_inflow_top10: d.miner_inflow_top10,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

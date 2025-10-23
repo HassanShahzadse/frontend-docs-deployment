@@ -1,0 +1,157 @@
+export const metadata = {
+  title: 'Fund Flow Ratio',
+  description:
+    'Use the Fund Flow Ratio endpoint to identify whale-focused exchanges by analyzing the concentration of large inflows relative to total inflows.',
+}
+
+# Fund Flow Ratio
+
+The **Fund Flow Ratio** metric identifies which exchanges are preferred by whale traders by analyzing the concentration of large inflows. {{ className: 'lead' }}
+
+This metric calculates the ratio of the top 10 largest inflows relative to total inflows, revealing exchanges with whale-concentrated activity and potential for dramatic price movements.
+
+---
+
+## Endpoint
+
+`GET /fund-flow-ratio`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor whale activity concentration across exchanges to identify platforms with heightened volatility risk and arbitrage opportunities.
+
+<Properties>
+  <Property name="exchange" type="string">
+    Exchange name. Example: <code>binance</code>, <code>coinbase</code>,{' '}
+    <code>kraken</code>. Default: <code>all_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Fund Flow Ratio data"}
+curl -G "https://api.blocklytics.net/api/public/v1/fund-flow-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=binance \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "fund_flow_ratio": 0.68
+  },
+  {
+    "date": "2025-01-06",
+    "fund_flow_ratio": 0.72
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/fund-flow-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=gemini \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="fund_flow_ratio" type="number">
+    The ratio of top 10 inflow amounts to total inflows. Range: 0 to 1, where
+    higher values indicate greater whale concentration.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High ratio (0.7+)** indicates the exchange is whale-dominated, with the top 10 inflows representing a large portion of total activity. Exchanges like Gemini often show high ratios, suggesting concentrated large trades that can cause dramatic price movements and create arbitrage opportunities.
+
+**Low ratio (0.3-)** suggests retail-focused exchange with distributed activity across many smaller participants. These exchanges typically experience more stable pricing with fewer sudden volatility spikes.
+
+**Rising ratio** reveals increasing whale interest in a specific exchange, potentially signaling that sophisticated traders are concentrating activity on that platform, which may precede significant price movements or liquidity events.
+
+**Sudden spikes** often indicate major institutional deposits or whale accumulation events, suggesting preparation for large trades that could create temporary price inefficiencies between exchanges.
+
+### Use Cases
+
+This metric is essential for identifying exchanges where whale activity creates price inefficiencies and trading opportunities. High ratios indicate platforms where a small number of large players dominate order flow, creating potential arbitrage windows as their trades move prices. Traders can monitor low-ratio exchanges for more stable execution and high-ratio exchanges for volatility trading opportunities. When major whales concentrate on specific exchanges, it often signals where significant market-moving activity will occur. Comparing ratios across exchanges helps identify where institutional money flows and which platforms are gaining or losing whale preference. Understanding whale concentration also reveals risk exposure, as exchanges with high ratios face greater volatility and potential manipulation risks from concentrated holders.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/fund-flow-ratio', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `fund-flow-ratio?window=${window}&exchange=${exchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      fund_flow_ratio: d.fund_flow_ratio,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

@@ -1,0 +1,142 @@
+export const metadata = {
+  title: 'Coinbase Premium Index',
+  description:
+    'Learn how to use the Coinbase Premium Index endpoint to measure the percentage difference between Coinbase and Binance Bitcoin prices — a proxy for institutional buying pressure.',
+}
+
+# Coinbase Premium Index
+
+The **Coinbase Premium Index** measures the percentage difference between Bitcoin’s USD price on Coinbase and its USDT price on Binance. {{ className: 'lead' }}
+
+A positive index indicates stronger spot buying pressure from U.S.-based investors on Coinbase, while a negative index suggests offshore or retail-driven selling on Binance.
+
+---
+
+## Endpoint
+
+`GET /coinbase-premium-index`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+This example retrieves the Coinbase Premium Index values for daily intervals. Adjust parameters to target specific ranges or output formats.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>min</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code> format.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code> format.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Coinbase Premium Index data"}
+curl -G "https://api.blocklytics.net/api/public/v1/coinbase-premium-index" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "coinbase_premium_index": 0.23
+  },
+  {
+    "date": "2025-01-06",
+    "coinbase_premium_index": -0.12
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/coinbase-premium-index" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+The **Coinbase Premium Index** helps quantify the difference in market sentiment between U.S. (Coinbase) and offshore (Binance) markets:
+
+<Properties>
+  <Property name="coinbase_premium_index" type="number">
+    Percentage difference between Coinbase (BTC/USD) and Binance (BTC/USDT)
+    prices.
+  </Property>
+  <Property name="coinbase_premium_gap" type="number">
+    Absolute price gap in USD between Coinbase and Binance.
+  </Property>
+</Properties>
+
+A higher premium suggests stronger institutional demand or limited supply on Coinbase. A sustained positive index may signal bullish U.S. inflows, while a persistent discount may indicate sell-side pressure.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/coinbase-premium-index', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `coinbase-premium-index?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      coinbase_premium_index: d.coinbase_premium_index,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

@@ -1,0 +1,206 @@
+export const metadata = {
+  title: 'Realized Cap - UTXO Age Bands (%)',
+  description:
+    'Use the Realized Cap UTXO Age Bands endpoint to track the distribution of realized capital across different holder age cohorts, revealing accumulation patterns and conviction levels by holding period.',
+}
+
+# Realized Cap - UTXO Age Bands (%)
+
+The **Realized Cap UTXO Age Bands** metric distributes realized capitalization across age cohorts, showing what percentage of network value is held by different holder time horizons. {{ className: 'lead' }}
+
+This metric reveals the composition of Bitcoin's capital base by holder conviction level, distinguishing between short-term traders and long-term investors through realized value distribution.
+
+---
+
+## Endpoint
+
+`GET /realized-cap-utxo-age-bands`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor realized cap distribution across age bands to understand holder conviction levels and identify shifts between short-term and long-term capital.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Realized Cap UTXO Age Bands data"}
+curl -G "https://api.blocklytics.net/api/public/v1/realized-cap-utxo-age-bands" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "range_0d_1d_percent": 0.8,
+    "range_1d_1w_percent": 3.2,
+    "range_1w_1m_percent": 5.6,
+    "range_1m_3m_percent": 8.4,
+    "range_3m_6m_percent": 7.2,
+    "range_6m_12m_percent": 12.3,
+    "range_12m_18m_percent": 9.1,
+    "range_18m_2y_percent": 8.7,
+    "range_2y_3y_percent": 11.2,
+    "range_3y_5y_percent": 14.5,
+    "range_5y_7y_percent": 8.9,
+    "range_7y_10y_percent": 6.4,
+    "range_10y_inf_percent": 3.7
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/realized-cap-utxo-age-bands" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="range_0d_1d_percent" type="number">
+    Percentage of realized cap held in UTXOs aged 0-1 days.
+  </Property>
+  <Property name="range_1d_1w_percent" type="number">
+    Percentage of realized cap held in UTXOs aged 1 day to 1 week.
+  </Property>
+  <Property name="range_1w_1m_percent" type="number">
+    Percentage of realized cap held in UTXOs aged 1 week to 1 month.
+  </Property>
+  <Property name="range_1m_3m_percent" type="number">
+    Percentage of realized cap held in UTXOs aged 1-3 months.
+  </Property>
+  <Property name="range_3m_6m_percent" type="number">
+    Percentage of realized cap held in UTXOs aged 3-6 months.
+  </Property>
+  <Property name="range_6m_12m_percent" type="number">
+    Percentage of realized cap held in UTXOs aged 6-12 months.
+  </Property>
+  <Property name="range_12m_18m_percent" type="number">
+    Percentage of realized cap held in UTXOs aged 12-18 months.
+  </Property>
+  <Property name="range_18m_2y_percent" type="number">
+    Percentage of realized cap held in UTXOs aged 18 months to 2 years.
+  </Property>
+  <Property name="range_2y_3y_percent" type="number">
+    Percentage of realized cap held in UTXOs aged 2-3 years.
+  </Property>
+  <Property name="range_3y_5y_percent" type="number">
+    Percentage of realized cap held in UTXOs aged 3-5 years.
+  </Property>
+  <Property name="range_5y_7y_percent" type="number">
+    Percentage of realized cap held in UTXOs aged 5-7 years.
+  </Property>
+  <Property name="range_7y_10y_percent" type="number">
+    Percentage of realized cap held in UTXOs aged 7-10 years.
+  </Property>
+  <Property name="range_10y_inf_percent" type="number">
+    Percentage of realized cap held in UTXOs aged over 10 years.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High short-term percentages (0d-1m)** indicate significant recent trading activity where substantial value changed hands at current prices, revealing active speculation and potential distribution from long-term holders, typical during bull markets when conviction shifts and profit-taking accelerates.
+
+**High long-term percentages (2y+)** demonstrate strong holder conviction where substantial capital acquired at historical prices remains unmoved, indicating accumulation success and reduced selling pressure as committed holders maintain positions through volatility.
+
+**Shift from long to short-term bands** signals distribution phase where long-held coins with low cost basis move to recent acquirers at higher prices, increasing realized cap in short-term bands while decreasing long-term percentages, often marking market tops as conviction weakens.
+
+**Shift from short to long-term bands** reveals accumulation phase where recently acquired coins age into longer holding periods without movement, indicating growing conviction as new holders become long-term investors, typically appearing during bear markets and early bull phases.
+
+### Use Cases
+
+This metric provides sophisticated insight into the quality and conviction of Bitcoin's holder base by examining the temporal distribution of realized capital rather than simple coin counts. Unlike standard UTXO age distributions that treat all coins equally regardless of acquisition price, realized cap weighting emphasizes economically significant holdings by valuing coins at their last movement price. This approach reveals which cohorts control the most capital rather than the most coins, making it particularly relevant for understanding potential supply dynamics. High concentrations in short-term bands indicate substantial fresh capital entered recently at current price levels, creating potential resistance as these holders lack significant gains and may sell on modest appreciation. Conversely, high concentrations in long-term bands reveal committed capital with low cost bases that survived market cycles, indicating strong hands less likely to sell despite volatility. Tracking band transitions identifies conviction shifts, with coins graduating from short-term to long-term bands signaling successful accumulation while degradation from long-term to short-term bands indicates distribution. During bull markets, watching for accelerating shifts from long-term to short-term bands warns of distribution intensity, while during bear markets, the formation of new long-term cohorts signals accumulation success. The metric also reveals generational holder patterns, with different age bands representing distinct entry cohorts that may behave similarly based on shared acquisition contexts and profit/loss positions.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/realized-cap-utxo-age-bands', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `realized-cap-utxo-age-bands?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      range_0d_1d_percent: d.range_0d_1d_percent,
+      range_1d_1w_percent: d.range_1d_1w_percent,
+      range_1w_1m_percent: d.range_1w_1m_percent,
+      range_1m_3m_percent: d.range_1m_3m_percent,
+      range_3m_6m_percent: d.range_3m_6m_percent,
+      range_6m_12m_percent: d.range_6m_12m_percent,
+      range_12m_18m_percent: d.range_12m_18m_percent,
+      range_18m_2y_percent: d.range_18m_2y_percent,
+      range_2y_3y_percent: d.range_2y_3y_percent,
+      range_3y_5y_percent: d.range_3y_5y_percent,
+      range_5y_7y_percent: d.range_5y_7y_percent,
+      range_7y_10y_percent: d.range_7y_10y_percent,
+      range_10y_inf_percent: d.range_10y_inf_percent,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

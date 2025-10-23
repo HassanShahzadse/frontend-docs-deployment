@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Taker Sell Ratio',
+  description:
+    'Use the Taker Sell Ratio endpoint to measure the proportion of aggressive sell orders in perpetual swap markets, revealing bearish conviction and selling pressure intensity through taker order flow.',
+}
+
+# Taker Sell Ratio
+
+The **Taker Sell Ratio** measures the percentage of perpetual swap volume executed by aggressive sellers (takers), revealing directional bearish sentiment. {{ className: 'lead' }}
+
+This metric quantifies bearish versus bullish aggression through order flow, with high ratios indicating dominant selling pressure from impatient traders willing to pay the spread for immediate short execution.
+
+---
+
+## Endpoint
+
+`GET /taker-sell-ratio`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Taker Sell Ratio to assess aggressive selling versus buying pressure and identify shifts in bearish sentiment through derivatives order flow.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>min</code>.
+  </Property>
+  <Property name="exchange" type="string">
+    Exchange to query. Options: <code>all_exchange</code>, <code>binance</code>,{' '}
+    <code>bybit</code>, <code>bitmex</code>, <code>deribit</code>,{' '}
+    <code>htx_global</code>, <code>okx</code>. Default:{' '}
+    <code>all_exchange</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Taker Sell Ratio data"}
+curl -G "https://api.blocklytics.net/api/public/v1/taker-sell-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d exchange=binance \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "taker_sell_ratio": 0.46
+  },
+  {
+    "date": "2025-01-06",
+    "taker_sell_ratio": 0.52
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/taker-sell-ratio" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d exchange=all_exchange \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="taker_sell_ratio" type="number">
+    The ratio of taker sell volume to total taker volume in perpetual swap
+    markets, ranging from 0 to 1, representing the proportion of aggressive
+    orders that are sells versus buys.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High taker sell ratio (above 0.55)** indicates aggressive selling dominates, revealing impatient bears willing to hit bids and pay the spread for immediate short exposure, signaling strong bearish conviction and potential downward momentum.
+
+**Low taker sell ratio (below 0.45)** demonstrates aggressive buying dominates over selling, showing impatient bulls overpower bears in order flow urgency, signaling strong bullish conviction and potential upward momentum.
+
+**Taker sell ratio near 0.50** suggests balanced aggression between sellers and buyers, indicating neutral sentiment without clear directional bias as neither bears nor bulls demonstrate urgency dominance.
+
+**Rising taker sell ratio** reveals growing selling aggression relative to buying, indicating strengthening bearish sentiment as more traders become willing to aggressively enter short positions by taking liquidity.
+
+### Use Cases
+
+This metric provides the inverse perspective to taker buy ratio, directly measuring bearish aggression through order flow. Taker sell orders represent impatient traders willing to pay the spread for immediate short execution rather than waiting passively, making taker sell flow a strong indicator of bearish conviction. High taker sell ratios indicate bears are more aggressive than bulls, suggesting downward momentum as selling pressure intensifies from traders demanding immediate short exposure. This aggressive selling often precedes or accompanies declines, as urgent supply hits prices when takers exhaust available buy liquidity. The metric identifies sentiment shifts through ratio changes, with transitions from low to high ratios signaling momentum reversals as aggression shifts from bulls to bears. Extreme readings above 0.60 indicate highly one-sided bearish sentiment that can signal either strong downtrends or potential exhaustion and reversal opportunities. Comparing taker sell ratio to price action reveals alignment quality, with price declines accompanied by high ratios confirming supply pressure while declines with low ratios warn of weak selling conviction. Since taker buy ratio and taker sell ratio sum to 1.0, they provide complementary perspectives on the same order flow dynamics. The metric proves valuable for identifying distribution phases, with elevated taker sell ratios during rallies warning of aggressive profit-taking or short positioning despite positive price action.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/taker-sell-ratio', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `taker-sell-ratio?window=${window}&exchange=${exchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      taker_sell_ratio: d.taker_sell_ratio,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

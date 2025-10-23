@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Supply in Profit (%)',
+  description:
+    'Use the Supply in Profit (%) endpoint to track the percentage of Bitcoin held above its acquisition price, revealing relative profitability levels and identifying market cycle extremes.',
+}
+
+# Supply in Profit (%)
+
+The **Supply in Profit (%)** metric measures the percentage of Bitcoin currently held above its acquisition price, revealing the proportion of holders enjoying unrealized gains. {{ className: 'lead' }}
+
+This metric normalizes profitability by showing what percentage of supply trades in profit, enabling comparison across different market environments and cycles to identify extreme euphoria or despair conditions.
+
+---
+
+## Endpoint
+
+`GET /supply-in-profit-percent`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Supply in Profit percentage to assess relative profitability levels and identify extreme market conditions signaling cycle tops or bottoms.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Supply in Profit (%) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/supply-in-profit-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "profit_percent": 76.6
+  },
+  {
+    "date": "2025-01-06",
+    "profit_percent": 74.2
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/supply-in-profit-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="profit_percent" type="number">
+    The percentage of total Bitcoin supply held in UTXOs where the current price
+    is above the acquisition price, representing the proportion of holders
+    enjoying unrealized gains.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High profit percentage (over 80%)** indicates the vast majority of supply trades profitably, revealing widespread gains that create both comfort and profit-taking temptation, historically marking bull market tops when nearly universal profitability breeds complacency.
+
+**Low profit percentage (under 40%)** demonstrates the majority of supply trades underwater, showing bear market conditions where most holders face losses and pain, historically marking bottoms when widespread distress forces final capitulation.
+
+**Rising profit percentage** reveals growing proportion of profitable holders as prices appreciate above more cost bases, signaling improving market health and building confidence as increasing percentages of participants enjoy gains rather than suffering losses.
+
+**Declining profit percentage** shows correction pushing profitable holders back underwater, indicating deteriorating market conditions and spreading pain as price weakness eliminates gains and forces previously comfortable holders into loss positions.
+
+### Use Cases
+
+This metric provides normalized measurement of market profitability that enables meaningful comparison across Bitcoin's history despite changing supply and price levels. The percentage view reveals whether current conditions represent extreme profitability or distress relative to historical precedent, with readings above 90-95 percent historically marking major tops when nearly all supply maintains gains. These extreme conditions create maximum complacency and profit-taking temptation, as broad-based gains reduce fear while increasing willingness to realize returns, often marking inflection points before corrections. Conversely, readings below 30-40 percent indicate widespread distress that historically precedes recoveries, as majority underwater positions create maximum fear and capitulation pressure. The metric reveals market cycle phases through characteristic patterns, with bull markets showing steadily rising profit percentages culminating in extreme peaks, while bear markets show declining percentages as drawdowns push supply underwater. Comparing current profit percentage to previous cycle extremes contextualizes risk-reward, revealing whether current conditions offer opportunity at distressed levels or risk at euphoric levels. The normalized view also enables assessment of rally quality, with strong advances lifting substantial percentages of supply to profit while weak bounces fail to rescue meaningful percentages from underwater positions. Tracking the metric during corrections identifies selling pressure sustainability, with high profit percentages suggesting abundant supply able to take profits while low percentages indicate limited profitable supply available to sell.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/supply-in-profit-percent', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `supply-in-profit-percent?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      profit_percent: d.profit_percent,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

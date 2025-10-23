@@ -1,0 +1,141 @@
+export const metadata = {
+  title: 'Block Rewards USD',
+  description:
+    'Learn how to use the Block Rewards USD endpoint to track total Bitcoin mining rewards and transaction fees converted to USD, providing insights into miner profitability in fiat terms.',
+}
+
+# Block Rewards USD
+
+The **Block Rewards USD** metric represents the total Bitcoin block rewards — including mining subsidies and transaction fees — converted into U.S. dollars. {{ className: 'lead' }}
+
+It reflects miner revenue in fiat terms and helps assess how changes in Bitcoin price and on-chain activity impact network profitability.
+
+---
+
+## Endpoint
+
+`GET /block-rewards-usd`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+This example retrieves the total block rewards expressed in USD for daily windows. Adjust parameters to query other periods or output formats.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Block Rewards USD data"}
+curl -G "https://api.blocklytics.net/api/public/v1/block-rewards-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "block_rewards_usd": 1324500.25
+  },
+  {
+    "date": "2025-01-06",
+    "block_rewards_usd": 1283700.91
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/block-rewards-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+**Block Rewards USD** helps visualize how Bitcoin price fluctuations and fee activity influence miner earnings in real-world currency terms:
+
+<Properties>
+  <Property name="block_rewards_usd" type="number">
+    The total block rewards (subsidy + fees) converted into USD at the time of
+    block creation.
+  </Property>
+</Properties>
+
+This metric rises when Bitcoin’s price or transaction fees increase, and falls after halving events or network slowdowns.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/block-rewards-usd', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `block-rewards-usd?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      block_rewards_usd: d.block_rewards_usd,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

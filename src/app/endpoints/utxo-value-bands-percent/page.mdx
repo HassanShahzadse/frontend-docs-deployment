@@ -1,0 +1,181 @@
+export const metadata = {
+  title: 'UTXO Value Bands (%)',
+  description:
+    'Use the UTXO Value Bands (%) endpoint to track the percentage distribution of Bitcoin supply across UTXO value size cohorts, revealing the relative wealth concentration between retail and whale positions.',
+}
+
+# UTXO Value Bands (%)
+
+The **UTXO Value Bands (%)** metric distributes the active Bitcoin supply across UTXO value size cohorts as percentages, revealing the relative wealth concentration. {{ className: 'lead' }}
+
+This metric identifies the proportional distribution of supply by output size, enabling normalized analysis of whether wealth concentrates in numerous small retail outputs or fewer large whale positions.
+
+---
+
+## Endpoint
+
+`GET /utxo-value-bands-percent`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor UTXO value percentage distribution across size bands to assess the relative wealth concentration across different output size tiers.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting UTXO Value Bands (%) data"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxo-value-bands-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "range_0_001_percent": 0.063,
+    "range_001_01_percent": 0.45,
+    "range_01_1_percent": 2.31,
+    "range_1_10_percent": 11.86,
+    "range_10_100_percent": 23.1,
+    "range_100_1k_percent": 19.71,
+    "range_1k_10k_percent": 14.08,
+    "range_10k_inf_percent": 25.96
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxo-value-bands-percent" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="range_0_001_percent" type="number">
+    Percentage of supply in UTXOs containing 0 to 0.001 BTC (dust).
+  </Property>
+  <Property name="range_001_01_percent" type="number">
+    Percentage of supply in UTXOs containing 0.001 to 0.01 BTC (micro).
+  </Property>
+  <Property name="range_01_1_percent" type="number">
+    Percentage of supply in UTXOs containing 0.01 to 1 BTC (small retail).
+  </Property>
+  <Property name="range_1_10_percent" type="number">
+    Percentage of supply in UTXOs containing 1 to 10 BTC (retail).
+  </Property>
+  <Property name="range_10_100_percent" type="number">
+    Percentage of supply in UTXOs containing 10 to 100 BTC (mid-tier).
+  </Property>
+  <Property name="range_100_1k_percent" type="number">
+    Percentage of supply in UTXOs containing 100 to 1,000 BTC (large holders).
+  </Property>
+  <Property name="range_1k_10k_percent" type="number">
+    Percentage of supply in UTXOs containing 1,000 to 10,000 BTC (whales).
+  </Property>
+  <Property name="range_10k_inf_percent" type="number">
+    Percentage of supply in UTXOs containing over 10,000 BTC (mega whales).
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High small value percentages** indicate supply dominated by retail-sized outputs, revealing wealth disperses across many modest positions rather than concentrating in large discrete holdings, suggesting democratized distribution.
+
+**High large value percentages** demonstrate supply dominated by whale-sized outputs, showing substantial wealth concentration in fewer but much larger positions held by sophisticated capital, indicating centralized distribution.
+
+**Rising small value percentages** reveal supply dispersing into smaller outputs, signaling distribution or retail accumulation fragmenting holdings into more numerous modest positions, reducing whale dominance.
+
+**Rising large value percentages** signal supply concentrating into whale outputs, indicating accumulation consolidates wealth into fewer but larger positions as sophisticated capital strengthens dominance over supply distribution.
+
+### Use Cases
+
+This metric provides normalized insight into wealth concentration patterns that enables meaningful comparison across different supply levels and market conditions. The percentage view removes the influence of absolute supply changes, focusing on the relative character of wealth distribution regardless of total Bitcoin in circulation. High large value percentages indicate wealth concentration where substantial supply consolidates in whale-sized outputs, suggesting sophisticated holders dominate and maintain significant positions. These concentrated distributions reveal markets where patient capital controls large supply proportions, creating potential for coordinated behavior as fewer entities hold more power. Conversely, high small value percentages indicate wealth dispersion where supply fragments across many retail-sized outputs, suggesting more democratized ownership where no single tier dominates supply control. The metric tracks wealth concentration shifts through percentage migration patterns, with growing large percentages confirming accumulation centralizes supply while growing small percentages indicate distribution democratizes holdings. Comparing percentage distributions across cycles reveals whether current wealth concentration demonstrates stronger or weaker centralization than historical precedent, contextualizing market structure risks. Rising large value percentages during bear markets confirm whale accumulation concentrates supply as sophisticated capital consolidates positions while retail capitulates. Declining large value percentages during bull markets warn of whale distribution as patient capital fragments large positions into smaller outputs for gradual profit-taking. The metric also identifies retail participation strength through small and mid-tier percentage growth, with increasing proportions indicating successful retail accumulation despite whale presence.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/utxo-value-bands-percent', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `utxo-value-bands-percent?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      range_0_001_percent: d.range_0_001_percent,
+      range_001_01_percent: d.range_001_01_percent,
+      range_01_1_percent: d.range_01_1_percent,
+      range_1_10_percent: d.range_1_10_percent,
+      range_10_100_percent: d.range_10_100_percent,
+      range_100_1k_percent: d.range_100_1k_percent,
+      range_1k_10k_percent: d.range_1k_10k_percent,
+      range_10k_inf_percent: d.range_10k_inf_percent,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

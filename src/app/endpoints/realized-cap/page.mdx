@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Realized Cap',
+  description:
+    'Use the Realized Cap endpoint to track the aggregate value of Bitcoin at the price when each coin last moved, providing an on-chain volume-weighted average price and fundamental valuation metric.',
+}
+
+# Realized Cap
+
+The **Realized Cap** metric measures the aggregate value of all Bitcoin at the price when each coin last moved on-chain. {{ className: 'lead' }}
+
+This metric provides an on-chain equivalent to volume-weighted average price (VWAP), valuing the network based on actual economic activity rather than current spot price, offering a more stable valuation foundation.
+
+---
+
+## Endpoint
+
+`GET /realized-cap`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Realized Cap to understand the aggregate cost basis of all Bitcoin holders and assess fundamental network valuation.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Realized Cap data"}
+curl -G "https://api.blocklytics.net/api/public/v1/realized-cap" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "realized_cap": 678900000000
+  },
+  {
+    "date": "2025-01-06",
+    "realized_cap": 675400000000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/realized-cap" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="realized_cap" type="number">
+    The sum of each UTXO valued at the price when it last moved on-chain,
+    representing the aggregate cost basis of all Bitcoin holders, measured in
+    USD.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Realized Cap above Market Cap** indicates the network trades below aggregate cost basis where holders collectively maintain unrealized losses, suggesting undervaluation and potential accumulation opportunities as prices fall below the average acquisition cost of all participants.
+
+**Realized Cap below Market Cap** reveals the network trades above aggregate cost basis where holders collectively maintain unrealized profits, indicating overvaluation risk when the ratio becomes extreme as prices significantly exceed what participants actually paid for their holdings.
+
+**Rising Realized Cap** demonstrates fresh capital entering the network as coins change hands at higher prices, increasing the aggregate cost basis and indicating genuine demand that strengthens the fundamental valuation floor regardless of temporary price fluctuations.
+
+**Stagnant Realized Cap** suggests limited turnover where coins remain dormant without changing hands, potentially indicating either strong holder conviction during accumulation phases or lack of trading activity during low-volatility periods when neither buyers nor sellers dominate.
+
+### Use Cases
+
+This metric provides one of the most fundamental and robust valuation frameworks in on-chain analysis by replacing speculative spot prices with actual transaction history. Realized Cap values each coin at its last movement price, effectively creating an on-chain VWAP that discounts lost coins and long-dormant holdings while emphasizing economically active supply. This approach solves the problem of market cap's sensitivity to spot price volatility, which can swing dramatically on low volume while most holders maintain their positions. Realized Cap provides a more stable valuation anchor that moves gradually with actual economic activity rather than speculation. The metric serves as the foundation for numerous derivative metrics like MVRV ratio (Market Cap / Realized Cap), which identifies overvaluation and undervaluation by comparing current price to aggregate cost basis. Historical analysis shows Market Cap consistently oscillates around Realized Cap across cycles, with extreme deviations marking cycle tops (high MVRV) and bottoms (low MVRV). Rising Realized Cap during bull markets confirms genuine capital inflows rather than merely speculative price appreciation without underlying support, while rising Realized Cap during bear markets indicates continued accumulation despite price weakness. The metric also helps identify lost coins and dormant supply, as coins unmoved for years contribute to Realized Cap at their ancient prices rather than current values, providing more accurate economic weight. Comparing Realized Cap growth rates across different periods reveals the pace of new capital absorption, with accelerating growth indicating strengthening fundamentals while stagnating growth warns of weakening demand.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/realized-cap', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `realized-cap?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      realized_cap: d.realized_cap,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

@@ -1,0 +1,152 @@
+export const metadata = {
+  title: 'Stock-to-Flow Ratio',
+  description:
+    'Use the Stock-to-Flow Ratio endpoint to measure Bitcoin scarcity by comparing existing supply to new issuance, providing a fundamental valuation framework based on digital scarcity.',
+}
+
+# Stock-to-Flow Ratio
+
+The **Stock-to-Flow Ratio** measures Bitcoin's scarcity by dividing the total existing supply (stock) by the annual production rate (flow). {{ className: 'lead' }}
+
+This metric quantifies Bitcoin's hardness as a monetary asset, with higher ratios indicating greater scarcity similar to precious metals, providing a fundamental valuation framework based on supply dynamics.
+
+---
+
+## Endpoint
+
+`GET /stock-to-flow`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the Stock-to-Flow Ratio to track Bitcoin's evolving scarcity and assess fundamental valuation based on supply constraints.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Stock-to-Flow Ratio data"}
+curl -G "https://api.blocklytics.net/api/public/v1/stock-to-flow" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "stock_to_flow": 120.5
+  },
+  {
+    "date": "2025-01-06",
+    "stock_to_flow": 120.4
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/stock-to-flow" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="stock_to_flow" type="number">
+    The ratio of Bitcoin's total circulating supply to its annual production
+    rate, measuring how many years of current production would be required to
+    produce the existing stock.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising Stock-to-Flow** indicates increasing scarcity as production rate declines relative to existing supply, particularly after halvings when new issuance drops by 50 percent, fundamentally strengthening Bitcoin's monetary properties and theoretical value proposition.
+
+**Stock-to-Flow near 60** marked the post-2020 halving scarcity level, representing a doubling from the previous cycle and approaching gold's ratio, suggesting Bitcoin's evolution toward a store-of-value asset with precious metal characteristics.
+
+**Stock-to-Flow above 100** represents the post-2024 halving environment where Bitcoin achieves unprecedented digital scarcity, with annual inflation below 1 percent creating supply dynamics theoretically supportive of higher valuations if demand remains constant.
+
+**Stock-to-Flow trending toward infinity** describes Bitcoin's long-term trajectory as issuance approaches zero around 2140, eventually creating a perfectly scarce asset where no new supply enters circulation, representing the ultimate hard money.
+
+### Use Cases
+
+This metric provides a fundamental valuation framework based on Bitcoin's provably scarce supply schedule, drawing parallels to precious metals valued for their scarcity. The Stock-to-Flow model, popularized by analyst PlanB, suggests a relationship between scarcity and value across hard assets, with higher stock-to-flow ratios corresponding to greater monetary premium. Bitcoin's halving events create step-function increases in stock-to-flow every four years, with each halving doubling the ratio by cutting new supply in half while existing supply continues growing. These scarcity shocks historically precede major bull markets, as reduced flow creates supply deficits if demand remains constant or increases. The model's predictive power remains debated, with proponents noting strong historical correlation between stock-to-flow and price while critics highlight assumptions about demand remaining constant and market efficiency. Comparing Bitcoin's stock-to-flow to gold reveals Bitcoin's progression toward and beyond gold's scarcity, with current ratios already rivaling or exceeding gold's roughly 60 ratio depending on measurement methods. The metric provides context for understanding Bitcoin's monetary evolution, with each halving bringing Bitcoin closer to perfect scarcity and further from inflationary fiat currencies. Stock-to-flow also enables comparison of different monetary assets' hardness, with higher ratios indicating resistance to inflation through supply constraints. The model suggests long-term holders should expect appreciation as scarcity increases, though short-term price action depends on demand dynamics not captured by supply alone.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/stock-to-flow', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `stock-to-flow?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      stock_to_flow: d.stock_to_flow,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

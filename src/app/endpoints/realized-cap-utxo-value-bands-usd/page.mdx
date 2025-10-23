@@ -1,0 +1,181 @@
+export const metadata = {
+  title: 'Realized Cap - UTXO Value Bands (USD)',
+  description:
+    'Use the Realized Cap UTXO Value Bands USD endpoint to track the absolute dollar value of realized capital across different UTXO size cohorts, revealing the scale of wealth held by each holder segment.',
+}
+
+# Realized Cap - UTXO Value Bands (USD)
+
+The **Realized Cap UTXO Value Bands (USD)** metric distributes realized capitalization across UTXO size cohorts in absolute dollar values, showing the scale of capital held by different holder sizes. {{ className: 'lead' }}
+
+This metric reveals the absolute economic weight of different holder size cohorts rather than relative percentages, enabling analysis of capital flows and wealth concentration changes over time.
+
+---
+
+## Endpoint
+
+`GET /realized-cap-utxo-value-bands-usd`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor absolute realized cap values across UTXO value bands to understand the dollar scale of capital held by each wealth tier and track absolute capital movements.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Realized Cap UTXO Value Bands USD data"}
+curl -G "https://api.blocklytics.net/api/public/v1/realized-cap-utxo-value-bands-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "range_0_1_usd": 2040000000,
+    "range_1_10_usd": 14260000000,
+    "range_10_100_usd": 59100000000,
+    "range_100_1k_usd": 104600000000,
+    "range_1k_10k_usd": 154800000000,
+    "range_10k_100k_usd": 193600000000,
+    "range_100k_1M_usd": 110100000000,
+    "range_1M_inf_usd": 40800000000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/realized-cap-utxo-value-bands-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="range_0_1_usd" type="number">
+    Realized cap value in USD for UTXOs valued $0-$1.
+  </Property>
+  <Property name="range_1_10_usd" type="number">
+    Realized cap value in USD for UTXOs valued $1-$10.
+  </Property>
+  <Property name="range_10_100_usd" type="number">
+    Realized cap value in USD for UTXOs valued $10-$100.
+  </Property>
+  <Property name="range_100_1k_usd" type="number">
+    Realized cap value in USD for UTXOs valued $100-$1,000.
+  </Property>
+  <Property name="range_1k_10k_usd" type="number">
+    Realized cap value in USD for UTXOs valued $1,000-$10,000.
+  </Property>
+  <Property name="range_10k_100k_usd" type="number">
+    Realized cap value in USD for UTXOs valued $10,000-$100,000.
+  </Property>
+  <Property name="range_100k_1M_usd" type="number">
+    Realized cap value in USD for UTXOs valued $100,000-$1,000,000.
+  </Property>
+  <Property name="range_1M_inf_usd" type="number">
+    Realized cap value in USD for UTXOs valued over $1,000,000.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Growing small UTXO values** indicate retail capital expansion in absolute dollar terms, revealing whether retail participation is genuinely increasing in economic significance or merely maintaining relative share despite smaller absolute growth compared to whales.
+
+**Growing large UTXO values** demonstrate whale and institutional capital accumulation in absolute terms, showing the dollar scale of sophisticated capital entering or consolidating positions, indicating increasing concentration or institutional adoption.
+
+**Declining large UTXO values** signal whale distribution where significant absolute capital exits large positions, revealing the dollar magnitude of supply being released by strong hands, often marking profit-taking during bull markets or forced liquidation during distress.
+
+**Rapid increases across multiple bands** suggest broad-based capital expansion where all holder tiers accumulate simultaneously, indicating healthy market growth with participation across wealth levels rather than concentrated in single cohorts.
+
+### Use Cases
+
+This metric provides absolute dollar-denominated insight into wealth distribution, complementing the percentage view by revealing actual capital scale rather than relative proportions. The absolute values enable tracking of real capital flows by holder size, showing whether specific wealth tiers are growing or shrinking in dollar terms regardless of overall market cap changes. During bull markets, monitoring absolute growth in small UTXO bands quantifies whether retail participation is truly expanding in economic terms or merely maintaining share as prices appreciate, distinguishing between genuine retail adoption and concentration. The absolute values also enable cohort growth rate analysis, comparing how quickly different wealth tiers accumulate or shed capital to identify which holder types are driving market dynamics. Tracking the absolute scale of large UTXO bands reveals the dollar amount of whale and institutional capital, providing a measure of sophisticated money positioning and potential market impact from concentrated holdings. When large UTXO band values decline substantially in absolute terms during bull markets, it signals major distribution from whales releasing meaningful supply at scale, while stable or growing values indicate strong hands maintaining despite tempting gains. The metric also enables comparison across market cycles, showing whether current wealth concentration differs from previous cycles in absolute capital scale, which has implications for market structure and volatility potential. Analyzing the absolute dollar gap between small and large bands reveals wealth concentration intensity, with widening gaps indicating increasing inequality while narrowing gaps suggest democratization of capital.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/realized-cap-utxo-value-bands-usd', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `realized-cap-utxo-value-bands-usd?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      range_0_1_usd: d.range_0_1_usd,
+      range_1_10_usd: d.range_1_10_usd,
+      range_10_100_usd: d.range_10_100_usd,
+      range_100_1k_usd: d.range_100_1k_usd,
+      range_1k_10k_usd: d.range_1k_10k_usd,
+      range_10k_100k_usd: d.range_10k_100k_usd,
+      range_100k_1M_usd: d.range_100k_1M_usd,
+      range_1M_inf_usd: d.range_1M_inf_usd,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

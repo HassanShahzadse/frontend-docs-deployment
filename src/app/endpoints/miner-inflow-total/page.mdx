@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Miner Inflow (Total)',
+  description:
+    'Use the Miner Inflow Total endpoint to track the total volume of BTC flowing into mining pools, revealing overall miner revenue and operational activity.',
+}
+
+# Miner Inflow (Total)
+
+The **Miner Inflow Total** metric tracks the total volume of BTC flowing into mining pool wallets. {{ className: 'lead' }}
+
+This metric reveals overall miner revenue including mining rewards, external payments, and operational fund returns, providing a comprehensive view of total capital entering miner operations.
+
+---
+
+## Endpoint
+
+`GET /miner-inflow-total`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor total inflow to assess overall miner revenue levels and identify periods of increased capital entering mining operations.
+
+<Properties>
+  <Property name="miner" type="string">
+    Mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner Inflow Total data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-inflow-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "miner_inflow_total": 2847.52
+  },
+  {
+    "date": "2025-01-06",
+    "miner_inflow_total": 2654.38
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-inflow-total" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=all_miner \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="miner_inflow_total" type="number">
+    The total volume of BTC flowing into mining pool wallets during the
+    specified time window, including all sources of inflows.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising total inflow** indicates increasing capital entering miner operations, typically from mining rewards during high-fee periods, external fund returns from exchanges or storage, or operational capital injections.
+
+**Declining total inflow** suggests reduced revenue capture by miners, which may result from lower fees, decreased mining activity, or periods when external fund sources contribute less to overall inflows.
+
+**Total inflow significantly above expected mining rewards** reveals substantial non-mining capital entering miner wallets, such as returns from exchange sales, cold storage withdrawals, or other operational fund movements beyond standard block rewards.
+
+**Total inflow closely matching expected rewards** indicates that mining rewards dominate inflows with minimal external capital movements, suggesting miners are primarily relying on mining revenue without significant treasury operations.
+
+### Use Cases
+
+This metric provides the foundation for understanding overall miner revenue and operational scale. Comparing total inflow with expected mining rewards reveals what percentage comes from actual mining versus external sources. Rising total inflows during bull markets often indicate miners benefiting from elevated transaction fees alongside price appreciation. When total inflow exceeds mining rewards substantially, it signals miners are bringing external capital into their operational wallets, possibly preparing for deployments or consolidating holdings. Tracking total inflow trends helps assess mining industry health, as sustained high inflows indicate robust revenue conditions while declining inflows may signal profitability pressures. For market analysis, comparing miner inflow with outflow provides net position data showing whether miners are accumulating or distributing their holdings.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-inflow-total', async (req, res) => {
+  try {
+    const miner = req.query.miner || 'all_miner'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-inflow-total?window=${window}&miner=${miner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      miner_inflow_total: d.miner_inflow_total,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

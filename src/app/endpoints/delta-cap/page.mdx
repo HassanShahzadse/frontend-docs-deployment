@@ -1,0 +1,154 @@
+export const metadata = {
+  title: 'Delta Cap',
+  description:
+    'Learn how to use the Delta Cap endpoint to analyze Bitcoin market cycles by comparing realized capitalization and long-term average capitalization.',
+}
+
+# Delta Cap
+
+The **Delta Cap** metric measures the difference between Bitcoin’s **realized capitalization** and its **average capitalization**. {{ className: 'lead' }}
+
+It helps identify long-term market bottoms and tops. Historically, **delta_cap** has oscillated between **realized_cap** and **average_cap**, with bottoms forming when delta approaches average_cap, and tops when it nears realized_cap (in log scale).
+
+---
+
+## Endpoint
+
+`GET /delta-cap`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+This example retrieves daily delta_cap values. Adjust parameters to query specific ranges or export results in CSV format.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Delta Cap data"}
+curl -G "https://api.blocklytics.net/api/public/v1/delta-cap" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "delta_cap": 256000000000
+  },
+  {
+    "date": "2025-01-06",
+    "delta_cap": 250800000000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/delta-cap" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=block \
+  -d from=820000 \
+  -d to=820500 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+**Delta Cap** is derived from Bitcoin’s capitalization metrics and provides insights into long-term valuation trends:
+
+<Properties>
+  <Property name="market_cap" type="number">
+    Total market capitalization — total supply multiplied by BTC/USD price.
+  </Property>
+  <Property name="realized_cap" type="number">
+    The sum of each UTXO multiplied by its last movement price, discounting lost
+    or inactive coins.
+  </Property>
+  <Property name="average_cap" type="number">
+    Lifetime moving average of market capitalization.
+  </Property>
+  <Property name="delta_cap" type="number">
+    The difference between realized_cap and average_cap (
+    <code>realized_cap - average_cap</code>).
+  </Property>
+  <Property name="thermo_cap" type="number">
+    Cumulative weighted sum of mined BTC prices, used to estimate long-term
+    network value.
+  </Property>
+</Properties>
+
+When **delta_cap** approaches **average_cap**, the market often finds a cyclical bottom. Conversely, when **delta_cap** nears **realized_cap**, the market tends to approach a cyclical top.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/delta-cap', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `delta-cap?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      delta_cap: d.delta_cap,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

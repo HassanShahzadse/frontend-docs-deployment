@@ -1,0 +1,152 @@
+export const metadata = {
+  title: 'Exchange Inflow CDD (Coin Days Destroyed)',
+  description:
+    'Learn how to use the Exchange Inflow CDD endpoint to analyze the age-weighted BTC inflows to exchanges, providing a cleaner dumping signal than standard CDD.',
+}
+
+# Exchange Inflow CDD (Coin Days Destroyed)
+
+The **Exchange Inflow CDD** metric measures the age-weighted volume of Bitcoin flowing into exchanges — a subset of the broader Coin Days Destroyed (CDD) indicator. {{ className: 'lead' }}
+
+It represents how long coins were held before being sent to exchanges, filtering out on-chain noise and providing a more accurate view of long-term holder (LTH) movements into exchange wallets — often a precursor to sell-side pressure.
+
+---
+
+## Endpoint
+
+`GET /exchange-inflow-cdd`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Retrieve the **Coin Days Destroyed inflow subset** per exchange, allowing you to isolate signals from long-term holders moving BTC to exchanges.
+
+<Properties>
+  <Property name="exchange" type="string">
+    Exchange name. Example: <code>binance</code>, <code>coinbase</code>,{' '}
+    <code>kraken</code>. Default: <code>all_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Exchange Inflow CDD data"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-inflow-cdd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=binance \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "inflow_cdd": 2421.67
+  },
+  {
+    "date": "2025-01-06",
+    "inflow_cdd": 3187.42
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-inflow-cdd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=kraken \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+**Coin Days Destroyed (CDD)** measures how long coins remained dormant before being moved. The longer coins are held, the more “coin days” they accumulate. When these aged coins are spent — especially into exchanges — it signals that long-term holders are likely taking profit or reducing exposure.
+
+<Properties>
+  <Property name="inflow_cdd" type="number">
+    Total age-weighted BTC inflow (Coin Days Destroyed) entering exchange
+    wallets within the specified window.
+  </Property>
+</Properties>
+
+### Interpretation
+
+- **Rising Exchange Inflow CDD** → Long-term holders (LTHs) are sending older coins to exchanges, often signaling increased sell pressure or distribution.
+- **Low Exchange Inflow CDD** → Younger coins dominate exchange inflows, suggesting short-term trading or fresh accumulation.
+
+This metric provides a more stable, filtered version of total CDD, reducing the impact of smaller, high-frequency transactions.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/exchange-inflow-cdd', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `exchange-inflow-cdd?window=${window}&exchange=${exchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      inflow_cdd: d.inflow_cdd,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

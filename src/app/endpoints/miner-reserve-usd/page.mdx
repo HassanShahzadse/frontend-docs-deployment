@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Miner Reserve USD',
+  description:
+    'Use the Miner Reserve USD endpoint to track the dollar value of mining pool holdings, revealing the economic scale of miner treasuries and potential selling pressure.',
+}
+
+# Miner Reserve USD
+
+The **Miner Reserve USD** metric tracks the dollar value of total on-chain balances held by mining pool wallets. {{ className: 'lead' }}
+
+This metric reveals the economic scale of miner holdings, normalizing reserves across different price environments and showing the real financial strength of mining operations.
+
+---
+
+## Endpoint
+
+`GET /miner-reserve-usd`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor miner reserves in USD to assess the dollar-value scale of miner holdings and compare treasury strength across time periods.
+
+<Properties>
+  <Property name="miner" type="string">
+    Mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner Reserve USD data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-reserve-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "miner_reserve_usd": 18452345000
+  },
+  {
+    "date": "2025-01-06",
+    "miner_reserve_usd": 18476892000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-reserve-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=all_miner \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="miner_reserve_usd" type="number">
+    The total dollar value of on-chain balances held in mining pool wallets at
+    the specified time, measured in USD.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising USD reserves** indicate either price appreciation amplifying holdings value or net BTC accumulation, revealing improving financial position and treasury strength that provides operational flexibility and reduces immediate selling pressure.
+
+**Declining USD reserves** suggest either price depreciation reducing holdings value or net BTC distribution, potentially indicating weakening financial position, profitability pressures, or strategic decisions to reduce exposure.
+
+**USD reserves rising while BTC reserves decline** reveal miners prioritizing dollar value preservation through strategic selling during favorable prices, capturing gains while reducing BTC exposure despite lower coin counts.
+
+**USD reserves declining despite stable BTC reserves** indicate price-driven value erosion where miners maintain coin holdings but experience reduced dollar-value strength, potentially pressuring future operations if profitability depends on dollar-denominated revenues.
+
+### Use Cases
+
+This metric provides crucial context for assessing miner financial health and operational sustainability in real economic terms. Miners operate with dollar-denominated expenses like electricity and hardware, making USD reserve values more relevant than BTC counts for evaluating true financial strength. High USD reserves indicate miners have substantial financial cushions to weather bear markets, sustain operations during low profitability periods, and avoid distress selling. Comparing USD reserves across market cycles reveals whether miners successfully preserve value or lose ground during volatility. Rising USD reserves during bull markets despite potential BTC reserve declines show successful treasury management through strategic selling. For predicting miner behavior, critically low USD reserves signal potential capitulation or forced selling regardless of coin counts, while robust USD reserves suggest miners can afford patient holding strategies.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-reserve-usd', async (req, res) => {
+  try {
+    const miner = req.query.miner || 'all_miner'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-reserve-usd?window=${window}&miner=${miner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      miner_reserve_usd: d.miner_reserve_usd,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

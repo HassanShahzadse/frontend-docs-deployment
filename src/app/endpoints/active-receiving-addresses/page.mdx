@@ -1,0 +1,134 @@
+export const metadata = {
+  title: 'Active Receiving Addresses',
+  description:
+    'Learn how to use the Active Receiving Addresses endpoint to measure Bitcoin network activity by tracking unique addresses that received funds within a given time window.',
+}
+
+# Active Receiving Addresses
+
+This guide explains how to use the **Active Receiving Addresses** endpoint to measure on-chain activity by tracking the number of Bitcoin addresses that received funds during a specified time period. {{ className: 'lead' }}
+
+Monitoring receiving addresses can reveal real user adoption trends and transaction distribution, helping analysts understand shifts in network usage and liquidity movement.
+
+---
+
+## Endpoint
+
+`GET /active-receiving-addresses`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+The following example retrieves metrics of receiving addresses on a daily interval. Adjust parameters to query specific ranges or export data in CSV format.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For <code>window=block</code>, you may pass a block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For <code>window=block</code>, you may pass a block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>. Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting daily receiving addresses"}
+curl -G "https://api.blocklytics.net/api/public/v1/active-receiving-addresses" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "receiving_addresses": 523441
+  },
+  {
+    "date": "2025-01-06",
+    "receiving_addresses": 514882
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/active-receiving-addresses" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=hour \
+  -d from=20250101T000000 \
+  -d to=20250101T120000 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+This metric provides insights into the **number of unique Bitcoin addresses** that received transactions within a specified window.  
+An increase may indicate rising user participation or inflows to new wallets, while a decrease can signal reduced activity or consolidation behavior.
+
+<Properties>
+  <Property name="receiving_addresses" type="integer">
+    The total number of unique Bitcoin addresses that received funds within the selected time window.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get("/active-receiving-addresses", async (req, res) => {
+  try {
+    const window = req.query.window || "day";
+    const from = req.query.from ? `&from=${req.query.from}` : "";
+    const to = req.query.to ? `&to=${req.query.to}` : "";
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : "";
+    const format = req.query.format ? `&format=${req.query.format}` : "";
+
+    const path = `active-receiving-addresses?window=${window}${from}${to}${limit}${format}`;
+    const data = await blocklyticsFetch(path);
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: "Unexpected API format", data });
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      receiving_addresses: d.receiving_addresses,
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+```
+  </Col>
+</Row>

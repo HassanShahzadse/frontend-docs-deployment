@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Taker Buy Volume',
+  description:
+    'Use the Taker Buy Volume endpoint to track the absolute volume of aggressive buy orders in perpetual swap markets, revealing the scale of impatient long positioning and bullish conviction.',
+}
+
+# Taker Buy Volume
+
+The **Taker Buy Volume** measures the total dollar volume of aggressive buy orders in perpetual swap markets, revealing the scale of impatient long positioning. {{ className: 'lead' }}
+
+This metric quantifies the absolute magnitude of bullish order flow from traders willing to pay the spread for immediate execution, providing insight into the intensity of buying conviction.
+
+---
+
+## Endpoint
+
+`GET /taker-buy-volume`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Taker Buy Volume to assess the absolute scale of aggressive buying activity and bullish conviction in derivatives markets.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>min</code>.
+  </Property>
+  <Property name="exchange" type="string">
+    Exchange to query. Options: <code>all_exchange</code>, <code>binance</code>,{' '}
+    <code>bybit</code>, <code>bitmex</code>, <code>deribit</code>,{' '}
+    <code>htx_global</code>, <code>okx</code>. Default:{' '}
+    <code>all_exchange</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Taker Buy Volume data"}
+curl -G "https://api.blocklytics.net/api/public/v1/taker-buy-volume" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d exchange=binance \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "taker_buy_volume": 4567000000
+  },
+  {
+    "date": "2025-01-06",
+    "taker_buy_volume": 3890000000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/taker-buy-volume" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d exchange=all_exchange \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="taker_buy_volume" type="number">
+    The total dollar volume of aggressive buy orders (takers lifting offers) in
+    perpetual swap markets, measured in USD, representing the scale of impatient
+    long positioning.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High taker buy volume** indicates substantial aggressive buying activity, revealing large-scale impatient long positioning where significant capital demands immediate execution by lifting available offers and absorbing liquidity.
+
+**Low taker buy volume** demonstrates minimal aggressive buying, showing limited urgency among bulls and weak demand for immediate long exposure, typical during bearish periods or consolidation when conviction lacks.
+
+**Rising taker buy volume** reveals growing aggressive buying activity, signaling increasing bullish conviction and urgency as more capital seeks immediate long positions rather than waiting passively.
+
+**Declining taker buy volume** shows decreasing aggressive buying, indicating weakening bullish conviction and reduced urgency to enter longs, often preceding or accompanying price weakness.
+
+### Use Cases
+
+This metric provides absolute measurement of buying aggression magnitude, revealing the scale of capital demanding immediate long exposure in derivatives markets. High taker buy volume indicates substantial bullish conviction, as large amounts of capital willingly pay the spread for instant execution rather than placing patient limit orders. The absolute volume reveals market participation intensity, with spikes indicating surges in buying urgency often accompanying breakouts or strong rallies. Comparing taker buy volume to historical levels contextualizes current buying pressure, revealing whether current aggressive long positioning is high or low relative to typical activity. The metric also identifies accumulation intensity during different market phases, with sustained high taker buy volume during consolidations suggesting strong demand absorbing available supply. Rising taker buy volume during uptrends confirms buying conviction supports the rally, while declining volume warns of weakening demand despite price strength. Sudden spikes in taker buy volume often mark short squeezes or FOMO events where urgent buying overwhelms available liquidity and drives rapid price appreciation. Comparing taker buy volume across exchanges reveals where buying pressure concentrates, identifying whether specific venues drive demand or if aggression is market-wide. The metric proves particularly valuable when combined with taker sell volume, as comparing absolute volumes reveals which side demonstrates greater urgency regardless of total volume levels.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/taker-buy-volume', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `taker-buy-volume?window=${window}&exchange=${exchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      taker_buy_volume: d.taker_buy_volume,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

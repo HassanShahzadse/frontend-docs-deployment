@@ -1,0 +1,165 @@
+export const metadata = {
+  title: 'Exchange to Miner Flow (Mean)',
+  description:
+    'Use the Exchange to Miner Flow Mean endpoint to track the average size of token transfers from exchanges to mining pools, revealing miner purchasing patterns.',
+}
+
+# Exchange to Miner Flow (Mean)
+
+The **Exchange to Miner Flow Mean** metric tracks the average size of token transfers from exchanges to mining pools. {{ className: 'lead' }}
+
+This metric reveals miner purchasing behavior and accumulation patterns. Rising mean values often indicate larger miner acquisitions, suggesting bullish sentiment from those closest to network fundamentals.
+
+---
+
+## Endpoint
+
+`GET /exchange-to-miner-flow-mean`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the average transaction size from exchanges to miners to understand miner accumulation strategies and market sentiment.
+
+<Properties>
+  <Property name="from_exchange" type="string">
+    Source exchange name. Example: <code>binance</code>, <code>coinbase</code>,{' '}
+    <code>kraken</code>. Default: <code>all_exchange</code>.
+  </Property>
+  <Property name="to_miner" type="string">
+    Destination mining pool name. Example: <code>f2pool</code>,{' '}
+    <code>antpool</code>, <code>foundryusa</code>. Default:{' '}
+    <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Exchange to Miner Flow Mean data"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-to-miner-flow-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_exchange=binance \
+  -d to_miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "flow_mean": 8.35
+  },
+  {
+    "date": "2025-01-06",
+    "flow_mean": 6.72
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-to-miner-flow-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_exchange=coinbase \
+  -d to_miner=antpool \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="flow_mean" type="number">
+    The average size of token transfers from the exchange to the mining pool
+    during the specified time window.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising mean values** indicate larger average transfers to miners, often signaling increased miner accumulation or purchasing of tokens. This can be bullish as miners, who have intimate knowledge of network fundamentals and operational costs, are acquiring more tokens.
+
+**Declining mean values** suggest smaller transfers, which may indicate miners taking smaller positions, operational purchasing for immediate needs, or reduced confidence in holding positions.
+
+**Sudden spikes** typically reveal significant miner acquisitions, possibly indicating expectations of price appreciation or strategic accumulation by mining operations with strong balance sheets.
+
+**Consistent patterns** help identify regular miner purchasing behaviors, seasonal trends tied to mining economics, or strategic accumulation cycles by major mining pools.
+
+### Use Cases
+
+This metric provides insights into miner sentiment, as miners are sophisticated market participants with direct exposure to production costs and network health. Rising mean values during price dips can signal that miners view current prices as undervalued relative to mining economics. When combined with Miner to Exchange flows, you can identify whether miners are in accumulation or distribution mode. Tracking specific mining pool behaviors can reveal which operations have the strongest balance sheets and most aggressive accumulation strategies.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/exchange-to-miner-flow-mean', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const fromExchange = req.query.from_exchange || 'all_exchange'
+    const toMiner = req.query.to_miner || 'all_miner'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `exchange-to-miner-flow-mean?window=${window}&from_exchange=${fromExchange}&to_miner=${toMiner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      flow_mean: d.flow_mean,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

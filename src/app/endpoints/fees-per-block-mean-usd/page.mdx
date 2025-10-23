@@ -1,0 +1,150 @@
+export const metadata = {
+  title: 'Fees per Block USD (Mean)',
+  description:
+    'Use the Fees per Block Mean USD endpoint to track the average transaction fees collected per block in dollar terms, revealing per-block miner revenue in USD.',
+}
+
+# Fees per Block USD (Mean)
+
+The **Fees per Block Mean USD** metric tracks the average transaction fees collected per block during a specified time window, denominated in US dollars. {{ className: 'lead' }}
+
+This metric reveals the dollar value of per-block fee revenue for miners, making it easier to assess mining profitability and compare network economics across different price environments.
+
+---
+
+## Endpoint
+
+`GET /fees-per-block-mean-usd`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor average fees per block in USD to understand the real dollar value of per-block miner revenue and profitability.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Fees per Block Mean USD data"}
+curl -G "https://api.blocklytics.net/api/public/v1/fees-per-block-mean-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "fees_block_mean_usd": 12456.78
+  },
+  {
+    "date": "2025-01-06",
+    "fees_block_mean_usd": 10892.34
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/fees-per-block-mean-usd" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="fees_block_mean_usd" type="number">
+    The average transaction fees collected per block during the specified time
+    window, denominated in US dollars.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising USD fees per block** indicate either increasing network congestion or rising token prices amplifying the dollar value of per-block revenue. This helps miners cover operational costs more effectively and improves profitability per block mined.
+
+**Declining USD fees per block** suggest reduced per-block profitability in dollar terms, which could result from lower network activity, falling token prices, or both. This may pressure miner margins if operational costs remain constant.
+
+**High USD fees during bull markets** reveal periods when each block is maximally profitable for miners, often enabling smaller operations to remain competitive and expanding the overall mining ecosystem.
+
+**Stable USD fees across price cycles** indicate consistent real economic value per block despite price volatility, suggesting that network usage patterns remain steady and users continue transacting regardless of market conditions.
+
+### Use Cases
+
+This metric is critical for assessing mining profitability in real terms. Miners operate with dollar-denominated expenses like electricity and hardware costs, making USD-based revenue metrics essential for understanding true profitability. High mean USD fees per block indicate periods when mining is most lucrative, potentially attracting new hashrate to the network. Comparing USD fees per block across different eras helps identify whether the network is generating sufficient economic value to sustain security as block subsidies decline through halvings. When combined with total block reward data, you can calculate what percentage of per-block revenue comes from fees versus subsidies in dollar terms. This metric also helps predict miner behavior during market downturns, as lower USD fees per block may force marginal miners offline.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/fees-per-block-mean-usd', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `fees-per-block-mean-usd?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      fees_block_mean_usd: d.fees_block_mean_usd,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

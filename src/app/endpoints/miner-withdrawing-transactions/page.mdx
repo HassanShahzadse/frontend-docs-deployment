@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Miner Withdrawing Transactions',
+  description:
+    'Use the Miner Withdrawing Transactions endpoint to track the number of outflow transactions from mining pools, revealing the frequency and patterns of miner distribution activity.',
+}
+
+# Miner Withdrawing Transactions
+
+The **Miner Withdrawing Transactions** metric tracks the total number of outflow transactions from mining pool wallets. {{ className: 'lead' }}
+
+This metric reveals the frequency and operational rhythm of miner distributions, showing how actively miners are moving coins and indicating the intensity of selling or treasury management operations.
+
+---
+
+## Endpoint
+
+`GET /miner-withdrawing-transactions`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the number of outflow transactions from mining pools to assess the frequency and intensity of miner distribution activity.
+
+<Properties>
+  <Property name="miner" type="string">
+    Mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner Withdrawing Transactions data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-withdrawing-transactions" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=f2pool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "transactions_count_outflow": 342
+  },
+  {
+    "date": "2025-01-06",
+    "transactions_count_outflow": 318
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-withdrawing-transactions" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d miner=all_miner \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="transactions_count_outflow" type="number">
+    The total number of outflow transactions from mining pool wallets during the
+    specified time period.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising transaction counts** indicate increased frequency of miner distributions, suggesting heightened selling activity, more active treasury management, or expanded operational transfers as miners execute more frequent movements of their holdings.
+
+**Declining transaction counts** suggest reduced distribution frequency where miners consolidate operations into fewer transactions, potentially indicating decreased selling pressure, operational efficiency improvements, or strategic holding during unfavorable market conditions.
+
+**High transaction counts with moderate volumes** reveal fragmented distribution patterns where miners split outflows across many smaller transactions, often indicating diverse operational needs, multiple payment obligations, or strategic dispersion to avoid market impact.
+
+**Low transaction counts with high volumes** indicate concentrated distribution operations where miners execute large transfers in fewer transactions, typically suggesting efficient batch processing, direct exchange deposits, or major OTC deals through limited counterparties.
+
+### Use Cases
+
+This metric provides crucial insight into the operational behavior and distribution strategies of mining operations beyond simple volume analysis. Transaction frequency patterns reveal how miners structure their selling and distribution activities, with high-frequency patterns often indicating retail-oriented distribution or diverse operational expenses, while low-frequency patterns suggest institutional approaches with consolidated transfers. Comparing transaction counts to outflow volumes helps identify average transaction sizes, revealing whether miners favor many small distributions or fewer large movements. During bull markets, rising transaction counts typically signal miners actively capitalizing on favorable prices through increased distribution operations, while declining counts during bear markets may indicate miners reducing activity and minimizing movements. Tracking transaction count changes alongside address counts reveals distribution complexity, where rising counts in both metrics indicate broad-based dispersed selling, while rising transaction counts with stable address counts suggest repeated transfers to the same destinations. This metric also helps identify operational shifts in mining pool behavior, such as transitions between frequent small disbursements and consolidated batch processing, which can signal changes in treasury management strategies or liquidity management approaches.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-withdrawing-transactions', async (req, res) => {
+  try {
+    const miner = req.query.miner || 'all_miner'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-withdrawing-transactions?window=${window}&miner=${miner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      transactions_count_outflow: d.transactions_count_outflow,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

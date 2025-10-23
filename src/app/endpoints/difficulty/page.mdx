@@ -1,0 +1,140 @@
+export const metadata = {
+  title: 'Difficulty',
+  description:
+    'Learn how to use the Difficulty endpoint to track the average mining difficulty of Bitcoin blocks — a key indicator of network security and miner competition.',
+}
+
+# Difficulty
+
+The **Difficulty** metric represents the average mining difficulty for generating new Bitcoin blocks. {{ className: 'lead' }}
+
+Mining difficulty adjusts approximately every two weeks to ensure blocks are mined every 10 minutes on average, maintaining consistent issuance and network security regardless of changes in total hash rate.
+
+---
+
+## Endpoint
+
+`GET /difficulty`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+This example retrieves daily average mining difficulty values. You can adjust parameters to query other time intervals or export in CSV format.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Difficulty data"}
+curl -G "https://api.blocklytics.net/api/public/v1/difficulty" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "difficulty": 87263452342356.53
+  },
+  {
+    "date": "2025-01-06",
+    "difficulty": 86543212353423.24
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/difficulty" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+**Difficulty** is a critical indicator of Bitcoin’s mining and security environment:
+
+<Properties>
+  <Property name="difficulty" type="number">
+    Average difficulty required to mine a block within the selected time window.
+  </Property>
+</Properties>
+
+An increase in difficulty indicates growing hash rate and stronger network security. A decrease suggests reduced miner participation or profitability.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/difficulty', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `difficulty?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      difficulty: d.difficulty,
+    }))
+
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

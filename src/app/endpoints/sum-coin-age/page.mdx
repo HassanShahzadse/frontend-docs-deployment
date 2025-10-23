@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Sum Coin Age (SCA)',
+  description:
+    'Use the Sum Coin Age endpoint to measure the total accumulated age of all unspent Bitcoin, revealing holder conviction and identifying periods of dormancy versus activity.',
+}
+
+# Sum Coin Age (SCA)
+
+The **Sum Coin Age (SCA)** calculates the total accumulated age across all unspent Bitcoin by multiplying each UTXO's value by its days unmoved. {{ className: 'lead' }}
+
+This metric reveals the aggregate holding commitment across the entire network, with rising SCA indicating increasing hodling conviction and declining SCA signaling distribution from long-term holders.
+
+---
+
+## Endpoint
+
+`GET /sum-coin-age`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor Sum Coin Age to assess the aggregate holding conviction of Bitcoin holders and identify periods of accumulation versus distribution.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Sum Coin Age data"}
+curl -G "https://api.blocklytics.net/api/public/v1/sum-coin-age" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "sca": 4567890000000
+  },
+  {
+    "date": "2025-01-06",
+    "sca": 4556780000000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/sum-coin-age" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="sca" type="number">
+    The sum of all unspent Bitcoin multiplied by the number of days each coin
+    has remained unmoved, measured in Bitcoin-days, representing the total
+    accumulated holding commitment across the network.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising SCA** indicates increasing aggregate holding conviction as coins remain unmoved and accumulate age, revealing strengthening hodler behavior across the network where participants commit capital for extended periods without selling or redistributing.
+
+**Declining SCA** demonstrates destruction of coin age through spending activity, signaling distribution as long-held coins move, often marking profit-taking periods when veteran holders break their holding commitment and realize gains.
+
+**Accelerating SCA growth** reveals intensifying accumulation behavior where holders not only maintain existing positions but new coins also enter dormancy, typical during bear markets when weak hands exit and strong hands accumulate for long-term holds.
+
+**SCA plateau or deceleration** suggests balanced market conditions where coin aging from hodling roughly equals coin age destruction from spending, indicating equilibrium between accumulation and distribution forces without clear directional dominance.
+
+### Use Cases
+
+This metric provides a cumulative measure of holding conviction across the entire Bitcoin network by quantifying the total commitment implied by all unmoved coins. Unlike flow metrics that measure instantaneous activity, SCA captures the stock of patience accumulated through sustained holding behavior. Rising SCA indicates the network is increasingly dominated by long-term holders who demonstrate conviction through extended inactivity, strengthening supply dynamics by locking coins away from markets. The metric naturally increases over time as Bitcoin matures and existing coins age, but the rate of change reveals behavioral shifts between accumulation and distribution regimes. During bear markets, accelerating SCA growth indicates aggressive accumulation as new buyers enter with long-term horizons while existing holders maintain positions despite losses. During bull markets, SCA growth typically slows or reverses as profit-taking destroys accumulated age, with sharp declines indicating major distribution events from long-term holders. The metric complements Coin Days Destroyed by measuring the opposite side, tracking age accumulation rather than age destruction. High absolute SCA values indicate a mature holder base with substantial conviction, while rapid SCA increases suggest growing long-term commitment. Comparing SCA to supply shows what percentage of coins demonstrate strong holder conviction through dormancy. The metric also reveals cycle transitions, with SCA peaks often marking bear market endings when maximum conviction accumulates before rallies begin.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/sum-coin-age', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `sum-coin-age?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      sca: d.sca,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

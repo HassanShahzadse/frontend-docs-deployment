@@ -1,0 +1,157 @@
+export const metadata = {
+  title: 'Fund Holdings',
+  description:
+    'Use the Fund Holdings endpoint to track digital asset holdings of investment funds like Grayscale, revealing institutional sentiment and investment trends.',
+}
+
+# Fund Holdings
+
+The **Fund Holdings** metric tracks the digital asset holdings of investment funds and trusts. {{ className: 'lead' }}
+
+This metric reveals institutional investor sentiment through traditional financial products like Grayscale's GBTC. Rising holdings indicate bullish institutional sentiment, while declining holdings suggest distribution or redemptions.
+
+---
+
+## Endpoint
+
+`GET /fund-holdings`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor fund holdings to understand institutional investment flows and stock market sentiment toward digital assets.
+
+<Properties>
+  <Property name="symbol" type="string">
+    Stock symbol (ticker) for the fund. Example: <code>gbtc</code> (Grayscale
+    Bitcoin Trust), <code>ethe</code> (Grayscale Ethereum Trust). Default:{' '}
+    <code>all_symbol</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Currently only supports <code>day</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. If not
+    specified, returns data from earliest time.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. If not
+    specified, returns data to latest time.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Fund Holdings data"}
+curl -G "https://api.blocklytics.net/api/public/v1/fund-holdings" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d symbol=gbtc \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "digital_asset_holdings": 632458.45
+  },
+  {
+    "date": "2025-01-06",
+    "digital_asset_holdings": 632127.89
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/fund-holdings" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d symbol=gbtc \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="digital_asset_holdings" type="number">
+    The total amount of digital assets held by the fund, typically denominated
+    in the base asset (e.g., BTC for GBTC).
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising holdings** indicate increasing institutional investment through traditional financial products, suggesting bullish sentiment among stock market investors who are accumulating exposure through regulated investment vehicles.
+
+**Declining holdings** suggest redemptions or outflows from the fund, which may indicate institutional investors reducing exposure, potentially signaling bearish sentiment or rotation to alternative investment products.
+
+**Steady growth** reveals consistent institutional accumulation over time, indicating sustained confidence from traditional finance investors and growing mainstream adoption through accessible investment vehicles.
+
+**Sharp increases** often correlate with major market rallies or institutional FOMO, as traditional investors rush to gain exposure through familiar stock market instruments rather than direct cryptocurrency purchases.
+
+### Use Cases
+
+This metric provides crucial insights into institutional investor behavior through traditional finance channels. Funds like Grayscale's GBTC allow stock market investors to gain cryptocurrency exposure without directly holding digital assets, making holdings data a proxy for traditional finance sentiment. Rising holdings during bear markets can signal institutional accumulation at perceived discount prices, while declining holdings during bull markets might indicate profit-taking by sophisticated investors. Comparing fund holdings with exchange reserves reveals whether institutional buying occurs through traditional products or direct cryptocurrency purchases. Sharp divergences between fund holdings trends and spot market price action can signal important sentiment shifts, as stock market investors may lead or lag cryptocurrency native participants. This data is particularly valuable for understanding how traditional finance views digital assets and whether mainstream adoption is accelerating or decelerating.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/fund-holdings', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const symbol = req.query.symbol || 'all_symbol'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `fund-holdings?window=${window}&symbol=${symbol}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      digital_asset_holdings: d.digital_asset_holdings,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

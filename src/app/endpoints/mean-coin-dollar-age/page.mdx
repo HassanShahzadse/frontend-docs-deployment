@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'Mean Coin Dollar Age (MCDA)',
+  description:
+    'Use the Mean Coin Dollar Age endpoint to track the dollar-weighted age of unspent coins, revealing the economic significance of holder behavior.',
+}
+
+# Mean Coin Dollar Age (MCDA)
+
+The **Mean Coin Dollar Age** metric tracks the average age of unspent transaction outputs weighted by both their BTC value and USD price at creation. {{ className: 'lead' }}
+
+This metric reveals the economic significance of holder behavior by accounting for the dollar value of coins when they were acquired, providing deeper insights than simple coin age into capital deployment patterns.
+
+---
+
+## Endpoint
+
+`GET /mean-coin-dollar-age`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor mean coin dollar age to understand the dollar-weighted conviction of holders and identify economically significant distribution events.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Mean Coin Dollar Age data"}
+curl -G "https://api.blocklytics.net/api/public/v1/mean-coin-dollar-age" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "mean_coin_dollar_age": 2450000000000
+  },
+  {
+    "date": "2025-01-06",
+    "mean_coin_dollar_age": 2448500000000
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/mean-coin-dollar-age" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="mean_coin_dollar_age" type="number">
+    The sum of unspent transaction output age multiplied by BTC value and USD
+    price at creation time. This weights older, more valuable purchases more
+    heavily.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising mean coin dollar age** indicates that capital invested at various price levels remains unspent, suggesting holders who deployed significant dollars maintain conviction regardless of current price movements. This reveals dollar-weighted accumulation behavior.
+
+**Declining mean coin dollar age** signals that economically significant capital is moving, with holders who invested substantial dollars at historical prices now spending their coins. This often precedes or confirms major distribution phases.
+
+**Higher MCDA relative to MCA** suggests that coins acquired at higher dollar values are being held longer, indicating that holders who bought at elevated prices maintain stronger conviction or are unwilling to realize losses.
+
+**Sharp MCDA drops** reveal when holders who deployed significant capital at various price points simultaneously decide to spend, marking economically significant distribution events that can overwhelm demand.
+
+### Use Cases
+
+This metric provides superior insights compared to simple coin age by weighting positions by their economic significance. Coins acquired for pennies matter less to market dynamics than those bought for thousands of dollars, making MCDA a better proxy for economically meaningful holder behavior. Rising MCDA during accumulation phases confirms that significant capital entering at current prices chooses to hold rather than trade, suggesting informed conviction. Comparing MCDA trends with price movements reveals whether current holders represent strong or weak hands based on their original dollar investment. Sharp MCDA declines during rallies indicate that holders with large dollar-basis positions are distributing, potentially signaling exhaustion as early adopters exit. For market analysis, MCDA helps distinguish between movement of coins acquired cheaply versus those representing substantial capital deployment, with the latter having greater market impact when spent.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/mean-coin-dollar-age', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `mean-coin-dollar-age?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      mean_coin_dollar_age: d.mean_coin_dollar_age,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

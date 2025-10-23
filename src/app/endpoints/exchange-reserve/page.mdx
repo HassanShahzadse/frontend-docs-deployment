@@ -1,0 +1,149 @@
+export const metadata = {
+  title: 'Exchange Reserve',
+  description:
+    'Learn how to use the Exchange Reserve endpoint to monitor the total BTC holdings across exchanges — a key indicator of liquidity, investor sentiment, and market supply pressure.',
+}
+
+# Exchange Reserve
+
+The **Exchange Reserve** metric represents the **total amount of Bitcoin held in exchange wallets**. {{ className: 'lead' }}
+
+Monitoring reserves helps identify liquidity trends and investor behavior — declining reserves usually indicate coins moving to self-custody (bullish), while increasing reserves suggest selling pressure (bearish).
+
+---
+
+## Endpoint
+
+`GET /exchange-reserve`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Retrieve the total BTC reserve for a specific exchange and time window.
+
+<Properties>
+  <Property name="exchange" type="string">
+    Exchange name. Example: <code>binance</code>, <code>coinbase</code>,{' '}
+    <code>kraken</code>. Default: <code>all_exchange</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Exchange Reserve data"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-reserve" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=binance \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "reserve": 189234.56
+  },
+  {
+    "date": "2025-01-06",
+    "reserve": 190002.13
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/exchange-reserve" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d exchange=coinbase \
+  -d window=hour \
+  -d from=2025010100 \
+  -d to=2025010123 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="reserve" type="number">
+    Total BTC held in exchange wallets during the selected period.
+  </Property>
+  <Property name="reserve_usd" type="number">
+    Equivalent USD value of total BTC reserves (if available).
+  </Property>
+</Properties>
+
+### Interpretation
+
+- **Falling Exchange Reserves (↓)** → Coins moving off exchanges → **bullish** (holders prefer self-custody, reduced sell pressure).
+- **Rising Exchange Reserves (↑)** → Coins moving onto exchanges → **bearish** (increased potential selling activity).
+
+When combined with inflow/outflow metrics, this indicator reveals shifts in liquidity and market sentiment.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/exchange-reserve', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const exchange = req.query.exchange || 'all_exchange'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `exchange-reserve?window=${window}&exchange=${exchange}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({ date: d.date, reserve: d.reserve }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

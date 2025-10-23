@@ -1,0 +1,148 @@
+export const metadata = {
+  title: 'UTXOs in Profit',
+  description:
+    'Use the UTXOs in Profit endpoint to track the amount of Bitcoin in spent outputs that were sold at a profit, revealing distribution intensity and profit-taking behavior during market rallies.',
+}
+
+# UTXOs in Profit
+
+The **UTXOs in Profit** metric measures the total amount of Bitcoin in UTXOs that were spent at prices higher than their acquisition cost, revealing realized profit intensity. {{ className: 'lead' }}
+
+This metric quantifies the scale of profit-taking by identifying Bitcoin sold above water, with high values indicating substantial distribution as successful holders exit profitable positions.
+
+---
+
+## Endpoint
+
+`GET /utxos-in-profit`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor UTXOs in profit to assess distribution intensity and identify periods of maximum profit-taking when substantial gains are realized.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Currently only supports: <code>day</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting UTXOs in Profit data"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxos-in-profit" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "profit_amount": 45600
+  },
+  {
+    "date": "2025-01-06",
+    "profit_amount": 38900
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/utxos-in-profit" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="profit_amount" type="number">
+    The total amount of Bitcoin in spent UTXOs where the selling price was
+    higher than the acquisition price, measured in BTC, representing realized
+    profits.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**High profit amount** indicates substantial Bitcoin sold at a profit, revealing intense distribution where significant volumes realize gains, typical during rallies or bull market tops when widespread profitability triggers selling.
+
+**Low profit amount** demonstrates minimal profit realization, showing holders maintain positions despite profitability, typical during early bull markets when conviction remains strong or during bear markets when few hold profits.
+
+**Rising profit amount** reveals increasing distribution intensity, signaling growing numbers of profitable holders are exiting positions as gains accumulate and selling pressure builds from successful participants.
+
+**Declining profit amount** shows decreasing distribution, indicating profitable holders are reducing selling activity, either because prices have fallen and fewer hold profits or because conviction strengthens despite gains.
+
+### Use Cases
+
+This metric provides direct measurement of realized profit intensity by quantifying the Bitcoin volume sold profitably, revealing distribution severity and holder behavior during price strength. High profit amounts indicate markets experiencing substantial distribution where significant volumes realize gains, suggesting either healthy profit-taking from patient capital or euphoric selling from greedy holders chasing tops. These distribution events often precede or accompany major tops as widespread profitability triggers selling that overwhelms demand. The metric identifies peak distribution through profit amount spikes, with extreme readings historically coinciding with cycle tops when maximum greed motivates profitable holders to sell regardless of future potential. Tracking profit amounts over time reveals distribution progression, with rising amounts confirming increasing selling pressure from successful holders. Conversely, declining profit amounts despite price strength warn of weakening distribution that could support further rallies, as profitable holders demonstrate conviction by maintaining positions despite gains. Comparing profit amounts to total volume reveals what proportion of activity represents successful distribution versus distressed capitulation, with high ratios indicating healthy profit-taking while low ratios suggest panic-dominated markets. The metric also identifies bull market phases, with early rallies showing low profit amounts as few hold gains, mid-cycle showing rising amounts as profitability spreads, and late stages showing massive spikes as euphoric distribution occurs. Rising profit amounts during price declines warn of bull trap situations where rallies provide exit opportunities for underwater holders who bought near peaks.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/utxos-in-profit', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `utxos-in-profit?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      profit_amount: d.profit_amount,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

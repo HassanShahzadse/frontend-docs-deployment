@@ -1,0 +1,158 @@
+export const metadata = {
+  title: 'Fund Market Premium',
+  description:
+    'Use the Fund Market Premium endpoint to track the premium or discount of investment funds relative to NAV, revealing market sentiment and arbitrage opportunities.',
+}
+
+# Fund Market Premium
+
+The **Fund Market Premium** metric tracks the premium or discount at which investment funds trade relative to their Net Asset Value (NAV). {{ className: 'lead' }}
+
+This metric reveals market sentiment and demand for traditional finance exposure to digital assets. Positive premiums indicate bullish sentiment with downside risk, while negative premiums suggest bearish sentiment with upside potential.
+
+---
+
+## Endpoint
+
+`GET /fund-market-premium`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor fund premiums to identify market sentiment extremes and potential arbitrage opportunities between fund shares and underlying assets.
+
+<Properties>
+  <Property name="symbol" type="string">
+    Stock symbol (ticker) for the fund. Example: <code>gbtc</code> (Grayscale
+    Bitcoin Trust), <code>ethe</code> (Grayscale Ethereum Trust). Default:{' '}
+    <code>all_symbol</code> (VWAP across all funds).
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Currently only supports <code>day</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. If not
+    specified, returns data from earliest time.
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. If not
+    specified, returns data to latest time.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Fund Market Premium data"}
+curl -G "https://api.blocklytics.net/api/public/v1/fund-market-premium" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d symbol=gbtc \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "market_premium": 0.15
+  },
+  {
+    "date": "2025-01-06",
+    "market_premium": -0.08
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/fund-market-premium" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d symbol=gbtc \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="market_premium" type="number">
+    The premium or discount calculated as (Market Price - NAV) / NAV. Positive
+    values indicate premium, negative values indicate discount. For example,
+    0.15 means 15% premium, -0.08 means 8% discount.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Positive premium (above 0)** indicates the fund trades above its Net Asset Value, suggesting strong demand from traditional finance investors and bullish sentiment. However, high premiums also signal downside risk as the gap may close through price correction or NAV appreciation.
+
+**Negative premium (below 0, a discount)** indicates the fund trades below its Net Asset Value, suggesting weak demand or bearish sentiment from stock market investors. However, discounts present upside opportunity as the gap may close through price appreciation or arbitrage.
+
+**Extremely high premiums (20%+)** reveal excessive demand and potential bubble conditions where investors overpay significantly for indirect exposure, often signaling market tops and elevated crash risk.
+
+**Deep discounts (20%+ negative)** suggest severe pessimism or structural issues, but may represent compelling value opportunities if the underlying assets remain fundamentally sound and arbitrage mechanisms can close the gap.
+
+### Use Cases
+
+This metric is essential for identifying sentiment extremes and arbitrage opportunities in traditional finance crypto products. High premiums during bull markets indicate retail FOMO through accessible stock market products, often preceding corrections as sophisticated investors exploit the arbitrage gap. Deep discounts during bear markets can signal capitulation and potential bottoms, especially when underlying asset fundamentals remain strong. Comparing premiums across different funds reveals which products maintain strongest demand and pricing power. The all_symbol aggregate premium using VWAP provides a broad sentiment gauge across the institutional investment landscape. Sharp premium contractions often precede major price movements as the gap between market expectations and underlying value closes rapidly. For sophisticated investors, persistent large discounts may justify buying the discounted fund shares over direct asset purchases, effectively acquiring exposure below fair value.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/fund-market-premium', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const symbol = req.query.symbol || 'all_symbol'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `fund-market-premium?window=${window}&symbol=${symbol}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      market_premium: d.market_premium,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

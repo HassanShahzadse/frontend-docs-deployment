@@ -1,0 +1,165 @@
+export const metadata = {
+  title: 'Miner to Miner Flow (Mean)',
+  description:
+    'Use the Miner to Miner Flow Mean endpoint to track the average transaction size of Bitcoin transfers between mining pools, revealing inter-pool settlement patterns and operational relationships.',
+}
+
+# Miner to Miner Flow (Mean)
+
+The **Miner to Miner Flow (Mean)** metric tracks the average size of Bitcoin transfers between mining pool wallets. {{ className: 'lead' }}
+
+This metric reveals the typical transaction scale in inter-pool transfers, indicating settlement patterns, operational relationships, and consolidation strategies among mining operations.
+
+---
+
+## Endpoint
+
+`GET /miner-to-miner-flow-mean`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor the average size of transfers between mining pools to understand inter-pool settlement patterns and operational relationships.
+
+<Properties>
+  <Property name="from_miner" type="string">
+    Source mining pool name. Example: <code>f2pool</code>, <code>antpool</code>,{' '}
+    <code>foundryusa</code>. Default: <code>all_miner</code>.
+  </Property>
+  <Property name="to_miner" type="string">
+    Destination mining pool name. Example: <code>f2pool</code>,{' '}
+    <code>antpool</code>, <code>foundryusa</code>. Default: <code>1thash</code>.
+  </Property>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting Miner to Miner Flow Mean data"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-to-miner-flow-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_miner=f2pool \
+  -d to_miner=antpool \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "flow_mean": 8.34
+  },
+  {
+    "date": "2025-01-06",
+    "flow_mean": 12.67
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/miner-to-miner-flow-mean" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d from_miner=all_miner \
+  -d to_miner=1thash \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="flow_mean" type="number">
+    The average size of Bitcoin transfers from one specified mining pool to
+    another during the time period, measured in BTC.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Rising mean transaction sizes** indicate miners are executing larger individual inter-pool transfers, suggesting consolidated settlement operations, treasury consolidation among related entities, or strategic repositioning of holdings between affiliated mining operations.
+
+**Declining mean transaction sizes** suggest inter-pool transfers are becoming more fragmented with smaller individual transactions, potentially indicating more frequent settlement cycles, distributed operational payments, or changes in mining pool payout structures.
+
+**High mean sizes with low transaction counts** reveal concentrated transfer patterns where miners execute fewer but significantly larger inter-pool movements, typically indicating bulk treasury consolidation, major settlements between pools, or strategic repositioning of substantial holdings.
+
+**Low mean sizes with high transaction counts** indicate dispersed inter-pool operations where transfers occur frequently in smaller amounts, often suggesting regular operational payments, automated settlement systems, or continuous redistribution among related mining entities.
+
+### Use Cases
+
+This metric provides insight into the operational relationships and settlement patterns between mining pools. Mean transaction sizes reveal the typical scale of inter-pool interactions, with larger means often indicating treasury management and strategic consolidation while smaller means suggest operational or payout-related transfers. Comparing mean flow sizes between specific pool pairs identifies established relationships and potential common ownership, with consistently large transfers often indicating affiliated operations or strategic partnerships. During periods of mining difficulty adjustments or market volatility, changes in mean transaction sizes can reveal shifts in consolidation strategies as pools adjust operational structures. Tracking mean sizes alongside transaction counts distinguishes between regular operational flows and strategic repositioning, where stable means with rising counts indicate scaled operations while rising means with stable counts suggest larger individual movements. This metric also helps identify potential pool mergers or operational consolidations, as dramatic increases in mean transaction sizes between specific pools often precede or accompany structural changes in mining operations. Analyzing mean flow patterns across multiple pool pairs reveals the network structure of mining operations, identifying hub pools that serve as consolidation points versus peripheral pools that primarily send or receive funds.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/miner-to-miner-flow-mean', async (req, res) => {
+  try {
+    const fromMiner = req.query.from_miner || 'all_miner'
+    const toMiner = req.query.to_miner || '1thash'
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `miner-to-miner-flow-mean?window=${window}&from_miner=${fromMiner}&to_miner=${toMiner}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      flow_mean: d.flow_mean,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>

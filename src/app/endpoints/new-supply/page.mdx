@@ -1,0 +1,151 @@
+export const metadata = {
+  title: 'New Supply',
+  description:
+    'Use the New Supply endpoint to track newly issued Bitcoin from mining rewards, revealing the rate of new coin creation and protocol-defined inflation.',
+}
+
+# New Supply
+
+The **New Supply** metric tracks the amount of newly issued Bitcoin through mining rewards during a specified time period. {{ className: 'lead' }}
+
+This metric reveals the rate of new coin creation through block rewards, providing insight into Bitcoin's programmatic inflation schedule and the baseline supply pressure from mining operations.
+
+---
+
+## Endpoint
+
+`GET /new-supply`
+
+**Base URL:**  
+`https://api.blocklytics.net/api/public/v1`
+
+---
+
+## Example using filters
+
+<Row>
+  <Col>
+
+Monitor new Bitcoin supply issuance to understand the rate of coin creation and protocol-defined inflation.
+
+<Properties>
+  <Property name="window" type="string">
+    Time resolution. Supported values: <code>day</code>, <code>hour</code>,{' '}
+    <code>block</code>.
+  </Property>
+  <Property name="from" type="string">
+    Start time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height (e.g., <code>510000</code>
+    ).
+  </Property>
+  <Property name="to" type="string">
+    End time in <code>YYYYMMDDTHHMMSS</code> or <code>YYYYMMDD</code>. For{' '}
+    <code>window=block</code>, specify block height.
+  </Property>
+  <Property name="limit" type="integer">
+    Maximum number of rows to return (1–100,000). Default: <code>100</code>.
+  </Property>
+  <Property name="format" type="string">
+    Output format. Supported values: <code>json</code>, <code>csv</code>.
+    Default: <code>json</code>.
+  </Property>
+</Properties>
+
+  </Col>
+  <Col>
+
+```bash {title="Requesting New Supply data"}
+curl -G "https://api.blocklytics.net/api/public/v1/new-supply" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250107 \
+  -d limit=2
+```
+
+```json {title="Sample JSON response"}
+[
+  {
+    "date": "2025-01-07",
+    "supply_new": 450
+  },
+  {
+    "date": "2025-01-06",
+    "supply_new": 450
+  }
+]
+```
+
+```bash {title="Exporting as CSV"}
+curl -G "https://api.blocklytics.net/api/public/v1/new-supply" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d window=day \
+  -d from=20250101 \
+  -d to=20250131 \
+  -d format=csv
+```
+
+  </Col>
+</Row>
+
+---
+
+## Understanding the metric
+
+<Row>
+  <Col>
+
+<Properties>
+  <Property name="supply_new" type="number">
+    The amount of newly issued Bitcoin through mining rewards during the
+    specified time period, measured in BTC.
+  </Property>
+</Properties>
+
+### Interpretation
+
+**Consistent daily issuance** reflects Bitcoin's programmatic supply schedule where block rewards are issued approximately every 10 minutes according to the protocol, with the specific amount determined by the current halving epoch and providing predictable baseline supply pressure.
+
+**Halving events** dramatically reduce new supply issuance by 50% approximately every four years, fundamentally changing the supply-demand dynamics by cutting the rate of new coin creation and historically preceding major bull markets as reduced inflation improves scarcity.
+
+**Variations in daily issuance** occur due to mining difficulty adjustments and block time variance, with faster block production temporarily increasing daily issuance and slower production decreasing it, though the protocol's difficulty adjustment mechanism ensures convergence toward the target average over time.
+
+**Supply issuance relative to price** reveals the dollar value of new supply pressure, as miners must typically sell portions of newly mined Bitcoin to cover dollar-denominated operational costs, creating baseline selling pressure proportional to both issuance rate and current price levels.
+
+### Use Cases
+
+This metric provides foundational insight into Bitcoin's programmatic monetary policy and its impact on supply-demand dynamics. New supply represents the baseline selling pressure that markets must absorb, as miners typically liquidate portions of rewards to cover operational expenses denominated in fiat currencies. The predictable issuance schedule makes Bitcoin unique among assets, with supply growth known years in advance rather than subject to discretionary central bank decisions. Tracking new supply helps contextualize miner selling behavior, as daily issuance establishes the maximum potential new supply pressure before considering any miner accumulation or strategic holding. Halving events approximately every four years create step-function reductions in issuance that have historically catalyzed major bull markets, as reduced supply growth meets sustained or growing demand. Comparing new supply to exchange inflows reveals what portion of miner rewards reaches liquid markets versus being held or sold through OTC channels, with high ratios indicating aggressive liquidation while low ratios suggest accumulation or alternative distribution. The dollar value of daily issuance (new supply × price) quantifies the minimum demand required to absorb new coins without price impact, helping assess whether current demand levels can sustain price or risk downward pressure. Understanding Bitcoin's declining inflation rate through progressively smaller new supply also helps long-term investors appreciate the asset's increasing scarcity, as annual percentage supply growth approaches zero over coming decades. This metric proves particularly valuable around halving events for modeling their supply shock impacts and anticipating market responses to dramatic issuance reductions.
+
+  </Col>
+  <Col>
+
+```js {title="Node.js (Express) example"}
+// Example Express route using Blocklytics
+router.get('/new-supply', async (req, res) => {
+  try {
+    const window = req.query.window || 'day'
+    const from = req.query.from ? `&from=${req.query.from}` : ''
+    const to = req.query.to ? `&to=${req.query.to}` : ''
+    const limit = req.query.limit ? `&limit=${req.query.limit}` : ''
+    const format = req.query.format ? `&format=${req.query.format}` : ''
+
+    const path = `new-supply?window=${window}${from}${to}${limit}${format}`
+    const data = await blocklyticsFetch(path)
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ error: 'Unexpected API format', data })
+    }
+
+    const formatted = data.map((d) => ({
+      date: d.date,
+      supply_new: d.supply_new,
+    }))
+    res.json(formatted)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+```
+
+  </Col>
+</Row>
