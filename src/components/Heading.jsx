@@ -42,10 +42,7 @@ function Eyebrow({ tag, label }) {
 
 function Anchor({ id, inView, children }) {
   return (
-    <Link
-      href={`#${id}`}
-      className="group text-inherit no-underline hover:text-inherit"
-    >
+    <span className="relative">
       {inView && (
         <div className="absolute mt-1 ml-[calc(-1*var(--width))] hidden w-(--width) opacity-0 transition [--width:calc(2.625rem+0.5px+50%-min(50%,calc(var(--container-lg)+(--spacing(8)))))] group-hover:opacity-100 group-focus:opacity-100 md:block lg:z-50 2xl:[--width:--spacing(10)]">
           <div className="group/anchor block h-5 w-5 rounded-lg bg-zinc-50 ring-1 ring-zinc-300 transition ring-inset hover:ring-zinc-500 dark:bg-zinc-800 dark:ring-zinc-700 dark:hover:bg-zinc-700 dark:hover:ring-zinc-600">
@@ -53,8 +50,13 @@ function Anchor({ id, inView, children }) {
           </div>
         </div>
       )}
-      {children}
-    </Link>
+      <Link
+        href={`#${id}`}
+        className="group text-inherit no-underline hover:text-inherit"
+      >
+        {children}
+      </Link>
+    </span>
   )
 }
 
